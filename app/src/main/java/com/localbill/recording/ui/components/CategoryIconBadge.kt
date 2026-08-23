@@ -4,7 +4,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Category
@@ -33,6 +32,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.localbill.recording.ui.theme.PrismBorder
+import com.localbill.recording.ui.theme.PrismSlate
 
 object CategoryIcons {
     val AVAILABLE_ICONS = listOf(
@@ -65,20 +66,19 @@ fun CategoryIconBadge(
     colorHex: Long,
     modifier: Modifier = Modifier,
     size: Dp = 38.dp,
-    iconSize: Dp = 19.dp,
-    cornerRadius: Dp = 12.dp
+    iconSize: Dp = 18.dp,
+    cornerRadius: Dp = 10.dp
 ) {
     val baseColor = Color(colorHex)
-    val containerColor = baseColor.copy(alpha = 0.12f)
 
     Box(
         modifier = modifier
             .size(size)
             .clip(RoundedCornerShape(cornerRadius))
-            .background(containerColor)
+            .background(PrismSlate)
             .border(
-                width = 0.5.dp,
-                color = baseColor.copy(alpha = 0.25f),
+                width = 1.dp,
+                color = PrismBorder,
                 shape = RoundedCornerShape(cornerRadius)
             ),
         contentAlignment = Alignment.Center

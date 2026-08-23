@@ -71,7 +71,7 @@ fun MainAppNavigation(
         bottomBar = {
             NavigationBar(
                 containerColor = MaterialTheme.colorScheme.surface,
-                tonalElevation = 6.dp
+                tonalElevation = 0.dp
             ) {
                 bottomNavScreens.forEach { screen ->
                     val isSelected = currentRoute == screen.route
@@ -80,13 +80,13 @@ fun MainAppNavigation(
                             Icon(
                                 imageVector = screen.icon,
                                 contentDescription = screen.title,
-                                modifier = Modifier.size(24.dp)
+                                modifier = Modifier.size(22.dp)
                             )
                         },
                         label = {
                             Text(
                                 text = screen.title,
-                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
+                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
                             )
                         },
                         selected = isSelected,
@@ -108,10 +108,10 @@ fun MainAppNavigation(
                             unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
                             unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant
                         )
-
                     )
                 }
             }
+
         }
     ) { innerPadding ->
         NavHost(

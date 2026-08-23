@@ -12,39 +12,39 @@ import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 
 private val LightColorScheme = lightColorScheme(
-    primary = InkPrimary,
-    onPrimary = PaperSurface,
-    primaryContainer = PaperSurfaceSubtle,
-    onPrimaryContainer = InkPrimary,
-    secondary = AccentSageGreen,
-    onSecondary = PaperSurface,
-    secondaryContainer = PaperSurfaceSubtle,
-    onSecondaryContainer = AccentSageGreen,
-    background = PaperLight,
-    onBackground = InkPrimary,
-    surface = PaperSurface,
-    onSurface = InkPrimary,
-    surfaceVariant = PaperSurfaceSubtle,
-    onSurfaceVariant = InkSecondary,
-    outline = PaperBorder
+    primary = PrismBlack,
+    onPrimary = PrismWhite,
+    primaryContainer = PrismSlate,
+    onPrimaryContainer = PrismBlack,
+    secondary = PrismLavender,
+    onSecondary = PrismWhite,
+    secondaryContainer = PrismSlate,
+    onSecondaryContainer = PrismBlack,
+    background = PrismSnow,
+    onBackground = PrismBlack,
+    surface = PrismWhite,
+    onSurface = PrismBlack,
+    surfaceVariant = PrismSlate,
+    onSurfaceVariant = PrismTextSecondary,
+    outline = PrismBorder
 )
 
 private val DarkColorScheme = darkColorScheme(
-    primary = InkDarkPrimary,
-    onPrimary = PaperDark,
-    primaryContainer = SurfaceDarkSubtle,
-    onPrimaryContainer = InkDarkPrimary,
-    secondary = AccentSageGreen,
-    onSecondary = PaperDark,
-    secondaryContainer = SurfaceDarkSubtle,
-    onSecondaryContainer = InkDarkPrimary,
-    background = PaperDark,
-    onBackground = InkDarkPrimary,
-    surface = SurfaceDark,
-    onSurface = InkDarkPrimary,
-    surfaceVariant = SurfaceDarkSubtle,
-    onSurfaceVariant = InkDarkSecondary,
-    outline = BorderDark
+    primary = PrismDarkTextPrimary,
+    onPrimary = PrismDarkBackground,
+    primaryContainer = PrismDarkSlate,
+    onPrimaryContainer = PrismDarkTextPrimary,
+    secondary = PrismLavender,
+    onSecondary = PrismDarkBackground,
+    secondaryContainer = PrismDarkSlate,
+    onSecondaryContainer = PrismDarkTextPrimary,
+    background = PrismDarkBackground,
+    onBackground = PrismDarkTextPrimary,
+    surface = PrismDarkSurface,
+    onSurface = PrismDarkTextPrimary,
+    surfaceVariant = PrismDarkSlate,
+    onSurfaceVariant = PrismDarkTextSecondary,
+    outline = PrismDarkBorder
 )
 
 @Composable

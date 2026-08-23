@@ -2,16 +2,18 @@ package com.localbill.recording.ui.components
 
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -44,12 +46,19 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.localbill.recording.data.model.CategoryAggregation
+import com.localbill.recording.ui.theme.PrismBlack
+import com.localbill.recording.ui.theme.PrismBorder
+import com.localbill.recording.ui.theme.PrismSlate
+import com.localbill.recording.ui.theme.PrismTextSecondary
+import com.localbill.recording.ui.theme.PrismTextTertiary
+import com.localbill.recording.ui.theme.PrismWhite
 import java.util.Locale
 import kotlin.math.atan2
 import kotlin.math.cos
 import kotlin.math.sin
 import kotlin.math.sqrt
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun DonutPieChart(
     aggregations: List<CategoryAggregation>,
@@ -67,7 +76,7 @@ fun DonutPieChart(
             Text(
                 text = "暂无分类支出数据",
                 style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                color = PrismTextSecondary
             )
         }
         return
@@ -84,14 +93,15 @@ fun DonutPieChart(
         )
     }
 
-
     Card(
-        modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(20.dp),
+        modifier = modifier
+            .fillMaxWidth()
+            .border(1.dp, PrismBorder, RoundedCornerShape(16.dp)),
+        shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
+            containerColor = PrismWhite
         ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Column(
             modifier = Modifier
@@ -108,20 +118,21 @@ fun DonutPieChart(
                     text = "分类占比",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface
+                    color = PrismBlack
                 )
                 Text(
                     text = "共 ${aggregations.size} 个分类",
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = PrismTextSecondary
                 )
             }
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // 环形图与中心文字
+            // 环形图与中心数据
             Box(
-                modifier = Modifier.size(200.dp),
+                modifier = Modifier
+                    .size(200.dp),
                 contentAlignment = Alignment.Center
             ) {
                 Canvas(
@@ -130,148 +141,144 @@ fun DonutPieChart(
                         .pointerInput(aggregations) {
                             detectTapGestures { offset ->
                                 val center = Offset(size.width / 2f, size.height / 2f)
-                                val touchAngle = (Math.toDegrees(
-                                    atan2((offset.y - center.y).toDouble(), (offset.x - center.x).toDouble())
-                                ) + 360) % 360
-                                val adjustedAngle = (touchAngle + 90) % 360
+                                val dx = offset.x - center.x
+                                val dy = offset.y - center.y
+                                val dist = sqrt(dx * dx + dy * dy)
+                                val outerRadius = size.width / 2f
+                                val innerRadius = outerRadius - 26.dp.toPx()
 
-                                var currentSweep = 0f
-                                for (i in aggregations.indices) {
-                                    val sweep = (aggregations[i].percentage / 100f) * 360f
-                                    if (adjustedAngle >= currentSweep && adjustedAngle <= currentSweep + sweep) {
-                                        selectedIndex = i
-                                        onCategoryClick?.invoke(aggregations[i])
-                                        break
+                                if (dist in innerRadius..outerRadius) {
+                                    var angle = Math.toDegrees(atan2(dy.toDouble(), dx.toDouble())).toFloat()
+                                    if (angle < 0) angle += 360f
+                                    var angleFromTop = (angle + 90f) % 360f
+
+                                    var currentAngle = 0f
+                                    for (i in aggregations.indices) {
+                                        val sweep = (aggregations[i].percentage / 100f * 360f).toFloat()
+                                        if (angleFromTop in currentAngle..(currentAngle + sweep)) {
+                                            selectedIndex = i
+                                            onCategoryClick?.invoke(aggregations[i])
+                                            break
+                                        }
+                                        currentAngle += sweep
                                     }
-                                    currentSweep += sweep
                                 }
                             }
                         }
                 ) {
-                    val strokeWidth = 24.dp.toPx()
-                    val diameter = size.minDimension - strokeWidth - 16.dp.toPx()
-                    val arcSize = Size(diameter, diameter)
+                    val strokeWidthPx = 22.dp.toPx()
+                    val diameter = size.minDimension - strokeWidthPx - 6.dp.toPx()
                     val topLeft = Offset(
                         (size.width - diameter) / 2f,
                         (size.height - diameter) / 2f
                     )
+                    val arcSize = Size(diameter, diameter)
 
-                    var startAngle = -90f
+                    // 绘制浅灰背景环
+                    drawArc(
+                        color = PrismSlate,
+                        startAngle = 0f,
+                        sweepAngle = 360f,
+                        useCenter = false,
+                        topLeft = topLeft,
+                        size = arcSize,
+                        style = Stroke(width = strokeWidthPx, cap = StrokeCap.Round)
+                    )
 
+                    var currentStartAngle = -90f
                     aggregations.forEachIndexed { index, item ->
-                        val sweepAngle = (item.percentage / 100f) * 360f * progress.value
+                        val sweepAngle = (item.percentage / 100f * 360f).toFloat() * progress.value
                         val isSelected = index == safeSelectedIndex
-                        val currentStrokeWidth = if (isSelected) strokeWidth + 6.dp.toPx() else strokeWidth
-                        val itemColor = Color(item.mainCategory.colorHex)
+                        val catColor = Color(item.mainCategory.colorHex)
 
-                        drawArc(
-                            color = itemColor,
-                            startAngle = startAngle,
-                            sweepAngle = (sweepAngle - 2.5f).coerceAtLeast(0.1f),
-                            useCenter = false,
-                            topLeft = topLeft,
-                            size = arcSize,
-                            style = Stroke(width = currentStrokeWidth, cap = StrokeCap.Round)
-                        )
+                        val arcStroke = if (isSelected) strokeWidthPx + 4.dp.toPx() else strokeWidthPx
 
-                        startAngle += sweepAngle
+                        if (sweepAngle > 0f) {
+                            drawArc(
+                                color = catColor,
+                                startAngle = currentStartAngle + 1.5f,
+                                sweepAngle = (sweepAngle - 3f).coerceAtLeast(0.5f),
+                                useCenter = false,
+                                topLeft = topLeft,
+                                size = arcSize,
+                                style = Stroke(width = arcStroke, cap = StrokeCap.Round)
+                            )
+                        }
+                        currentStartAngle += sweepAngle
                     }
                 }
 
-                // 中心内容展示当前选中的分类信息
+                // 中心统计
                 val selectedItem = aggregations.getOrNull(safeSelectedIndex) ?: aggregations.first()
                 Column(
-                    horizontalAlignment = Alignment.CenterHorizontally
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
                 ) {
                     Text(
-                        text = selectedItem.mainCategory.name,
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                    Text(
                         text = String.format(Locale.US, "%.1f%%", selectedItem.percentage),
-                        style = MaterialTheme.typography.headlineMedium,
-                        fontWeight = FontWeight.ExtraBold,
+                        style = MaterialTheme.typography.headlineMedium.copy(
+                            fontSize = 24.sp,
+                            fontWeight = FontWeight.ExtraBold
+                        ),
                         color = Color(selectedItem.mainCategory.colorHex)
                     )
                     Text(
-                        text = "¥ " + String.format(Locale.US, "%.2f", selectedItem.totalAmount),
+                        text = selectedItem.mainCategory.name,
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        fontWeight = FontWeight.Bold,
+                        color = PrismBlack
+                    )
+                    Text(
+                        text = "¥ " + String.format(Locale.US, "%.2f", selectedItem.totalAmount),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = PrismTextSecondary
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.height(20.dp))
+            Spacer(modifier = Modifier.height(18.dp))
 
-            // 底部图例清单（支持点击联动）
-            Column(
+            // 底部图例胶囊列表
+            FlowRow(
                 modifier = Modifier.fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalArrangement = Arrangement.spacedBy(6.dp)
             ) {
                 aggregations.forEachIndexed { index, item ->
                     val isSelected = index == safeSelectedIndex
-                    val catColor = Color(item.mainCategory.colorHex)
-
+                    val color = Color(item.mainCategory.colorHex)
 
                     Row(
                         modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(12.dp))
-                            .background(
-                                if (isSelected) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.35f)
-                                else Color.Transparent
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(if (isSelected) PrismSlate else Color.Transparent)
+                            .border(
+                                width = 1.dp,
+                                color = if (isSelected) color.copy(alpha = 0.5f) else PrismBorder,
+                                shape = RoundedCornerShape(8.dp)
                             )
-                            .padding(horizontal = 12.dp, vertical = 8.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween
+                            .padding(horizontal = 8.dp, vertical = 4.dp),
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Box(
-                                modifier = Modifier
-                                    .size(10.dp)
-                                    .clip(CircleShape)
-                                    .background(catColor)
-                            )
-                            Spacer(modifier = Modifier.width(10.dp))
-                            CategoryIconBadge(
-                                iconName = item.mainCategory.iconName,
-                                colorHex = item.mainCategory.colorHex,
-                                size = 32.dp,
-                                iconSize = 18.dp,
-                                cornerRadius = 8.dp
-                            )
-                            Spacer(modifier = Modifier.width(10.dp))
-                            Column {
-                                Text(
-                                    text = item.mainCategory.name,
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                                    color = MaterialTheme.colorScheme.onSurface
-                                )
-                                Text(
-                                    text = "${item.count} 笔支出",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            }
-                        }
-
-                        Column(horizontalAlignment = Alignment.End) {
-                            Text(
-                                text = "¥ " + String.format(Locale.US, "%.2f", item.totalAmount),
-                                style = MaterialTheme.typography.titleSmall,
-                                fontWeight = FontWeight.SemiBold,
-                                color = MaterialTheme.colorScheme.onSurface
-                            )
-                            Text(
-                                text = String.format(Locale.US, "%.1f%%", item.percentage),
-                                style = MaterialTheme.typography.bodySmall,
-                                color = catColor,
-                                fontWeight = FontWeight.Medium
-                            )
-                        }
+                        Box(
+                            modifier = Modifier
+                                .size(7.dp)
+                                .clip(CircleShape)
+                                .background(color)
+                        )
+                        Spacer(modifier = Modifier.width(5.dp))
+                        Text(
+                            text = item.mainCategory.name,
+                            style = MaterialTheme.typography.labelSmall,
+                            color = PrismBlack,
+                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = String.format(Locale.US, "%.0f%%", item.percentage),
+                            style = MaterialTheme.typography.labelSmall,
+                            color = PrismTextSecondary
+                        )
                     }
                 }
             }

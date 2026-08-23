@@ -29,6 +29,8 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.DeleteOutline
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -57,13 +59,13 @@ import androidx.compose.ui.unit.sp
 import com.localbill.recording.data.entity.CategoryEntity
 import com.localbill.recording.ui.components.CategoryIconBadge
 import com.localbill.recording.ui.components.CategoryIcons
-import com.localbill.recording.ui.theme.EditorialCategoryColors
-import com.localbill.recording.ui.theme.InkPrimary
-import com.localbill.recording.ui.theme.InkQuaternary
-import com.localbill.recording.ui.theme.InkSecondary
-import com.localbill.recording.ui.theme.InkTertiary
-import com.localbill.recording.ui.theme.PaperBorder
-import com.localbill.recording.ui.theme.PaperSurfaceSubtle
+import com.localbill.recording.ui.theme.LightcoreCategoryColors
+import com.localbill.recording.ui.theme.PrismBlack
+import com.localbill.recording.ui.theme.PrismBorder
+import com.localbill.recording.ui.theme.PrismSlate
+import com.localbill.recording.ui.theme.PrismTextSecondary
+import com.localbill.recording.ui.theme.PrismTextTertiary
+import com.localbill.recording.ui.theme.PrismWhite
 import com.localbill.recording.ui.viewmodel.CategoryEvent
 import com.localbill.recording.ui.viewmodel.CategoryNode
 import com.localbill.recording.ui.viewmodel.CategoryViewModel
@@ -106,8 +108,8 @@ fun CategoryManagementScreen(
                     parentCategoryForNewSub = null
                     isEditDialogVisible = true
                 },
-                containerColor = MaterialTheme.colorScheme.primary,
-                contentColor = MaterialTheme.colorScheme.onPrimary,
+                containerColor = PrismBlack,
+                contentColor = PrismWhite,
                 shape = CircleShape,
                 modifier = Modifier.padding(bottom = 16.dp)
             ) {
@@ -115,7 +117,7 @@ fun CategoryManagementScreen(
                     modifier = Modifier.padding(horizontal = 16.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Icon(imageVector = Icons.Default.Add, contentDescription = "新增大类", modifier = Modifier.size(18.dp))
+                    Icon(imageVector = Icons.Default.Add, contentDescription = "新增主分类", modifier = Modifier.size(18.dp))
                     Spacer(modifier = Modifier.width(6.dp))
                     Text(text = "添加主分类", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.labelLarge)
                 }
@@ -126,22 +128,22 @@ fun CategoryManagementScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding),
-            contentPadding = PaddingValues(horizontal = 20.dp, vertical = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            contentPadding = PaddingValues(horizontal = 18.dp, vertical = 14.dp),
+            verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
             item {
                 Column {
                     Text(
-                        text = "分类体系与层级",
+                        text = "分类系统与层级",
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold,
-                        color = InkPrimary
+                        color = PrismBlack
                     )
                     Spacer(modifier = Modifier.height(2.dp))
                     Text(
-                        text = "主分类可自由管理子分类，并自动聚合下属所有流水总额",
+                        text = "支持主分类与子分类自由拓展，自动汇总下辖流水",
                         style = MaterialTheme.typography.bodySmall,
-                        color = InkSecondary
+                        color = PrismTextSecondary
                     )
                 }
             }
@@ -150,7 +152,7 @@ fun CategoryManagementScreen(
                 items = uiState.categoryNodes,
                 key = { it.mainCategory.id }
             ) { node ->
-                EditorialCategoryNode(
+                LightcoreCategoryCard(
                     node = node,
                     onAddSubCategory = {
                         parentCategoryForNewSub = node.mainCategory
@@ -175,7 +177,7 @@ fun CategoryManagementScreen(
     }
 
     if (isEditDialogVisible) {
-        EditorialAddEditCategoryDialog(
+        LightcoreAddEditCategoryDialog(
             category = editingCategory,
             parentCategory = parentCategoryForNewSub,
             onDismiss = {
@@ -199,173 +201,177 @@ fun CategoryManagementScreen(
 }
 
 @Composable
-private fun EditorialCategoryNode(
+private fun LightcoreCategoryCard(
     node: CategoryNode,
     onAddSubCategory: () -> Unit,
     onEditCategory: (CategoryEntity) -> Unit,
     onDeleteCategory: (CategoryEntity) -> Unit
 ) {
-    Column(
+    Card(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(16.dp))
-            .background(MaterialTheme.colorScheme.surface)
-            .padding(16.dp)
+            .border(1.dp, PrismBorder, RoundedCornerShape(16.dp)),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = PrismWhite),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
-        // 主分类行
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(14.dp)
         ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                CategoryIconBadge(
-                    iconName = node.mainCategory.iconName,
-                    colorHex = node.mainCategory.colorHex,
-                    size = 36.dp,
-                    iconSize = 18.dp,
-                    cornerRadius = 10.dp
-                )
-                Spacer(modifier = Modifier.width(10.dp))
-                Column {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(
-                            text = node.mainCategory.name,
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = InkPrimary
-                        )
-                        if (node.mainCategory.isBuiltIn) {
-                            Spacer(modifier = Modifier.width(6.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    CategoryIconBadge(
+                        iconName = node.mainCategory.iconName,
+                        colorHex = node.mainCategory.colorHex,
+                        size = 36.dp,
+                        iconSize = 18.dp,
+                        cornerRadius = 10.dp
+                    )
+                    Spacer(modifier = Modifier.width(10.dp))
+                    Column {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
                             Text(
-                                text = "内置",
-                                style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
-                                color = InkTertiary
+                                text = node.mainCategory.name,
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = PrismBlack
                             )
+                            if (node.mainCategory.isBuiltIn) {
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text(
+                                    text = "内置",
+                                    style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
+                                    color = PrismTextTertiary
+                                )
+                            }
                         }
+                        Text(
+                            text = "${node.subCategories.size} 个子分类",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = PrismTextSecondary
+                        )
                     }
-                    Text(
-                        text = "${node.subCategories.size} 个子分类",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = InkSecondary
-                    )
                 }
-            }
 
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                IconButton(
-                    onClick = { onEditCategory(node.mainCategory) },
-                    modifier = Modifier.size(28.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Edit,
-                        contentDescription = "编辑",
-                        tint = InkSecondary,
-                        modifier = Modifier.size(16.dp)
-                    )
-                }
-                if (!node.mainCategory.isBuiltIn) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
                     IconButton(
-                        onClick = { onDeleteCategory(node.mainCategory) },
+                        onClick = { onEditCategory(node.mainCategory) },
                         modifier = Modifier.size(28.dp)
                     ) {
                         Icon(
-                            imageVector = Icons.Default.DeleteOutline,
-                            contentDescription = "删除",
-                            tint = InkQuaternary,
+                            imageVector = Icons.Default.Edit,
+                            contentDescription = "编辑",
+                            tint = PrismTextSecondary,
                             modifier = Modifier.size(16.dp)
                         )
                     }
-                }
-            }
-        }
-
-        Spacer(modifier = Modifier.height(10.dp))
-        HorizontalDivider(color = PaperBorder, thickness = 0.5.dp)
-        Spacer(modifier = Modifier.height(8.dp))
-
-        // 子分类条目
-        Column(
-            modifier = Modifier.fillMaxWidth(),
-            verticalArrangement = Arrangement.spacedBy(4.dp)
-        ) {
-            node.subCategories.forEach { sub ->
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 4.dp, horizontal = 4.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        CategoryIconBadge(
-                            iconName = sub.iconName,
-                            colorHex = sub.colorHex,
-                            size = 24.dp,
-                            iconSize = 12.dp,
-                            cornerRadius = 6.dp
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            text = sub.name,
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = InkPrimary
-                        )
-                    }
-
-                    Row(verticalAlignment = Alignment.CenterVertically) {
+                    if (!node.mainCategory.isBuiltIn) {
                         IconButton(
-                            onClick = { onEditCategory(sub) },
-                            modifier = Modifier.size(24.dp)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Edit,
-                                contentDescription = "编辑",
-                                tint = InkSecondary,
-                                modifier = Modifier.size(14.dp)
-                            )
-                        }
-                        IconButton(
-                            onClick = { onDeleteCategory(sub) },
-                            modifier = Modifier.size(24.dp)
+                            onClick = { onDeleteCategory(node.mainCategory) },
+                            modifier = Modifier.size(28.dp)
                         ) {
                             Icon(
                                 imageVector = Icons.Default.DeleteOutline,
                                 contentDescription = "删除",
-                                tint = InkQuaternary,
-                                modifier = Modifier.size(14.dp)
+                                tint = PrismTextTertiary,
+                                modifier = Modifier.size(16.dp)
                             )
                         }
                     }
                 }
             }
 
-            // 极简添加子分类按钮
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(8.dp))
-                    .clickable(onClick = onAddSubCategory)
-                    .padding(vertical = 6.dp),
-                contentAlignment = Alignment.CenterStart
+            Spacer(modifier = Modifier.height(10.dp))
+            HorizontalDivider(color = PrismBorder, thickness = 0.8.dp)
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.padding(start = 4.dp)
+                node.subCategories.forEach { sub ->
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 4.dp, horizontal = 2.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            CategoryIconBadge(
+                                iconName = sub.iconName,
+                                colorHex = sub.colorHex,
+                                size = 26.dp,
+                                iconSize = 13.dp,
+                                cornerRadius = 6.dp
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = sub.name,
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = PrismBlack
+                            )
+                        }
+
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            IconButton(
+                                onClick = { onEditCategory(sub) },
+                                modifier = Modifier.size(24.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Edit,
+                                    contentDescription = "编辑",
+                                    tint = PrismTextSecondary,
+                                    modifier = Modifier.size(14.dp)
+                                )
+                            }
+                            IconButton(
+                                onClick = { onDeleteCategory(sub) },
+                                modifier = Modifier.size(24.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.DeleteOutline,
+                                    contentDescription = "删除",
+                                    tint = PrismTextTertiary,
+                                    modifier = Modifier.size(14.dp)
+                                )
+                            }
+                        }
+                    }
+                }
+
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(8.dp))
+                        .clickable(onClick = onAddSubCategory)
+                        .padding(vertical = 6.dp),
+                    contentAlignment = Alignment.CenterStart
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.Add,
-                        contentDescription = null,
-                        tint = InkSecondary,
-                        modifier = Modifier.size(14.dp)
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text(
-                        text = "添加子分类...",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = InkSecondary,
-                        fontWeight = FontWeight.Medium
-                    )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.padding(start = 2.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Add,
+                            contentDescription = null,
+                            tint = PrismTextSecondary,
+                            modifier = Modifier.size(14.dp)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = "添加子分类...",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = PrismTextSecondary,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
                 }
             }
         }
@@ -374,7 +380,7 @@ private fun EditorialCategoryNode(
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun EditorialAddEditCategoryDialog(
+private fun LightcoreAddEditCategoryDialog(
     category: CategoryEntity?,
     parentCategory: CategoryEntity?,
     onDismiss: () -> Unit,
@@ -385,7 +391,7 @@ private fun EditorialAddEditCategoryDialog(
         mutableStateOf(category?.iconName ?: parentCategory?.iconName ?: "shopping_cart")
     }
     var selectedColorHex by remember {
-        mutableLongStateOf(category?.colorHex ?: parentCategory?.colorHex ?: EditorialCategoryColors.first())
+        mutableLongStateOf(category?.colorHex ?: parentCategory?.colorHex ?: LightcoreCategoryColors.first())
     }
 
     val dialogTitle = when {
@@ -396,7 +402,8 @@ private fun EditorialAddEditCategoryDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(text = dialogTitle, fontWeight = FontWeight.Bold) },
+        containerColor = PrismWhite,
+        title = { Text(text = dialogTitle, fontWeight = FontWeight.Bold, color = PrismBlack) },
         text = {
             Column(
                 modifier = Modifier.fillMaxWidth(),
@@ -415,7 +422,7 @@ private fun EditorialAddEditCategoryDialog(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(text = "预览：", style = MaterialTheme.typography.bodySmall)
+                    Text(text = "预览：", style = MaterialTheme.typography.bodySmall, color = PrismTextSecondary)
                     Spacer(modifier = Modifier.width(6.dp))
                     CategoryIconBadge(
                         iconName = selectedIconName,
@@ -433,7 +440,7 @@ private fun EditorialAddEditCategoryDialog(
                 }
 
                 // 图标选择
-                Text(text = "选择图标", style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.SemiBold)
+                Text(text = "选择图标", style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.SemiBold, color = PrismBlack)
                 FlowRow(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -445,14 +452,15 @@ private fun EditorialAddEditCategoryDialog(
                             modifier = Modifier
                                 .size(34.dp)
                                 .clip(RoundedCornerShape(8.dp))
-                                .background(if (isSelected) InkPrimary else PaperSurfaceSubtle)
+                                .background(if (isSelected) PrismBlack else PrismSlate)
+                                .border(1.dp, PrismBorder, RoundedCornerShape(8.dp))
                                 .clickable { selectedIconName = iconKey },
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(
                                 imageVector = vector,
                                 contentDescription = iconKey,
-                                tint = if (isSelected) Color.White else InkPrimary,
+                                tint = if (isSelected) Color.White else PrismBlack,
                                 modifier = Modifier.size(16.dp)
                             )
                         }
@@ -460,14 +468,14 @@ private fun EditorialAddEditCategoryDialog(
                 }
 
                 // 色彩选择
-                Text(text = "选择色调", style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.SemiBold)
+                Text(text = "选择色调", style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.SemiBold, color = PrismBlack)
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
                         .horizontalScroll(rememberScrollState()),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    EditorialCategoryColors.forEach { colorVal ->
+                    LightcoreCategoryColors.forEach { colorVal ->
                         val isSelected = selectedColorHex == colorVal
                         Box(
                             modifier = Modifier
@@ -476,7 +484,7 @@ private fun EditorialAddEditCategoryDialog(
                                 .background(Color(colorVal))
                                 .border(
                                     width = if (isSelected) 2.5.dp else 0.dp,
-                                    color = if (isSelected) InkPrimary else Color.Transparent,
+                                    color = if (isSelected) PrismBlack else Color.Transparent,
                                     shape = CircleShape
                                 )
                                 .clickable { selectedColorHex = colorVal }
@@ -489,12 +497,12 @@ private fun EditorialAddEditCategoryDialog(
             TextButton(
                 onClick = { onSave(name, selectedIconName, selectedColorHex) }
             ) {
-                Text(text = "保存", fontWeight = FontWeight.Bold, color = InkPrimary)
+                Text(text = "保存", fontWeight = FontWeight.Bold, color = PrismBlack)
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text(text = "取消", color = InkSecondary)
+                Text(text = "取消", color = PrismTextSecondary)
             }
         }
     )

@@ -11,7 +11,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -26,12 +25,12 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Backspace
+import androidx.compose.material.icons.automirrored.filled.Backspace
 import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.EditNote
-
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -50,6 +49,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedback
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
@@ -60,11 +60,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.localbill.recording.data.entity.CategoryEntity
 import com.localbill.recording.data.entity.RecordWithCategory
-import com.localbill.recording.ui.theme.InkPrimary
-import com.localbill.recording.ui.theme.InkSecondary
-import com.localbill.recording.ui.theme.PaperSurfaceSubtle
+import com.localbill.recording.ui.theme.PrismBlack
+import com.localbill.recording.ui.theme.PrismBorder
+import com.localbill.recording.ui.theme.PrismSlate
+import com.localbill.recording.ui.theme.PrismSpectralBrush
+import com.localbill.recording.ui.theme.PrismTextSecondary
+import com.localbill.recording.ui.theme.PrismTextTertiary
+import com.localbill.recording.ui.theme.PrismWhite
 import com.localbill.recording.util.DateTimeUtils
-
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.Locale
@@ -82,14 +85,12 @@ fun CalculatorBottomSheet(
     val context = LocalContext.current
     val haptic = LocalHapticFeedback.current
 
-    // 计算器表达式状态
     var expression by remember {
         mutableStateOf(
             if (editingRecord != null) String.format(Locale.US, "%.2f", editingRecord.record.amount) else "0"
         )
     }
 
-    // 分类选择状态
     var selectedMainCategory by remember {
         mutableStateOf(
             editingRecord?.category ?: allMainCategories.firstOrNull()
@@ -100,7 +101,6 @@ fun CalculatorBottomSheet(
         mutableStateOf(editingRecord?.subCategory)
     }
 
-    // 备注与时间
     var noteText by remember { mutableStateOf(editingRecord?.record?.note ?: "") }
     var selectedTimestamp by remember {
         mutableLongStateOf(editingRecord?.record?.timestamp ?: System.currentTimeMillis())
@@ -115,7 +115,7 @@ fun CalculatorBottomSheet(
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = sheetState,
-        containerColor = MaterialTheme.colorScheme.surface,
+        containerColor = PrismWhite,
         shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
         dragHandle = null
     ) {
@@ -125,54 +125,69 @@ fun CalculatorBottomSheet(
                 .navigationBarsPadding()
                 .padding(bottom = 8.dp)
         ) {
-            // 1. 顶部操作栏
+            // 1. 顶部棱镜流光指示线
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(3.dp)
+                    .background(PrismSpectralBrush)
+            )
+
+            // 2. 标题栏
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                    .padding(horizontal = 18.dp, vertical = 10.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = if (editingRecord != null) "修改账单" else "记一笔支出",
+                    text = if (editingRecord != null) "编辑账单" else "记一笔",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface
+                    color = PrismBlack
                 )
                 IconButton(
                     onClick = onDismiss,
-                    modifier = Modifier.size(32.dp)
+                    modifier = Modifier.size(28.dp)
                 ) {
-                    Icon(imageVector = Icons.Default.Close, contentDescription = "关闭", modifier = Modifier.size(20.dp))
+                    Icon(imageVector = Icons.Default.Close, contentDescription = "关闭", tint = PrismTextSecondary, modifier = Modifier.size(18.dp))
                 }
             }
 
-            // 2. 金额显示与即时算式
-            Column(
+            // 3. 大字号金额展示
+            Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 20.dp, vertical = 2.dp),
-                horizontalAlignment = Alignment.End
+                    .padding(horizontal = 20.dp, vertical = 4.dp),
+                horizontalArrangement = Arrangement.End,
+                verticalAlignment = Alignment.Bottom
             ) {
+                Text(
+                    text = "¥",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = PrismTextSecondary,
+                    modifier = Modifier.padding(end = 6.dp, bottom = 4.dp)
+                )
                 Text(
                     text = expression,
                     style = MaterialTheme.typography.displayLarge.copy(
-                        fontSize = if (expression.length > 8) 28.sp else 36.sp,
-                        fontWeight = FontWeight.ExtraBold
+                        fontSize = if (expression.length > 8) 30.sp else 38.sp,
+                        fontWeight = FontWeight.ExtraBold,
+                        letterSpacing = (-0.5).sp
                     ),
-                    color = InkPrimary,
+                    color = PrismBlack,
                     maxLines = 1
                 )
-
             }
 
-            // 3. 两级分类选择器 (极速滚动联动)
+            // 4. 两级分类选择器
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(vertical = 6.dp)
             ) {
-                // 主分类滚动条
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -186,15 +201,12 @@ fun CalculatorBottomSheet(
 
                         Row(
                             modifier = Modifier
-                                .clip(RoundedCornerShape(14.dp))
-                                .background(
-                                    if (isSelected) catColor.copy(alpha = 0.16f)
-                                    else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
-                                )
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(if (isSelected) PrismSlate else Color.Transparent)
                                 .border(
-                                    width = if (isSelected) 1.5.dp else 0.dp,
-                                    color = if (isSelected) catColor else Color.Transparent,
-                                    shape = RoundedCornerShape(14.dp)
+                                    width = 1.dp,
+                                    color = if (isSelected) catColor else PrismBorder,
+                                    shape = RoundedCornerShape(12.dp)
                                 )
                                 .clickable {
                                     haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
@@ -203,7 +215,6 @@ fun CalculatorBottomSheet(
                                         selectedSubCategory = null
                                     }
                                 }
-
                                 .padding(horizontal = 10.dp, vertical = 6.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
@@ -211,21 +222,21 @@ fun CalculatorBottomSheet(
                                 iconName = mainCat.iconName,
                                 colorHex = mainCat.colorHex,
                                 size = 26.dp,
-                                iconSize = 15.dp,
+                                iconSize = 14.dp,
                                 cornerRadius = 6.dp
                             )
                             Spacer(modifier = Modifier.width(6.dp))
                             Text(
                                 text = mainCat.name,
-                                style = MaterialTheme.typography.labelMedium,
+                                style = MaterialTheme.typography.labelLarge,
                                 fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                                color = if (isSelected) catColor else MaterialTheme.colorScheme.onSurface
+                                color = if (isSelected) PrismBlack else PrismTextSecondary
                             )
                         }
                     }
                 }
 
-                // 子分类胶囊标签
+                // 子分类标签
                 val currentSubList = selectedMainCategory?.let { subCategoriesMap[it.id] } ?: emptyList()
                 AnimatedVisibility(
                     visible = currentSubList.isNotEmpty(),
@@ -245,23 +256,20 @@ fun CalculatorBottomSheet(
 
                             Box(
                                 modifier = Modifier
-                                    .clip(RoundedCornerShape(10.dp))
-                                    .background(
-                                        if (isSubSelected) subColor
-                                        else subColor.copy(alpha = 0.12f)
-                                    )
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .background(if (isSubSelected) subColor else PrismSlate)
+                                    .border(1.dp, if (isSubSelected) subColor else PrismBorder, RoundedCornerShape(8.dp))
                                     .clickable {
                                         haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                                         selectedSubCategory = if (isSubSelected) null else subCat
                                     }
-
-                                    .padding(horizontal = 10.dp, vertical = 5.dp)
+                                    .padding(horizontal = 10.dp, vertical = 4.dp)
                             ) {
                                 Text(
                                     text = subCat.name,
-                                    style = MaterialTheme.typography.bodySmall.copy(fontSize = 12.sp),
+                                    style = MaterialTheme.typography.labelSmall,
                                     fontWeight = if (isSubSelected) FontWeight.Bold else FontWeight.Medium,
-                                    color = if (isSubSelected) Color.White else subColor
+                                    color = if (isSubSelected) Color.White else PrismTextSecondary
                                 )
                             }
                         }
@@ -269,7 +277,7 @@ fun CalculatorBottomSheet(
                 }
             }
 
-            // 4. 日期与备注输入
+            // 5. 日期与备注行
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -281,7 +289,8 @@ fun CalculatorBottomSheet(
                 Row(
                     modifier = Modifier
                         .clip(RoundedCornerShape(10.dp))
-                        .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f))
+                        .background(PrismSlate)
+                        .border(1.dp, PrismBorder, RoundedCornerShape(10.dp))
                         .clickable {
                             val currentDate = ldt.toLocalDate()
                             DatePickerDialog(
@@ -302,14 +311,15 @@ fun CalculatorBottomSheet(
                     Icon(
                         imageVector = Icons.Default.CalendarToday,
                         contentDescription = "日期",
-                        tint = InkPrimary,
-                        modifier = Modifier.size(15.dp)
+                        tint = PrismBlack,
+                        modifier = Modifier.size(14.dp)
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
                         text = "${ldt.monthValue}/${ldt.dayOfMonth}",
                         style = MaterialTheme.typography.bodySmall,
-                        fontWeight = FontWeight.Medium
+                        fontWeight = FontWeight.SemiBold,
+                        color = PrismBlack
                     )
                 }
 
@@ -317,7 +327,7 @@ fun CalculatorBottomSheet(
                     value = noteText,
                     onValueChange = { noteText = it },
                     placeholder = {
-                        Text(text = "添加备注...", style = MaterialTheme.typography.bodySmall)
+                        Text(text = "添加备注...", style = MaterialTheme.typography.bodySmall, color = PrismTextTertiary)
                     },
                     singleLine = true,
                     textStyle = MaterialTheme.typography.bodyMedium,
@@ -325,26 +335,25 @@ fun CalculatorBottomSheet(
                         Icon(
                             imageVector = Icons.Default.EditNote,
                             contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            tint = PrismTextSecondary,
                             modifier = Modifier.size(16.dp)
                         )
                     },
                     modifier = Modifier
                         .weight(1f)
-                        .height(46.dp),
+                        .height(44.dp),
                     shape = RoundedCornerShape(10.dp),
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = InkPrimary,
-                        unfocusedBorderColor = Color.Transparent,
-                        focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
-                        unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+                        focusedBorderColor = PrismBlack,
+                        unfocusedBorderColor = PrismBorder,
+                        focusedContainerColor = PrismSlate,
+                        unfocusedContainerColor = PrismSlate
                     )
                 )
-
             }
 
-            // 5. 极致轻量高响应 4x4 触感键盘
-            TactileKeyboard(
+            // 6. Lightcore 棱镜流光数字键盘
+            LightcoreTactileKeyboard(
                 expression = expression,
                 haptic = haptic,
                 onExpressionChange = { expression = it },
@@ -352,13 +361,13 @@ fun CalculatorBottomSheet(
                     val finalAmount = evaluateExpression(expression)
                     if (finalAmount == null || finalAmount <= 0.0) {
                         Toast.makeText(context, "请输入有效的支出金额", Toast.LENGTH_SHORT).show()
-                        return@TactileKeyboard
+                        return@LightcoreTactileKeyboard
                     }
 
                     val mainCat = selectedMainCategory
                     if (mainCat == null) {
                         Toast.makeText(context, "请选择支出分类", Toast.LENGTH_SHORT).show()
-                        return@TactileKeyboard
+                        return@LightcoreTactileKeyboard
                     }
 
                     onSaveRecord(
@@ -377,7 +386,7 @@ fun CalculatorBottomSheet(
 }
 
 @Composable
-private fun TactileKeyboard(
+private fun LightcoreTactileKeyboard(
     expression: String,
     haptic: HapticFeedback,
     onExpressionChange: (String) -> Unit,
@@ -396,19 +405,19 @@ private fun TactileKeyboard(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 12.dp, vertical = 4.dp),
-        verticalArrangement = Arrangement.spacedBy(5.dp)
+        verticalArrangement = Arrangement.spacedBy(6.dp)
     ) {
         keys.forEach { rowKeys ->
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(5.dp)
+                horizontalArrangement = Arrangement.spacedBy(6.dp)
             ) {
                 rowKeys.forEach { key ->
-                    KeypadButton(
+                    LightcoreKeypadButton(
                         key = key,
                         modifier = Modifier
                             .weight(1f)
-                            .height(50.dp),
+                            .height(48.dp),
                         onClick = {
                             haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                             handleKeyPress(key, expression, onExpressionChange, onComplete)
@@ -421,7 +430,7 @@ private fun TactileKeyboard(
 }
 
 @Composable
-private fun KeypadButton(
+private fun LightcoreKeypadButton(
     key: String,
     modifier: Modifier = Modifier,
     onClick: () -> Unit
@@ -429,42 +438,36 @@ private fun KeypadButton(
     val isActionKey = key == "完成"
     val isOpKey = key in listOf("+", "-", "C", "⌫")
 
-    val bgColor = when {
-        isActionKey -> InkPrimary
-        isOpKey -> MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f)
-        else -> MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f)
+    val bgModifier = if (isActionKey) {
+        Modifier.background(PrismSpectralBrush)
+    } else {
+        Modifier
+            .background(if (isOpKey) PrismSlate else PrismWhite)
+            .border(1.dp, PrismBorder, RoundedCornerShape(10.dp))
     }
-
-    val textColor = when {
-        isActionKey -> Color.White
-        isOpKey -> InkPrimary
-        else -> MaterialTheme.colorScheme.onSurface
-    }
-
 
     Box(
         modifier = modifier
-            .clip(RoundedCornerShape(12.dp))
-            .background(bgColor)
+            .clip(RoundedCornerShape(10.dp))
+            .then(bgModifier)
             .clickable(onClick = onClick),
         contentAlignment = Alignment.Center
     ) {
-
         if (key == "⌫") {
             Icon(
-                imageVector = Icons.Default.Backspace,
+                imageVector = Icons.AutoMirrored.Filled.Backspace,
                 contentDescription = "删除",
-                tint = textColor,
-                modifier = Modifier.size(19.dp)
+                tint = PrismBlack,
+                modifier = Modifier.size(18.dp)
             )
         } else {
             Text(
                 text = key,
-                style = MaterialTheme.typography.titleLarge.copy(
+                style = MaterialTheme.typography.titleMedium.copy(
                     fontWeight = if (isActionKey || isOpKey) FontWeight.Bold else FontWeight.SemiBold,
-                    fontSize = if (isActionKey) 16.sp else 20.sp
+                    fontSize = if (isActionKey) 15.sp else 19.sp
                 ),
-                color = textColor
+                color = if (isActionKey) Color.White else PrismBlack
             )
         }
     }

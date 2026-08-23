@@ -36,8 +36,8 @@ import com.localbill.recording.ui.screens.BackupScreen
 import com.localbill.recording.ui.screens.CategoryManagementScreen
 import com.localbill.recording.ui.screens.HomeScreen
 import com.localbill.recording.ui.screens.StatisticsScreen
-import com.localbill.recording.ui.theme.PrimaryGreen
 import com.localbill.recording.ui.viewmodel.BackupViewModel
+
 import com.localbill.recording.ui.viewmodel.CategoryViewModel
 import com.localbill.recording.ui.viewmodel.HomeViewModel
 import com.localbill.recording.ui.viewmodel.StatisticsViewModel
@@ -102,12 +102,13 @@ fun MainAppNavigation(
                             }
                         },
                         colors = NavigationBarItemDefaults.colors(
-                            selectedIconColor = PrimaryGreen,
-                            selectedTextColor = PrimaryGreen,
-                            indicatorColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f),
+                            selectedIconColor = MaterialTheme.colorScheme.primary,
+                            selectedTextColor = MaterialTheme.colorScheme.primary,
+                            indicatorColor = MaterialTheme.colorScheme.primaryContainer,
                             unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
                             unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant
                         )
+
                     )
                 }
             }

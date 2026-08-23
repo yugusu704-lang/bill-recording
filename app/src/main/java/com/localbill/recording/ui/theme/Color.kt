@@ -2,56 +2,45 @@ package com.localbill.recording.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-// 主色调：现代清新绿 (Fresh Forest & Mint)
-val PrimaryGreen = Color(0xFF107C41)
-val PrimaryGreenLight = Color(0xFF22C55E)
-val PrimaryGreenDark = Color(0xFF0D5E31)
-val MintContainer = Color(0xFFDCFCE7)
-val OnMintContainer = Color(0xFF052E16)
+// ==========================================
+// 北欧人文杂志风 (Nordic Editorial & Paper)
+// ==========================================
 
-// 辅助色
-val SecondaryTeal = Color(0xFF0D9488)
-val SecondaryTealContainer = Color(0xFFCCFBF1)
-val OnSecondaryTealContainer = Color(0xFF115E59)
+// 纸张底色与墨水色
+val PaperLight = Color(0xFFFAF8F5)          // 温暖米白纸质底色
+val PaperSurface = Color(0xFFFFFFFF)        // 纯白表层
+val PaperSurfaceSubtle = Color(0xFFF4EFEA)  // 暖沙色微底
+val PaperBorder = Color(0xFFE7E2DA)         // 极细纸质分隔线
 
-// 中性色与背景
-val BackgroundLight = Color(0xFFF8FAF9)
-val SurfaceLight = Color(0xFFFFFFFF)
-val SurfaceVariantLight = Color(0xFFF1F5F3)
-val OutlineLight = Color(0xFFE2E8F0)
-val TextPrimaryLight = Color(0xFF1E293B)
-val TextSecondaryLight = Color(0xFF64748B)
+val InkPrimary = Color(0xFF1C1917)          // 浓郁暖黑墨水字
+val InkSecondary = Color(0xFF78716C)        // 暖岩灰副标题字
+val InkTertiary = Color(0xFFA8A29E)         // 极淡注释灰
+val InkQuaternary = Color(0xFFD6D3D1)       // 极弱底线灰
 
-// 暗色主题
-val BackgroundDark = Color(0xFF0F172A)
-val SurfaceDark = Color(0xFF1E293B)
-val SurfaceVariantDark = Color(0xFF334155)
-val OutlineDark = Color(0xFF475569)
-val TextPrimaryDark = Color(0xFFF8FAFC)
-val TextSecondaryDark = Color(0xFF94A3B8)
+// 主题点缀色 (北欧陶土与松针绿)
+val AccentTerracotta = Color(0xFFC2410C)    // 陶土红（开销强调）
+val AccentSageGreen = Color(0xFF15803D)     // 鼠尾草墨绿（主基调）
+val AccentWarmAmber = Color(0xFFD97706)     // 暖琥珀
+val AccentDeepNavy = Color(0xFF1E293B)      // 普鲁士蓝
 
-// 强调色与图表调色盘
-val ChartGreen = Color(0xFF22C55E)
-val ChartBlue = Color(0xFF3B82F6)
-val ChartAmber = Color(0xFFF59E0B)
-val ChartPurple = Color(0xFF8B5CF6)
-val ChartRose = Color(0xFFEC4899)
-val ChartCyan = Color(0xFF06B6D4)
-val ChartOrange = Color(0xFFF97316)
-val ChartCoral = Color(0xFFEF4444)
+// 暗色主题 (深邃黑胶与石墨质感)
+val PaperDark = Color(0xFF121212)           // 深邃石墨黑
+val SurfaceDark = Color(0xFF1E1E1E)         // 磨砂表面
+val SurfaceDarkSubtle = Color(0xFF262626)   // 浅层石墨
+val BorderDark = Color(0xFF333333)          // 暗色分界线
+val InkDarkPrimary = Color(0xFFF5F5F4)      // 暖白字
+val InkDarkSecondary = Color(0xFFA8A29E)    // 浅灰字
 
-// 马卡龙专属色彩库（用于分类徽章）
-val MacaronColorList = listOf(
-    0xFF3B82F6L, // 亮蓝
-    0xFFF59E0BL, // 暖橙
-    0xFF10B981L, // 翡翠绿
-    0xFF8B5CF6L, // 优雅紫
-    0xFFEF4444L, // 珊瑚红
-    0xFF06B6D4L, // 青蓝
-    0xFFEC4899L, // 玫瑰粉
-    0xFFF97316L, // 亮橙
-    0xFF6366F1L, // 靛蓝
-    0xFF14B8A6L, // 碧绿
-    0xFFEAB308L, // 金黄
-    0xFF64748BL  // 灰蓝
+// 人文杂志专属分类调色盘 (低纯度、高质感、高级大地色调)
+val EditorialCategoryColors = listOf(
+    0xFF15803DL, // 森林墨绿 (饮食/自然)
+    0xFFB45309L, // 琥珀赭石 (学习/成长)
+    0xFFC2410CL, // 赤陶砖红 (餐饮/外出)
+    0xFF0369A1L, // 普鲁士蓝 (交通/出行)
+    0xFF6B21A8L, // 贵族深紫 (服饰/美妆)
+    0xFF0F766EL, // 冷杉青绿 (日用/居家)
+    0xFFBE123CL, // 浆果冷红 (娱乐/休闲)
+    0xFF4338CAL, // 经典靛蓝 (数码/办公)
+    0xFF44403CL, // 石墨炭灰 (其他/杂项)
+    0xFF854D0EL  // 暖褐驼色 (医疗/保障)
 )

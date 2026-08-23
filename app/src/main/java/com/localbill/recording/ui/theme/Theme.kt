@@ -12,39 +12,39 @@ import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 
 private val LightColorScheme = lightColorScheme(
-    primary = PrimaryGreen,
-    onPrimary = SurfaceLight,
-    primaryContainer = MintContainer,
-    onPrimaryContainer = OnMintContainer,
-    secondary = SecondaryTeal,
-    onSecondary = SurfaceLight,
-    secondaryContainer = SecondaryTealContainer,
-    onSecondaryContainer = OnSecondaryTealContainer,
-    background = BackgroundLight,
-    onBackground = TextPrimaryLight,
-    surface = SurfaceLight,
-    onSurface = TextPrimaryLight,
-    surfaceVariant = SurfaceVariantLight,
-    onSurfaceVariant = TextSecondaryLight,
-    outline = OutlineLight
+    primary = InkPrimary,
+    onPrimary = PaperSurface,
+    primaryContainer = PaperSurfaceSubtle,
+    onPrimaryContainer = InkPrimary,
+    secondary = AccentSageGreen,
+    onSecondary = PaperSurface,
+    secondaryContainer = PaperSurfaceSubtle,
+    onSecondaryContainer = AccentSageGreen,
+    background = PaperLight,
+    onBackground = InkPrimary,
+    surface = PaperSurface,
+    onSurface = InkPrimary,
+    surfaceVariant = PaperSurfaceSubtle,
+    onSurfaceVariant = InkSecondary,
+    outline = PaperBorder
 )
 
 private val DarkColorScheme = darkColorScheme(
-    primary = PrimaryGreenLight,
-    onPrimary = OnMintContainer,
-    primaryContainer = PrimaryGreenDark,
-    onPrimaryContainer = MintContainer,
-    secondary = SecondaryTeal,
-    onSecondary = SurfaceLight,
-    secondaryContainer = OnSecondaryTealContainer,
-    onSecondaryContainer = SecondaryTealContainer,
-    background = BackgroundDark,
-    onBackground = TextPrimaryDark,
+    primary = InkDarkPrimary,
+    onPrimary = PaperDark,
+    primaryContainer = SurfaceDarkSubtle,
+    onPrimaryContainer = InkDarkPrimary,
+    secondary = AccentSageGreen,
+    onSecondary = PaperDark,
+    secondaryContainer = SurfaceDarkSubtle,
+    onSecondaryContainer = InkDarkPrimary,
+    background = PaperDark,
+    onBackground = InkDarkPrimary,
     surface = SurfaceDark,
-    onSurface = TextPrimaryDark,
-    surfaceVariant = SurfaceVariantDark,
-    onSurfaceVariant = TextSecondaryDark,
-    outline = OutlineDark
+    onSurface = InkDarkPrimary,
+    surfaceVariant = SurfaceDarkSubtle,
+    onSurfaceVariant = InkDarkSecondary,
+    outline = BorderDark
 )
 
 @Composable

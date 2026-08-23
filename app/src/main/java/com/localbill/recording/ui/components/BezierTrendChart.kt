@@ -45,18 +45,19 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.localbill.recording.data.model.TrendPoint
-import com.localbill.recording.ui.theme.PrimaryGreen
-import com.localbill.recording.ui.theme.PrimaryGreenLight
+import com.localbill.recording.ui.theme.InkPrimary
+import com.localbill.recording.ui.theme.InkTertiary
 import java.util.Locale
 
 @Composable
 fun BezierTrendChart(
     points: List<TrendPoint>,
     modifier: Modifier = Modifier,
-    lineColor: Color = PrimaryGreen,
-    gradientStartColor: Color = PrimaryGreenLight.copy(alpha = 0.45f),
-    gradientEndColor: Color = PrimaryGreenLight.copy(alpha = 0.0f)
+    lineColor: Color = InkPrimary,
+    gradientStartColor: Color = InkPrimary.copy(alpha = 0.08f),
+    gradientEndColor: Color = Color.Transparent
 ) {
+
     if (points.isEmpty()) {
         Box(
             modifier = modifier

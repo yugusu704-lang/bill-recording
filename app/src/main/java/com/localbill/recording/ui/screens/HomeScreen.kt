@@ -23,9 +23,8 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.DeleteOutline
 import androidx.compose.material.icons.filled.ReceiptLong
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -41,7 +40,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -50,12 +48,16 @@ import com.localbill.recording.data.entity.RecordWithCategory
 import com.localbill.recording.ui.components.AnimatedAmountText
 import com.localbill.recording.ui.components.CalculatorBottomSheet
 import com.localbill.recording.ui.components.CategoryIconBadge
-import com.localbill.recording.ui.theme.PrimaryGreen
-import com.localbill.recording.ui.theme.PrimaryGreenDark
-import com.localbill.recording.ui.theme.PrimaryGreenLight
+import com.localbill.recording.ui.theme.InkPrimary
+import com.localbill.recording.ui.theme.InkQuaternary
+import com.localbill.recording.ui.theme.InkSecondary
+import com.localbill.recording.ui.theme.InkTertiary
+import com.localbill.recording.ui.theme.PaperBorder
+
 import com.localbill.recording.ui.viewmodel.HomeViewModel
 import com.localbill.recording.util.DateTimeUtils
 import java.time.LocalDate
+import java.time.YearMonth
 import java.util.Locale
 
 @Composable
@@ -71,21 +73,22 @@ fun HomeScreen(
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
+        containerColor = MaterialTheme.colorScheme.background,
         floatingActionButton = {
             FloatingActionButton(
                 onClick = {
                     editingRecord = null
                     isBottomSheetOpen = true
                 },
-                containerColor = PrimaryGreen,
-                contentColor = Color.White,
+                containerColor = MaterialTheme.colorScheme.primary,
+                contentColor = MaterialTheme.colorScheme.onPrimary,
                 shape = CircleShape,
                 modifier = Modifier.padding(bottom = 16.dp)
             ) {
                 Icon(
                     imageVector = Icons.Default.Add,
                     contentDescription = "记一笔",
-                    modifier = Modifier.size(28.dp)
+                    modifier = Modifier.size(24.dp)
                 )
             }
         }
@@ -94,16 +97,22 @@ fun HomeScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .background(MaterialTheme.colorScheme.background)
         ) {
-            // 1. 顶部 Header 与 统计总览大卡片
-            OverviewHeaderCard(
+            // 1. 杂志排版式顶部财务概览 (Editorial Header)
+            EditorialHeader(
                 todayAmount = uiState.todayExpense,
                 weekAmount = uiState.weekExpense,
-                monthAmount = uiState.monthExpense
+                monthAmount = uiState.monthExpense,
+                totalCount = uiState.totalRecordCount
             )
 
-            // 2. 流水明细列表
+            HorizontalDivider(
+                color = PaperBorder,
+                thickness = 0.6.dp,
+                modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp)
+            )
+
+            // 2. 流水明细列表 (无生硬方框，纯粹通透的杂志列表)
             if (uiState.groupedDays.isEmpty()) {
                 EmptyStateView(
                     modifier = Modifier
@@ -115,15 +124,15 @@ fun HomeScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .weight(1f),
-                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 6.dp),
-                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                    contentPadding = PaddingValues(horizontal = 20.dp, vertical = 8.dp),
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
                     uiState.groupedDays.forEach { dayGroup ->
                         item(
                             key = "header_${dayGroup.date}",
                             contentType = "date_header"
                         ) {
-                            DateGroupHeader(
+                            EditorialDateHeader(
                                 date = dayGroup.date,
                                 dayTotal = dayGroup.totalAmount
                             )
@@ -134,7 +143,7 @@ fun HomeScreen(
                             key = { it.record.id },
                             contentType = { "record_item" }
                         ) { recordItem ->
-                            RecordListItem(
+                            EditorialRecordItem(
                                 item = recordItem,
                                 onClick = {
                                     editingRecord = recordItem
@@ -154,7 +163,7 @@ fun HomeScreen(
         }
     }
 
-    // 记账/编辑底部抽屉
+    // 记账抽屉
     if (isBottomSheetOpen) {
         CalculatorBottomSheet(
             allMainCategories = uiState.mainCategories,
@@ -209,85 +218,115 @@ fun HomeScreen(
 }
 
 /**
- * 顶部总览卡片
+ * 杂志出版物风格的顶部排版
  */
 @Composable
-private fun OverviewHeaderCard(
+private fun EditorialHeader(
     todayAmount: Double,
     weekAmount: Double,
-    monthAmount: Double
+    monthAmount: Double,
+    totalCount: Int
 ) {
-    Box(
+    val now = LocalDate.now()
+    val monthTitle = "${now.year} 年 ${now.monthValue} 月"
+
+    Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 10.dp)
-            .clip(RoundedCornerShape(22.dp))
-            .background(
-                Brush.linearGradient(
-                    colors = listOf(PrimaryGreenDark, PrimaryGreen, PrimaryGreenLight)
-                )
-            )
-            .padding(18.dp)
+            .padding(start = 24.dp, end = 24.dp, top = 20.dp, bottom = 12.dp)
     ) {
-        Column {
+        // 顶部小标题
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
             Text(
-                text = "本月总支出",
-                style = MaterialTheme.typography.bodyMedium,
-                color = Color.White.copy(alpha = 0.85f)
+                text = monthTitle,
+                style = MaterialTheme.typography.labelSmall,
+                color = InkSecondary,
+                fontWeight = FontWeight.Bold,
+                letterSpacing = 1.sp
             )
-            Spacer(modifier = Modifier.height(2.dp))
-            AnimatedAmountText(
-                amount = monthAmount,
-                style = MaterialTheme.typography.displayLarge.copy(fontSize = 30.sp, color = Color.White),
-                color = Color.White
+            Text(
+                text = "MONTHLY LEDGER",
+                style = MaterialTheme.typography.labelSmall,
+                color = InkTertiary,
+                letterSpacing = 1.5.sp
             )
+        }
 
-            Spacer(modifier = Modifier.height(14.dp))
+        Spacer(modifier = Modifier.height(8.dp))
 
-            // 今日与本周两栏对比
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Column {
-                    Text(
-                        text = "今日支出",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = Color.White.copy(alpha = 0.8f)
-                    )
-                    Spacer(modifier = Modifier.height(2.dp))
-                    Text(
-                        text = "¥ " + String.format(Locale.US, "%.2f", todayAmount),
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White
-                    )
-                }
+        // 大字号当月总支出
+        Row(
+            verticalAlignment = Alignment.Bottom,
+            modifier = Modifier.fillMaxWidth()
+        ) {
 
-                Column(horizontalAlignment = Alignment.End) {
-                    Text(
-                        text = "本周支出",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = Color.White.copy(alpha = 0.8f)
-                    )
-                    Spacer(modifier = Modifier.height(2.dp))
-                    Text(
-                        text = "¥ " + String.format(Locale.US, "%.2f", weekAmount),
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White
-                    )
-                }
+            Text(
+                text = "¥",
+                style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                color = InkPrimary,
+                modifier = Modifier.padding(end = 4.dp)
+            )
+            Text(
+                text = String.format(Locale.US, "%.2f", monthAmount),
+                style = MaterialTheme.typography.displayLarge.copy(
+                    fontSize = 38.sp,
+                    fontWeight = FontWeight.ExtraBold,
+                    letterSpacing = (-1).sp
+                ),
+                color = InkPrimary
+            )
+        }
+
+        Spacer(modifier = Modifier.height(14.dp))
+
+        // 简练的今日与本周晴雨表行
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(text = "今日 ", style = MaterialTheme.typography.bodySmall, color = InkSecondary)
+                Text(
+                    text = "¥ " + String.format(Locale.US, "%.2f", todayAmount),
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = InkPrimary
+                )
             }
+
+            Text(text = "·", color = InkTertiary)
+
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(text = "本周 ", style = MaterialTheme.typography.bodySmall, color = InkSecondary)
+                Text(
+                    text = "¥ " + String.format(Locale.US, "%.2f", weekAmount),
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = InkPrimary
+                )
+            }
+
+            Text(text = "·", color = InkTertiary)
+
+            Text(
+                text = "共 ${totalCount} 笔",
+                style = MaterialTheme.typography.bodySmall,
+                color = InkSecondary
+            )
         }
     }
 }
 
 /**
- * 分组日期表头
+ * 极简日期分隔线
  */
 @Composable
-private fun DateGroupHeader(
+private fun EditorialDateHeader(
     date: LocalDate,
     dayTotal: Double
 ) {
@@ -304,7 +343,7 @@ private fun DateGroupHeader(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 4.dp, vertical = 2.dp),
+            .padding(top = 16.dp, bottom = 8.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -313,30 +352,30 @@ private fun DateGroupHeader(
                 text = dateTitle,
                 style = MaterialTheme.typography.titleSmall,
                 fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurface
+                color = InkPrimary
             )
             Spacer(modifier = Modifier.width(6.dp))
             Text(
                 text = weekday,
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                color = InkSecondary
             )
         }
 
         Text(
-            text = "支出 ¥ " + String.format(Locale.US, "%.2f", dayTotal),
+            text = "当日 ¥ " + String.format(Locale.US, "%.2f", dayTotal),
             style = MaterialTheme.typography.bodySmall,
             fontWeight = FontWeight.Medium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            color = InkSecondary
         )
     }
 }
 
 /**
- * 账单单条卡片
+ * 去卡片化极简流水条目
  */
 @Composable
-private fun RecordListItem(
+private fun EditorialRecordItem(
     item: RecordWithCategory,
     onClick: () -> Unit,
     onDelete: () -> Unit
@@ -345,106 +384,88 @@ private fun RecordListItem(
         DateTimeUtils.toLocalDateTime(item.record.timestamp).format(DateTimeUtils.TIME_FORMATTER)
     }
 
-    Card(
+    Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(14.dp))
-            .clickable(onClick = onClick),
-        shape = RoundedCornerShape(14.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.5.dp)
+            .clip(RoundedCornerShape(8.dp))
+            .clickable(onClick = onClick)
+            .padding(vertical = 10.dp, horizontal = 4.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween
     ) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 12.dp, vertical = 10.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
+            modifier = Modifier.weight(1f)
         ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.weight(1f)
-            ) {
-                CategoryIconBadge(
-                    iconName = item.displayIconName,
-                    colorHex = item.displayColorHex,
-                    size = 38.dp,
-                    iconSize = 20.dp,
-                    cornerRadius = 10.dp
-                )
+            CategoryIconBadge(
+                iconName = item.displayIconName,
+                colorHex = item.displayColorHex,
+                size = 36.dp,
+                iconSize = 18.dp,
+                cornerRadius = 10.dp
+            )
 
-                Spacer(modifier = Modifier.width(10.dp))
+            Spacer(modifier = Modifier.width(12.dp))
 
-                Column {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
+            Column {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = item.displayCategoryName,
+                        style = MaterialTheme.typography.bodyLarge,
+                        fontWeight = FontWeight.SemiBold,
+                        color = InkPrimary
+                    )
+
+                    if (item.displaySubCategoryName != null) {
+                        Spacer(modifier = Modifier.width(6.dp))
                         Text(
-                            text = item.displayCategoryName,
-                            style = MaterialTheme.typography.titleSmall,
-                            fontWeight = FontWeight.SemiBold,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-
-                        if (item.displaySubCategoryName != null) {
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Box(
-                                modifier = Modifier
-                                    .clip(RoundedCornerShape(4.dp))
-                                    .background(
-                                        Color(item.displayColorHex).copy(alpha = 0.15f)
-                                    )
-                                    .padding(horizontal = 5.dp, vertical = 1.dp)
-                            ) {
-                                Text(
-                                    text = item.displaySubCategoryName!!,
-                                    style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
-                                    color = Color(item.displayColorHex),
-                                    fontWeight = FontWeight.Medium
-                                )
-                            }
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.height(2.dp))
-
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(
-                            text = timeStr,
+                            text = "/ ${item.displaySubCategoryName}",
                             style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            color = InkSecondary
                         )
-                        if (item.record.note.isNotBlank()) {
-                            Text(
-                                text = " · ${item.record.note}",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                maxLines = 1
-                            )
-                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(2.dp))
+
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = timeStr,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = InkTertiary
+                    )
+                    if (item.record.note.isNotBlank()) {
+                        Text(
+                            text = " · ${item.record.note}",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = InkSecondary,
+                            maxLines = 1
+                        )
                     }
                 }
             }
+        }
 
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(
-                    text = "- ¥ " + String.format(Locale.US, "%.2f", item.record.amount),
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                text = "- ¥ " + String.format(Locale.US, "%.2f", item.record.amount),
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color = InkPrimary
+            )
+
+            IconButton(
+                onClick = onDelete,
+                modifier = Modifier
+                    .padding(start = 4.dp)
+                    .size(28.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.DeleteOutline,
+                    contentDescription = "删除",
+                    tint = InkQuaternary,
+                    modifier = Modifier.size(16.dp)
                 )
-
-                IconButton(
-                    onClick = onDelete,
-                    modifier = Modifier.size(30.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.DeleteOutline,
-                        contentDescription = "删除",
-                        tint = MaterialTheme.colorScheme.outline,
-                        modifier = Modifier.size(17.dp)
-                    )
-                }
             }
         }
     }
@@ -463,21 +484,21 @@ private fun EmptyStateView(modifier: Modifier = Modifier) {
             Icon(
                 imageVector = Icons.Default.ReceiptLong,
                 contentDescription = null,
-                tint = MaterialTheme.colorScheme.outline,
-                modifier = Modifier.size(56.dp)
+                tint = InkQuaternary,
+                modifier = Modifier.size(48.dp)
             )
             Spacer(modifier = Modifier.height(10.dp))
             Text(
-                text = "还没有记账记录",
+                text = "空白账页",
                 style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                fontWeight = FontWeight.Medium
+                color = InkSecondary,
+                fontWeight = FontWeight.Bold
             )
             Spacer(modifier = Modifier.height(4.dp))
             Text(
-                text = "点击右下角按钮，开启你的极简记账生活",
+                text = "点击右下角按钮，记录生活中的每一笔开销",
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                color = InkTertiary
             )
         }
     }

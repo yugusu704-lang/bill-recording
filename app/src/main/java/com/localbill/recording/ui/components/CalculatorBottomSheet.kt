@@ -60,8 +60,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.localbill.recording.data.entity.CategoryEntity
 import com.localbill.recording.data.entity.RecordWithCategory
-import com.localbill.recording.ui.theme.PrimaryGreen
+import com.localbill.recording.ui.theme.InkPrimary
+import com.localbill.recording.ui.theme.InkSecondary
+import com.localbill.recording.ui.theme.PaperSurfaceSubtle
 import com.localbill.recording.util.DateTimeUtils
+
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.Locale
@@ -157,9 +160,10 @@ fun CalculatorBottomSheet(
                         fontSize = if (expression.length > 8) 28.sp else 36.sp,
                         fontWeight = FontWeight.ExtraBold
                     ),
-                    color = PrimaryGreen,
+                    color = InkPrimary,
                     maxLines = 1
                 )
+
             }
 
             // 3. 两级分类选择器 (极速滚动联动)
@@ -298,7 +302,7 @@ fun CalculatorBottomSheet(
                     Icon(
                         imageVector = Icons.Default.CalendarToday,
                         contentDescription = "日期",
-                        tint = PrimaryGreen,
+                        tint = InkPrimary,
                         modifier = Modifier.size(15.dp)
                     )
                     Spacer(modifier = Modifier.width(4.dp))
@@ -330,12 +334,13 @@ fun CalculatorBottomSheet(
                         .height(46.dp),
                     shape = RoundedCornerShape(10.dp),
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = PrimaryGreen,
+                        focusedBorderColor = InkPrimary,
                         unfocusedBorderColor = Color.Transparent,
                         focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
                         unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
                     )
                 )
+
             }
 
             // 5. 极致轻量高响应 4x4 触感键盘
@@ -425,16 +430,17 @@ private fun KeypadButton(
     val isOpKey = key in listOf("+", "-", "C", "⌫")
 
     val bgColor = when {
-        isActionKey -> PrimaryGreen
+        isActionKey -> InkPrimary
         isOpKey -> MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f)
         else -> MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f)
     }
 
     val textColor = when {
         isActionKey -> Color.White
-        isOpKey -> PrimaryGreen
+        isOpKey -> InkPrimary
         else -> MaterialTheme.colorScheme.onSurface
     }
+
 
     Box(
         modifier = modifier

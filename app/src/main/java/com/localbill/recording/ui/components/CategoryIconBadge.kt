@@ -1,8 +1,10 @@
 package com.localbill.recording.ui.components
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Category
@@ -62,18 +64,23 @@ fun CategoryIconBadge(
     iconName: String,
     colorHex: Long,
     modifier: Modifier = Modifier,
-    size: Dp = 44.dp,
-    iconSize: Dp = 24.dp,
-    cornerRadius: Dp = 14.dp
+    size: Dp = 38.dp,
+    iconSize: Dp = 19.dp,
+    cornerRadius: Dp = 12.dp
 ) {
     val baseColor = Color(colorHex)
-    val containerColor = baseColor.copy(alpha = 0.16f)
+    val containerColor = baseColor.copy(alpha = 0.12f)
 
     Box(
         modifier = modifier
             .size(size)
             .clip(RoundedCornerShape(cornerRadius))
-            .background(containerColor),
+            .background(containerColor)
+            .border(
+                width = 0.5.dp,
+                color = baseColor.copy(alpha = 0.25f),
+                shape = RoundedCornerShape(cornerRadius)
+            ),
         contentAlignment = Alignment.Center
     ) {
         Icon(

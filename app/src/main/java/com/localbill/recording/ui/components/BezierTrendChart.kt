@@ -6,6 +6,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -16,8 +17,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -35,30 +34,26 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.localbill.recording.data.model.TrendPoint
-import com.localbill.recording.ui.theme.PrismBlack
-import com.localbill.recording.ui.theme.PrismBorder
-import com.localbill.recording.ui.theme.PrismCyan
-import com.localbill.recording.ui.theme.PrismLavender
-import com.localbill.recording.ui.theme.PrismLuminousBrush
-import com.localbill.recording.ui.theme.PrismPink
-import com.localbill.recording.ui.theme.PrismSlate
-import com.localbill.recording.ui.theme.PrismTextSecondary
-import com.localbill.recording.ui.theme.PrismTextTertiary
-import com.localbill.recording.ui.theme.PrismWhite
+import com.localbill.recording.ui.theme.ClaudeBorder
+import com.localbill.recording.ui.theme.ClaudeInk
+import com.localbill.recording.ui.theme.ClaudeTerracotta
+import com.localbill.recording.ui.theme.ClaudeTextSecondary
+import com.localbill.recording.ui.theme.ClaudeTextTertiary
+import com.localbill.recording.ui.theme.PrismWarmSpectralBrush
 import java.util.Locale
 
 @Composable
 fun BezierTrendChart(
     points: List<TrendPoint>,
     modifier: Modifier = Modifier,
-    lineColor: Color = PrismLavender,
-    gradientStartColor: Color = PrismLavender.copy(alpha = 0.15f),
+    lineColor: Color = ClaudeTerracotta,
+    gradientStartColor: Color = ClaudeTerracotta.copy(alpha = 0.15f),
     gradientEndColor: Color = Color.Transparent
 ) {
     if (points.isEmpty()) {
@@ -71,7 +66,7 @@ fun BezierTrendChart(
             Text(
                 text = "暂无消费走势数据",
                 style = MaterialTheme.typography.bodyMedium,
-                color = PrismTextSecondary
+                color = ClaudeTextSecondary
             )
         }
         return
@@ -95,23 +90,34 @@ fun BezierTrendChart(
         (points.maxOfOrNull { it.amount } ?: 1.0).coerceAtLeast(10.0)
     }
 
-    Card(
+    // 智能 X 轴关键里程碑抽样索引 (当数据点很多时，抽样显示 5 个代表性节点)
+    val landmarkIndices = remember(points.size) {
+        if (points.size <= 7) {
+            points.indices.toList()
+        } else {
+            val last = points.size - 1
+            listOf(
+                0,
+                (last * 0.25f).toInt(),
+                (last * 0.50f).toInt(),
+                (last * 0.75f).toInt(),
+                last
+            ).distinct()
+        }
+    }
+
+    Box(
         modifier = modifier
             .fillMaxWidth()
-            .border(1.dp, PrismBorder, RoundedCornerShape(16.dp)),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = PrismWhite
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+            .clip(RoundedCornerShape(18.dp))
+            .background(Color.White.copy(alpha = 0.78f))
+            .border(1.2.dp, Color.White.copy(alpha = 0.92f), RoundedCornerShape(18.dp))
+            .padding(16.dp)
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp)
-        ) {
+        Column(modifier = Modifier.fillMaxWidth()) {
             val currentPoint = points.getOrNull(safeSelectedIndex) ?: points.last()
 
+            // 顶部实时触控数据卡片
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -122,63 +128,73 @@ fun BezierTrendChart(
                         text = "支出走势",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
-                        color = PrismBlack
+                        color = ClaudeInk
                     )
                     Text(
                         text = "${currentPoint.label} ${if (currentPoint.subLabel.isNotEmpty()) "(${currentPoint.subLabel})" else ""}",
                         style = MaterialTheme.typography.bodySmall,
-                        color = PrismTextSecondary
+                        color = ClaudeTextSecondary
                     )
                 }
 
                 Box(
                     modifier = Modifier
                         .clip(RoundedCornerShape(8.dp))
-                        .background(PrismSlate)
-                        .border(1.dp, PrismBorder, RoundedCornerShape(8.dp))
+                        .background(Color.White.copy(alpha = 0.85f))
+                        .border(1.dp, ClaudeBorder.copy(alpha = 0.6f), RoundedCornerShape(8.dp))
                         .padding(horizontal = 10.dp, vertical = 4.dp)
                 ) {
                     Text(
                         text = "¥ " + String.format(Locale.US, "%.2f", currentPoint.amount),
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.Bold,
-                        color = PrismBlack
+                        color = ClaudeTerracotta
                     )
                 }
             }
 
             Spacer(modifier = Modifier.height(14.dp))
 
+            // Canvas 曲线图 (支持点击与平滑跟手左右连续滑动 Touch Scrubbing)
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(160.dp)
+                    .height(130.dp)
             ) {
                 Canvas(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(160.dp)
-                        .pointerInput(points) {
+                        .height(130.dp)
+                        .pointerInput(points.size) {
                             detectTapGestures { offset ->
                                 val spacing = size.width / (points.size - 1).coerceAtLeast(1)
-                                val tappedIndex = (offset.x / spacing + 0.5f).toInt()
-                                    .coerceIn(0, points.size - 1)
-                                selectedIndex = tappedIndex
+                                selectedIndex = (offset.x / spacing + 0.5f).toInt().coerceIn(0, points.size - 1)
                             }
+                        }
+                        .pointerInput(points.size) {
+                            detectDragGestures(
+                                onDragStart = { offset ->
+                                    val spacing = size.width / (points.size - 1).coerceAtLeast(1)
+                                    selectedIndex = (offset.x / spacing + 0.5f).toInt().coerceIn(0, points.size - 1)
+                                },
+                                onDrag = { change, _ ->
+                                    change.consume()
+                                    val spacing = size.width / (points.size - 1).coerceAtLeast(1)
+                                    selectedIndex = (change.position.x / spacing + 0.5f).toInt().coerceIn(0, points.size - 1)
+                                }
+                            )
                         }
                 ) {
                     val width = size.width
                     val height = size.height
-                    val paddingBottom = 22.dp.toPx()
-                    val chartHeight = height - paddingBottom
                     val stepX = if (points.size > 1) width / (points.size - 1) else width
 
-                    // 绘制极细辅助虚线
+                    // 绘制水平辅助线
                     val lineCount = 3
                     for (i in 0..lineCount) {
-                        val y = chartHeight * (i.toFloat() / lineCount)
+                        val y = height * (i.toFloat() / lineCount)
                         drawLine(
-                            color = PrismBorder,
+                            color = ClaudeBorder.copy(alpha = 0.4f),
                             start = Offset(0f, y),
                             end = Offset(width, y),
                             strokeWidth = 0.8f
@@ -188,7 +204,7 @@ fun BezierTrendChart(
                     val coordPoints = points.mapIndexed { index, item ->
                         val x = index * stepX
                         val normalizedVal = (item.amount / maxAmount).coerceIn(0.0, 1.0).toFloat()
-                        val y = chartHeight - (normalizedVal * chartHeight * 0.85f * progress.value) - 8.dp.toPx()
+                        val y = height - (normalizedVal * (height - 16.dp.toPx()) * progress.value) - 8.dp.toPx()
                         Offset(x, y)
                     }
 
@@ -197,7 +213,7 @@ fun BezierTrendChart(
                         val fillPath = Path()
 
                         strokePath.moveTo(coordPoints.first().x, coordPoints.first().y)
-                        fillPath.moveTo(coordPoints.first().x, chartHeight)
+                        fillPath.moveTo(coordPoints.first().x, height)
                         fillPath.lineTo(coordPoints.first().x, coordPoints.first().y)
 
                         for (i in 0 until coordPoints.size - 1) {
@@ -212,53 +228,51 @@ fun BezierTrendChart(
                             fillPath.cubicTo(controlX1, controlY1, controlX2, controlY2, p1.x, p1.y)
                         }
 
-                        fillPath.lineTo(coordPoints.last().x, chartHeight)
+                        fillPath.lineTo(coordPoints.last().x, height)
                         fillPath.close()
 
-                        // 填充柔和微光渐变
+                        // 填充温润柔光渐变
                         drawPath(
                             path = fillPath,
                             brush = Brush.verticalGradient(
                                 colors = listOf(
-                                    PrismLavender.copy(alpha = 0.18f),
-                                    PrismCyan.copy(alpha = 0.05f),
+                                    ClaudeTerracotta.copy(alpha = 0.16f),
                                     Color.Transparent
                                 ),
                                 startY = 0f,
-                                endY = chartHeight
+                                endY = height
                             )
                         )
 
-                        // 绘制五彩棱镜折射渐变线条
+                        // 绘制陶土红折线
                         drawPath(
                             path = strokePath,
-                            brush = PrismLuminousBrush,
+                            brush = PrismWarmSpectralBrush,
                             style = Stroke(
                                 width = 2.5.dp.toPx(),
                                 cap = StrokeCap.Round
                             )
                         )
 
-                        // 绘制选中的发光脉冲点
                         val selectedCoord = coordPoints.getOrNull(safeSelectedIndex) ?: coordPoints.last()
 
                         // 垂直指示线
                         drawLine(
-                            color = PrismBorder,
+                            color = ClaudeBorder,
                             start = Offset(selectedCoord.x, 0f),
-                            end = Offset(selectedCoord.x, chartHeight),
+                            end = Offset(selectedCoord.x, height),
                             strokeWidth = 1.dp.toPx()
                         )
 
                         // 外圈光晕
                         drawCircle(
-                            color = PrismLavender.copy(alpha = 0.35f),
+                            color = ClaudeTerracotta.copy(alpha = 0.25f),
                             radius = 8.dp.toPx(),
                             center = selectedCoord
                         )
-                        // 中圈彩色
+                        // 实心彩点
                         drawCircle(
-                            color = PrismLavender,
+                            color = ClaudeTerracotta,
                             radius = 4.5.dp.toPx(),
                             center = selectedCoord
                         )
@@ -268,26 +282,41 @@ fun BezierTrendChart(
                             radius = 2.dp.toPx(),
                             center = selectedCoord
                         )
-
-                        // 绘制底部 X 轴标签
-                        val textPaint = android.graphics.Paint().apply {
-                            color = android.graphics.Color.parseColor("#94A3B8")
-                            textSize = 10.sp.toPx()
-                            isAntiAlias = true
-                            textAlign = android.graphics.Paint.Align.CENTER
-                        }
-
-                        points.forEachIndexed { index, pt ->
-                            val x = index * stepX
-                            val y = height - 4.dp.toPx()
-                            drawContext.canvas.nativeCanvas.drawText(
-                                pt.label,
-                                x,
-                                y,
-                                textPaint
-                            )
-                        }
                     }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            // 智能金融级 X 轴里程碑展示 (5 节点法，彻底消除月度 31 天挤压乱象)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                landmarkIndices.forEach { idx ->
+                    val pt = points[idx]
+                    val isNearSelected = (idx == safeSelectedIndex)
+                    val labelText = if (points.size > 7) {
+                        // 月度模式下提取简洁的 "1日", "8日", "15日", "22日", "31日"
+                        pt.label
+                    } else {
+                        pt.label
+                    }
+
+                    Text(
+                        text = labelText,
+                        style = MaterialTheme.typography.labelSmall.copy(
+                            fontSize = 11.sp,
+                            fontWeight = if (isNearSelected) FontWeight.Bold else FontWeight.Normal
+                        ),
+                        color = if (isNearSelected) ClaudeTerracotta else ClaudeTextTertiary,
+                        textAlign = when (idx) {
+                            0 -> TextAlign.Start
+                            points.size - 1 -> TextAlign.End
+                            else -> TextAlign.Center
+                        }
+                    )
                 }
             }
         }

@@ -70,7 +70,7 @@ fun MainAppNavigation(
     Scaffold(
         bottomBar = {
             NavigationBar(
-                containerColor = MaterialTheme.colorScheme.surface,
+                containerColor = com.localbill.recording.ui.theme.ClaudeWarmBg,
                 tonalElevation = 0.dp
             ) {
                 bottomNavScreens.forEach { screen ->
@@ -102,15 +102,16 @@ fun MainAppNavigation(
                             }
                         },
                         colors = NavigationBarItemDefaults.colors(
-                            selectedIconColor = MaterialTheme.colorScheme.primary,
-                            selectedTextColor = MaterialTheme.colorScheme.primary,
-                            indicatorColor = MaterialTheme.colorScheme.primaryContainer,
-                            unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                            unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant
+                            selectedIconColor = com.localbill.recording.ui.theme.ClaudeTerracotta,
+                            selectedTextColor = com.localbill.recording.ui.theme.ClaudeTerracotta,
+                            indicatorColor = com.localbill.recording.ui.theme.ClaudeTerracotta.copy(alpha = 0.14f),
+                            unselectedIconColor = com.localbill.recording.ui.theme.ClaudeTextSecondary,
+                            unselectedTextColor = com.localbill.recording.ui.theme.ClaudeTextSecondary
                         )
                     )
                 }
             }
+
 
         }
     ) { innerPadding ->

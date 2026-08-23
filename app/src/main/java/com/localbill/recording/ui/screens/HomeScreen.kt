@@ -1,9 +1,5 @@
 package com.localbill.recording.ui.screens
 
-import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.tween
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -25,15 +21,9 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.AutoGraph
-import androidx.compose.material.icons.filled.Category
 import androidx.compose.material.icons.filled.DeleteOutline
-import androidx.compose.material.icons.filled.NotificationsNone
 import androidx.compose.material.icons.filled.ReceiptLong
-import androidx.compose.material.icons.filled.Today
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -43,7 +33,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -52,30 +41,20 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.localbill.recording.data.entity.RecordWithCategory
 import com.localbill.recording.ui.components.CalculatorBottomSheet
 import com.localbill.recording.ui.components.CategoryIconBadge
-import com.localbill.recording.ui.theme.PrismBlack
-import com.localbill.recording.ui.theme.PrismBorder
-import com.localbill.recording.ui.theme.PrismCyan
-import com.localbill.recording.ui.theme.PrismLavender
-import com.localbill.recording.ui.theme.PrismLuminousBrush
-import com.localbill.recording.ui.theme.PrismPink
-import com.localbill.recording.ui.theme.PrismSlate
-import com.localbill.recording.ui.theme.PrismSpectralBrush
-import com.localbill.recording.ui.theme.PrismTextSecondary
-import com.localbill.recording.ui.theme.PrismTextTertiary
-import com.localbill.recording.ui.theme.PrismWhite
+import com.localbill.recording.ui.theme.ClaudeBorder
+import com.localbill.recording.ui.theme.ClaudeInk
+import com.localbill.recording.ui.theme.ClaudeTerracotta
+import com.localbill.recording.ui.theme.ClaudeTextSecondary
+import com.localbill.recording.ui.theme.ClaudeTextTertiary
+import com.localbill.recording.ui.theme.ClaudeWarmBg
 import com.localbill.recording.ui.viewmodel.HomeViewModel
 import com.localbill.recording.util.DateTimeUtils
 import java.time.LocalDate
@@ -94,17 +73,19 @@ fun HomeScreen(
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
-        containerColor = MaterialTheme.colorScheme.background,
+        containerColor = ClaudeWarmBg,
         floatingActionButton = {
             FloatingActionButton(
                 onClick = {
                     editingRecord = null
                     isBottomSheetOpen = true
                 },
-                containerColor = PrismBlack,
-                contentColor = PrismWhite,
+                containerColor = ClaudeTerracotta,
+                contentColor = Color.White,
                 shape = CircleShape,
-                modifier = Modifier.padding(bottom = 16.dp)
+                modifier = Modifier
+                    .padding(bottom = 16.dp)
+                    .shadow(8.dp, CircleShape, spotColor = ClaudeTerracotta.copy(alpha = 0.4f))
             ) {
                 Icon(
                     imageVector = Icons.Default.Add,
@@ -119,11 +100,11 @@ fun HomeScreen(
                 .fillMaxSize()
                 .padding(innerPadding),
             contentPadding = PaddingValues(horizontal = 18.dp, vertical = 12.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
-            // 1. Lightcore 顶部总览卡片 (复刻原型：Welcome + Balance + Tag + Sparkline)
+            // 1. 真实纯粹的本月财务总览大卡片 (去除所有假曲线、假标签与假通知图标)
             item {
-                LightcoreBalanceOverviewCard(
+                PureFinancialOverviewCard(
                     monthAmount = uiState.monthExpense,
                     todayAmount = uiState.todayExpense,
                     weekAmount = uiState.weekExpense,
@@ -131,43 +112,35 @@ fun HomeScreen(
                 )
             }
 
-            // 2. 快捷操作微胶囊 (Quick Actions)
-            item {
-                LightcoreQuickActions(
-                    onAddClick = {
-                        editingRecord = null
-                        isBottomSheetOpen = true
-                    }
-                )
-            }
-
-            // 3. 流水明细列表 (Recent Activity 悬浮白底卡片容器)
+            // 2. 流水明细列表标题
             item {
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 4.dp),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "近期明细 (Recent Activity)",
+                        text = "流水明细",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
-                        color = PrismBlack
+                        color = ClaudeInk
                     )
                     Text(
-                        text = "共 ${uiState.totalRecordCount} 笔",
+                        text = "本月共 ${uiState.totalRecordCount} 笔",
                         style = MaterialTheme.typography.bodySmall,
-                        color = PrismTextSecondary
+                        color = ClaudeTextSecondary
                     )
                 }
             }
 
             if (uiState.groupedDays.isEmpty()) {
                 item {
-                    EmptyStateView(
+                    PureEmptyStateCard(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(200.dp)
+                            .height(180.dp)
                     )
                 }
             } else {
@@ -176,7 +149,7 @@ fun HomeScreen(
                         key = "header_${dayGroup.date}",
                         contentType = "date_header"
                     ) {
-                        LightcoreDateHeader(
+                        PureDateHeader(
                             date = dayGroup.date,
                             dayTotal = dayGroup.totalAmount
                         )
@@ -187,7 +160,7 @@ fun HomeScreen(
                         key = { it.record.id },
                         contentType = { "record_item" }
                     ) { recordItem ->
-                        LightcoreRecordItem(
+                        PureGlassRecordItem(
                             item = recordItem,
                             onClick = {
                                 editingRecord = recordItem
@@ -232,12 +205,14 @@ fun HomeScreen(
     recordToDelete?.let { recordItem ->
         AlertDialog(
             onDismissRequest = { recordToDelete = null },
-            title = { Text(text = "删除此账单？", fontWeight = FontWeight.Bold) },
+            containerColor = Color.White.copy(alpha = 0.95f),
+            title = { Text(text = "删除此账单？", fontWeight = FontWeight.Bold, color = ClaudeInk) },
             text = {
                 Text(
                     text = "即将删除「${recordItem.displayCategoryName}」支出 ¥ ${
                         String.format(Locale.US, "%.2f", recordItem.record.amount)
-                    }，此操作不可撤销。"
+                    }，此操作不可撤销。",
+                    color = ClaudeTextSecondary
                 )
             },
             confirmButton = {
@@ -252,7 +227,7 @@ fun HomeScreen(
             },
             dismissButton = {
                 TextButton(onClick = { recordToDelete = null }) {
-                    Text(text = "取消")
+                    Text(text = "取消", color = ClaudeTextSecondary)
                 }
             }
         )
@@ -260,10 +235,10 @@ fun HomeScreen(
 }
 
 /**
- * 顶部总览卡片 (参考右下角 Mobile App 原型)
+ * 真实纯粹的财务总览卡片 (无假曲线、无假英文字符、无死图标)
  */
 @Composable
-private fun LightcoreBalanceOverviewCard(
+private fun PureFinancialOverviewCard(
     monthAmount: Double,
     todayAmount: Double,
     weekAmount: Double,
@@ -272,135 +247,85 @@ private fun LightcoreBalanceOverviewCard(
     val now = LocalDate.now()
     val monthTitle = "${now.year} 年 ${now.monthValue} 月"
 
-    Card(
+    Box(
         modifier = Modifier
             .fillMaxWidth()
-            .border(1.dp, PrismBorder, RoundedCornerShape(20.dp)),
-        shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = PrismWhite),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+            .clip(RoundedCornerShape(18.dp))
+            .background(Color.White.copy(alpha = 0.78f))
+            .border(1.2.dp, Color.White.copy(alpha = 0.92f), RoundedCornerShape(18.dp))
+            .padding(18.dp)
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(18.dp)
-        ) {
-            // 顶部问候与图标微按钮
+        Column(modifier = Modifier.fillMaxWidth()) {
+            // 真实动态年份与月份
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "${monthTitle} · 支出总览",
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = ClaudeTerracotta
+                )
+
+                Text(
+                    text = "记账 ${totalCount} 笔",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = ClaudeTextSecondary
+                )
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // 本月总支出大字号
+            Row(verticalAlignment = Alignment.Bottom) {
+                Text(
+                    text = "¥",
+                    style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                    color = ClaudeInk,
+                    modifier = Modifier.padding(end = 4.dp, bottom = 2.dp)
+                )
+                Text(
+                    text = String.format(Locale.US, "%.2f", monthAmount),
+                    style = MaterialTheme.typography.displayLarge.copy(
+                        fontSize = 34.sp,
+                        fontWeight = FontWeight.ExtraBold,
+                        letterSpacing = (-0.5).sp
+                    ),
+                    color = ClaudeInk
+                )
+            }
+
+            Spacer(modifier = Modifier.height(14.dp))
+            HorizontalDivider(color = ClaudeBorder.copy(alpha = 0.45f), thickness = 0.8.dp)
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // 今日支出与本周支出对比
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Column {
-                    Text(
-                        text = "Welcome to Lightcore",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = PrismTextSecondary
-                    )
-                    Text(
-                        text = "本月累计开销 (Total Expense)",
-                        style = MaterialTheme.typography.labelSmall,
-                        fontWeight = FontWeight.Bold,
-                        color = PrismTextTertiary,
-                        letterSpacing = 0.5.sp
-                    )
-                }
-
-                Box(
-                    modifier = Modifier
-                        .size(34.dp)
-                        .clip(RoundedCornerShape(10.dp))
-                        .background(PrismSlate)
-                        .border(1.dp, PrismBorder, RoundedCornerShape(10.dp)),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.NotificationsNone,
-                        contentDescription = null,
-                        tint = PrismBlack,
-                        modifier = Modifier.size(18.dp)
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(10.dp))
-
-            // 金额大字号排版 + Prism 渐变胶囊
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.Bottom,
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Row(verticalAlignment = Alignment.Bottom) {
-                    Text(
-                        text = "¥",
-                        style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
-                        color = PrismBlack,
-                        modifier = Modifier.padding(end = 4.dp, bottom = 2.dp)
-                    )
-                    Text(
-                        text = String.format(Locale.US, "%.2f", monthAmount),
-                        style = MaterialTheme.typography.displayLarge.copy(
-                            fontSize = 32.sp,
-                            fontWeight = FontWeight.ExtraBold,
-                            letterSpacing = (-0.5).sp
-                        ),
-                        color = PrismBlack
-                    )
-                }
-
-                // 标志性 Prism 折射渐变微胶囊
-                Box(
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(8.dp))
-                        .background(PrismSpectralBrush)
-                        .padding(horizontal = 8.dp, vertical = 3.dp)
-                ) {
-                    Text(
-                        text = "▲ ${monthTitle}",
-                        style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            // 内嵌微光走势 Sparkline 曲线
-            InlineSparklineChart(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(48.dp)
-            )
-
-            Spacer(modifier = Modifier.height(12.dp))
-            HorizontalDivider(color = PrismBorder, thickness = 0.8.dp)
-            Spacer(modifier = Modifier.height(10.dp))
-
-            // 今日与本周两栏微数据
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(text = "今日 ", style = MaterialTheme.typography.bodySmall, color = PrismTextSecondary)
+                    Text(text = "今日支出", style = MaterialTheme.typography.bodySmall, color = ClaudeTextSecondary)
+                    Spacer(modifier = Modifier.height(2.dp))
                     Text(
                         text = "¥ " + String.format(Locale.US, "%.2f", todayAmount),
-                        style = MaterialTheme.typography.bodyMedium,
+                        style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.Bold,
-                        color = PrismBlack
+                        color = ClaudeInk
                     )
                 }
 
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(text = "本周 ", style = MaterialTheme.typography.bodySmall, color = PrismTextSecondary)
+                Column(horizontalAlignment = Alignment.End) {
+                    Text(text = "本周支出", style = MaterialTheme.typography.bodySmall, color = ClaudeTextSecondary)
+                    Spacer(modifier = Modifier.height(2.dp))
                     Text(
                         text = "¥ " + String.format(Locale.US, "%.2f", weekAmount),
-                        style = MaterialTheme.typography.bodyMedium,
+                        style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.Bold,
-                        color = PrismBlack
+                        color = ClaudeInk
                     )
                 }
             }
@@ -409,133 +334,10 @@ private fun LightcoreBalanceOverviewCard(
 }
 
 /**
- * 内嵌微走势折线 Sparkline
+ * 日期表头
  */
 @Composable
-private fun InlineSparklineChart(modifier: Modifier = Modifier) {
-    val progress = remember { Animatable(0f) }
-    LaunchedEffect(Unit) {
-        progress.animateTo(1f, animationSpec = tween(700, easing = FastOutSlowInEasing))
-    }
-
-    Canvas(modifier = modifier) {
-        val width = size.width
-        val height = size.height
-
-        val dummyPoints = listOf(
-            Offset(0f, height * 0.7f),
-            Offset(width * 0.18f, height * 0.5f),
-            Offset(width * 0.35f, height * 0.8f),
-            Offset(width * 0.55f, height * 0.35f),
-            Offset(width * 0.75f, height * 0.6f),
-            Offset(width * 0.95f, height * 0.2f)
-        )
-
-        val strokePath = Path()
-        val fillPath = Path()
-
-        strokePath.moveTo(dummyPoints.first().x, dummyPoints.first().y)
-        fillPath.moveTo(dummyPoints.first().x, height)
-        fillPath.lineTo(dummyPoints.first().x, dummyPoints.first().y)
-
-        for (i in 0 until dummyPoints.size - 1) {
-            val p0 = dummyPoints[i]
-            val p1 = dummyPoints[i + 1]
-            val controlX = (p0.x + p1.x) / 2
-            strokePath.cubicTo(controlX, p0.y, controlX, p1.y, p1.x, p1.y)
-            fillPath.cubicTo(controlX, p0.y, controlX, p1.y, p1.x, p1.y)
-        }
-
-        fillPath.lineTo(dummyPoints.last().x, height)
-        fillPath.close()
-
-        drawPath(
-            path = fillPath,
-            brush = Brush.verticalGradient(
-                colors = listOf(PrismLavender.copy(alpha = 0.15f * progress.value), Color.Transparent),
-                startY = 0f,
-                endY = height
-            )
-        )
-
-        drawPath(
-            path = strokePath,
-            brush = PrismLuminousBrush,
-            style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round)
-        )
-
-        // 终点发光点
-        val lastPt = dummyPoints.last()
-        drawCircle(
-            color = PrismLavender.copy(alpha = 0.3f),
-            radius = 6.dp.toPx(),
-            center = lastPt
-        )
-        drawCircle(
-            color = PrismLavender,
-            radius = 3.5.dp.toPx(),
-            center = lastPt
-        )
-    }
-}
-
-/**
- * 4 组快捷操作微胶囊 (参考原型 4 个圆形/方形动作)
- */
-@Composable
-private fun LightcoreQuickActions(onAddClick: () -> Unit) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween
-    ) {
-        QuickActionButton(icon = Icons.Default.Add, label = "记一笔", isPrimary = true, onClick = onAddClick)
-        QuickActionButton(icon = Icons.Default.Today, label = "今日明细", onClick = {})
-        QuickActionButton(icon = Icons.Default.AutoGraph, label = "走势分析", onClick = {})
-        QuickActionButton(icon = Icons.Default.Category, label = "分类管理", onClick = {})
-    }
-}
-
-@Composable
-private fun QuickActionButton(
-    icon: ImageVector,
-    label: String,
-    isPrimary: Boolean = false,
-    onClick: () -> Unit
-) {
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier.clickable(onClick = onClick)
-    ) {
-        Box(
-            modifier = Modifier
-                .size(46.dp)
-                .clip(RoundedCornerShape(14.dp))
-                .background(if (isPrimary) PrismBlack else PrismSlate)
-                .border(1.dp, PrismBorder, RoundedCornerShape(14.dp)),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = label,
-                tint = if (isPrimary) Color.White else PrismBlack,
-                modifier = Modifier.size(20.dp)
-            )
-        }
-        Spacer(modifier = Modifier.height(4.dp))
-        Text(
-            text = label,
-            style = MaterialTheme.typography.labelSmall,
-            fontWeight = FontWeight.Medium,
-            color = PrismTextSecondary
-        )
-    }
-}
-
-/**
- * 日期分隔头
- */
-@Composable
-private fun LightcoreDateHeader(
+private fun PureDateHeader(
     date: LocalDate,
     dayTotal: Double
 ) {
@@ -561,13 +363,13 @@ private fun LightcoreDateHeader(
                 text = dateTitle,
                 style = MaterialTheme.typography.titleSmall,
                 fontWeight = FontWeight.Bold,
-                color = PrismBlack
+                color = ClaudeInk
             )
             Spacer(modifier = Modifier.width(6.dp))
             Text(
                 text = weekday,
                 style = MaterialTheme.typography.bodySmall,
-                color = PrismTextSecondary
+                color = ClaudeTextSecondary
             )
         }
 
@@ -575,16 +377,16 @@ private fun LightcoreDateHeader(
             text = "当日 ¥ " + String.format(Locale.US, "%.2f", dayTotal),
             style = MaterialTheme.typography.bodySmall,
             fontWeight = FontWeight.Medium,
-            color = PrismTextSecondary
+            color = ClaudeTextSecondary
         )
     }
 }
 
 /**
- * 流水单条微光卡片条目 (参考原型 Recent Activity 项)
+ * 单条流水账单卡片
  */
 @Composable
-private fun LightcoreRecordItem(
+private fun PureGlassRecordItem(
     item: RecordWithCategory,
     onClick: () -> Unit,
     onDelete: () -> Unit
@@ -593,19 +395,17 @@ private fun LightcoreRecordItem(
         DateTimeUtils.toLocalDateTime(item.record.timestamp).format(DateTimeUtils.TIME_FORMATTER)
     }
 
-    Card(
+    Box(
         modifier = Modifier
             .fillMaxWidth()
-            .border(1.dp, PrismBorder, RoundedCornerShape(14.dp))
-            .clickable(onClick = onClick),
-        shape = RoundedCornerShape(14.dp),
-        colors = CardDefaults.cardColors(containerColor = PrismWhite),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+            .clip(RoundedCornerShape(14.dp))
+            .background(Color.White.copy(alpha = 0.72f))
+            .border(1.dp, Color.White.copy(alpha = 0.88f), RoundedCornerShape(14.dp))
+            .clickable(onClick = onClick)
+            .padding(horizontal = 12.dp, vertical = 10.dp)
     ) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 12.dp, vertical = 10.dp),
+            modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
@@ -629,7 +429,7 @@ private fun LightcoreRecordItem(
                             text = item.displayCategoryName,
                             style = MaterialTheme.typography.bodyLarge,
                             fontWeight = FontWeight.SemiBold,
-                            color = PrismBlack
+                            color = ClaudeInk
                         )
 
                         if (item.displaySubCategoryName != null) {
@@ -637,8 +437,8 @@ private fun LightcoreRecordItem(
                             Box(
                                 modifier = Modifier
                                     .clip(RoundedCornerShape(4.dp))
-                                    .background(PrismSlate)
-                                    .border(0.8.dp, PrismBorder, RoundedCornerShape(4.dp))
+                                    .background(Color.White.copy(alpha = 0.8f))
+                                    .border(0.8.dp, Color(item.displayColorHex).copy(alpha = 0.3f), RoundedCornerShape(4.dp))
                                     .padding(horizontal = 4.dp, vertical = 1.dp)
                             ) {
                                 Text(
@@ -657,13 +457,13 @@ private fun LightcoreRecordItem(
                         Text(
                             text = timeStr,
                             style = MaterialTheme.typography.bodySmall,
-                            color = PrismTextTertiary
+                            color = ClaudeTextTertiary
                         )
                         if (item.record.note.isNotBlank()) {
                             Text(
                                 text = " · ${item.record.note}",
                                 style = MaterialTheme.typography.bodySmall,
-                                color = PrismTextSecondary,
+                                color = ClaudeTextSecondary,
                                 maxLines = 1
                             )
                         }
@@ -676,7 +476,7 @@ private fun LightcoreRecordItem(
                     text = "- ¥ " + String.format(Locale.US, "%.2f", item.record.amount),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
-                    color = PrismBlack
+                    color = ClaudeInk
                 )
 
                 IconButton(
@@ -686,7 +486,7 @@ private fun LightcoreRecordItem(
                     Icon(
                         imageVector = Icons.Default.DeleteOutline,
                         contentDescription = "删除",
-                        tint = PrismTextTertiary,
+                        tint = ClaudeTextTertiary,
                         modifier = Modifier.size(16.dp)
                     )
                 }
@@ -696,43 +496,38 @@ private fun LightcoreRecordItem(
 }
 
 @Composable
-private fun EmptyStateView(modifier: Modifier = Modifier) {
-    Card(
+private fun PureEmptyStateCard(modifier: Modifier = Modifier) {
+    Box(
         modifier = modifier
             .fillMaxWidth()
-            .border(1.dp, PrismBorder, RoundedCornerShape(16.dp)),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = PrismWhite),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+            .clip(RoundedCornerShape(16.dp))
+            .background(Color.White.copy(alpha = 0.65f))
+            .border(1.dp, Color.White.copy(alpha = 0.85f), RoundedCornerShape(16.dp)),
+        contentAlignment = Alignment.Center
     ) {
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
         ) {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
-            ) {
-                Icon(
-                    imageVector = Icons.Default.ReceiptLong,
-                    contentDescription = null,
-                    tint = PrismTextTertiary,
-                    modifier = Modifier.size(42.dp)
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    text = "暂无近期账单",
-                    style = MaterialTheme.typography.titleSmall,
-                    color = PrismBlack,
-                    fontWeight = FontWeight.Bold
-                )
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = "点击快捷按钮开启 Lightcore 极简记账",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = PrismTextSecondary
-                )
-            }
+            Icon(
+                imageVector = Icons.Default.ReceiptLong,
+                contentDescription = null,
+                tint = ClaudeTextTertiary,
+                modifier = Modifier.size(42.dp)
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = "暂无近期账单",
+                style = MaterialTheme.typography.titleSmall,
+                color = ClaudeInk,
+                fontWeight = FontWeight.Bold
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = "点击右下角按钮开启极简记账",
+                style = MaterialTheme.typography.bodySmall,
+                color = ClaudeTextSecondary
+            )
         }
     }
 }

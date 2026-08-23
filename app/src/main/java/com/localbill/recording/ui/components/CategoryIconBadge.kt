@@ -32,8 +32,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.localbill.recording.ui.theme.PrismBorder
-import com.localbill.recording.ui.theme.PrismSlate
+import com.localbill.recording.ui.theme.GlassCardBackground
+import com.localbill.recording.ui.theme.GlassCardBorder
 
 object CategoryIcons {
     val AVAILABLE_ICONS = listOf(
@@ -75,10 +75,10 @@ fun CategoryIconBadge(
         modifier = modifier
             .size(size)
             .clip(RoundedCornerShape(cornerRadius))
-            .background(PrismSlate)
+            .background(Color.White.copy(alpha = 0.85f))
             .border(
                 width = 1.dp,
-                color = PrismBorder,
+                color = Color.White,
                 shape = RoundedCornerShape(cornerRadius)
             ),
         contentAlignment = Alignment.Center

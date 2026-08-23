@@ -1,9 +1,7 @@
 package com.localbill.recording.ui.theme
 
 import android.app.Activity
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
@@ -11,58 +9,40 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 
-private val LightColorScheme = lightColorScheme(
-    primary = PrismBlack,
-    onPrimary = PrismWhite,
-    primaryContainer = PrismSlate,
-    onPrimaryContainer = PrismBlack,
-    secondary = PrismLavender,
-    onSecondary = PrismWhite,
-    secondaryContainer = PrismSlate,
-    onSecondaryContainer = PrismBlack,
-    background = PrismSnow,
-    onBackground = PrismBlack,
-    surface = PrismWhite,
-    onSurface = PrismBlack,
-    surfaceVariant = PrismSlate,
-    onSurfaceVariant = PrismTextSecondary,
-    outline = PrismBorder
-)
-
-private val DarkColorScheme = darkColorScheme(
-    primary = PrismDarkTextPrimary,
-    onPrimary = PrismDarkBackground,
-    primaryContainer = PrismDarkSlate,
-    onPrimaryContainer = PrismDarkTextPrimary,
-    secondary = PrismLavender,
-    onSecondary = PrismDarkBackground,
-    secondaryContainer = PrismDarkSlate,
-    onSecondaryContainer = PrismDarkTextPrimary,
-    background = PrismDarkBackground,
-    onBackground = PrismDarkTextPrimary,
-    surface = PrismDarkSurface,
-    onSurface = PrismDarkTextPrimary,
-    surfaceVariant = PrismDarkSlate,
-    onSurfaceVariant = PrismDarkTextSecondary,
-    outline = PrismDarkBorder
+private val ClaudeGlassColorScheme = lightColorScheme(
+    primary = ClaudeInk,
+    onPrimary = ClaudeWarmBg,
+    primaryContainer = ClaudeWarmBgSubtle,
+    onPrimaryContainer = ClaudeInk,
+    secondary = ClaudeTerracotta,
+    onSecondary = ClaudeWarmBg,
+    secondaryContainer = ClaudeWarmBgSubtle,
+    onSecondaryContainer = ClaudeTerracotta,
+    background = ClaudeWarmBg,
+    onBackground = ClaudeInk,
+    surface = GlassCardBackground,
+    onSurface = ClaudeInk,
+    surfaceVariant = ClaudeWarmBgSubtle,
+    onSurfaceVariant = ClaudeTextSecondary,
+    outline = ClaudeBorder
 )
 
 @Composable
 fun BillRecordingTheme(
-    darkTheme: Boolean = isSystemInDarkTheme(),
+    darkTheme: Boolean = false, // 默认锁定纯净 Claude 暖奶油玻璃风，防止系统深色模式强制变纯黑
     content: @Composable () -> Unit
 ) {
-    val colorScheme = if (darkTheme) DarkColorScheme else LightColorScheme
+    val colorScheme = ClaudeGlassColorScheme
     val view = LocalView.current
 
     if (!view.isInEditMode) {
         SideEffect {
             val window = (view.context as Activity).window
-            window.statusBarColor = colorScheme.background.toArgb()
-            window.navigationBarColor = colorScheme.background.toArgb()
+            window.statusBarColor = ClaudeWarmBg.toArgb()
+            window.navigationBarColor = ClaudeWarmBg.toArgb()
             WindowCompat.getInsetsController(window, view).apply {
-                isAppearanceLightStatusBars = !darkTheme
-                isAppearanceLightNavigationBars = !darkTheme
+                isAppearanceLightStatusBars = true
+                isAppearanceLightNavigationBars = true
             }
         }
     }

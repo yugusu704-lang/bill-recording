@@ -2,8 +2,6 @@ package com.localbill.recording.ui.components
 
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -23,8 +21,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -46,16 +42,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.localbill.recording.data.model.CategoryAggregation
-import com.localbill.recording.ui.theme.PrismBlack
-import com.localbill.recording.ui.theme.PrismBorder
-import com.localbill.recording.ui.theme.PrismSlate
-import com.localbill.recording.ui.theme.PrismTextSecondary
-import com.localbill.recording.ui.theme.PrismTextTertiary
-import com.localbill.recording.ui.theme.PrismWhite
+import com.localbill.recording.ui.theme.ClaudeBorder
+import com.localbill.recording.ui.theme.ClaudeInk
+import com.localbill.recording.ui.theme.ClaudeTextSecondary
+import com.localbill.recording.ui.theme.ClaudeTextTertiary
+import com.localbill.recording.ui.theme.ClaudeWarmBgSubtle
 import java.util.Locale
 import kotlin.math.atan2
-import kotlin.math.cos
-import kotlin.math.sin
 import kotlin.math.sqrt
 
 @OptIn(ExperimentalLayoutApi::class)
@@ -76,7 +69,7 @@ fun DonutPieChart(
             Text(
                 text = "暂无分类支出数据",
                 style = MaterialTheme.typography.bodyMedium,
-                color = PrismTextSecondary
+                color = ClaudeTextSecondary
             )
         }
         return
@@ -93,20 +86,16 @@ fun DonutPieChart(
         )
     }
 
-    Card(
+    Box(
         modifier = modifier
             .fillMaxWidth()
-            .border(1.dp, PrismBorder, RoundedCornerShape(16.dp)),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = PrismWhite
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+            .clip(RoundedCornerShape(18.dp))
+            .background(Color.White.copy(alpha = 0.78f))
+            .border(1.2.dp, Color.White.copy(alpha = 0.92f), RoundedCornerShape(18.dp))
+            .padding(16.dp)
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
+            modifier = Modifier.fillMaxWidth(),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Row(
@@ -118,12 +107,12 @@ fun DonutPieChart(
                     text = "分类占比",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
-                    color = PrismBlack
+                    color = ClaudeInk
                 )
                 Text(
                     text = "共 ${aggregations.size} 个分类",
                     style = MaterialTheme.typography.bodySmall,
-                    color = PrismTextSecondary
+                    color = ClaudeTextSecondary
                 )
             }
 
@@ -131,8 +120,7 @@ fun DonutPieChart(
 
             // 环形图与中心数据
             Box(
-                modifier = Modifier
-                    .size(200.dp),
+                modifier = Modifier.size(200.dp),
                 contentAlignment = Alignment.Center
             ) {
                 Canvas(
@@ -174,9 +162,8 @@ fun DonutPieChart(
                     )
                     val arcSize = Size(diameter, diameter)
 
-                    // 绘制浅灰背景环
                     drawArc(
-                        color = PrismSlate,
+                        color = Color.White.copy(alpha = 0.5f),
                         startAngle = 0f,
                         sweepAngle = 360f,
                         useCenter = false,
@@ -226,12 +213,12 @@ fun DonutPieChart(
                         text = selectedItem.mainCategory.name,
                         style = MaterialTheme.typography.bodySmall,
                         fontWeight = FontWeight.Bold,
-                        color = PrismBlack
+                        color = ClaudeInk
                     )
                     Text(
                         text = "¥ " + String.format(Locale.US, "%.2f", selectedItem.totalAmount),
                         style = MaterialTheme.typography.labelSmall,
-                        color = PrismTextSecondary
+                        color = ClaudeTextSecondary
                     )
                 }
             }
@@ -251,10 +238,10 @@ fun DonutPieChart(
                     Row(
                         modifier = Modifier
                             .clip(RoundedCornerShape(8.dp))
-                            .background(if (isSelected) PrismSlate else Color.Transparent)
+                            .background(if (isSelected) Color.White.copy(alpha = 0.9f) else Color.White.copy(alpha = 0.5f))
                             .border(
                                 width = 1.dp,
-                                color = if (isSelected) color.copy(alpha = 0.5f) else PrismBorder,
+                                color = if (isSelected) color.copy(alpha = 0.6f) else Color.White.copy(alpha = 0.8f),
                                 shape = RoundedCornerShape(8.dp)
                             )
                             .padding(horizontal = 8.dp, vertical = 4.dp),
@@ -270,14 +257,14 @@ fun DonutPieChart(
                         Text(
                             text = item.mainCategory.name,
                             style = MaterialTheme.typography.labelSmall,
-                            color = PrismBlack,
+                            color = ClaudeInk,
                             fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
                         )
                         Spacer(modifier = Modifier.width(4.dp))
                         Text(
                             text = String.format(Locale.US, "%.0f%%", item.percentage),
                             style = MaterialTheme.typography.labelSmall,
-                            color = PrismTextSecondary
+                            color = ClaudeTextSecondary
                         )
                     }
                 }

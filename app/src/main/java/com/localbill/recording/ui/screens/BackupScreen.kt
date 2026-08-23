@@ -29,8 +29,6 @@ import androidx.compose.material.icons.filled.Security
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -53,12 +51,13 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.localbill.recording.ui.theme.PrismBlack
-import com.localbill.recording.ui.theme.PrismBorder
-import com.localbill.recording.ui.theme.PrismSlate
-import com.localbill.recording.ui.theme.PrismTextSecondary
-import com.localbill.recording.ui.theme.PrismTextTertiary
-import com.localbill.recording.ui.theme.PrismWhite
+import com.localbill.recording.ui.theme.ClaudeBorder
+import com.localbill.recording.ui.theme.ClaudeInk
+import com.localbill.recording.ui.theme.ClaudeTerracotta
+import com.localbill.recording.ui.theme.ClaudeTextSecondary
+import com.localbill.recording.ui.theme.ClaudeTextTertiary
+import com.localbill.recording.ui.theme.ClaudeWarmBg
+import com.localbill.recording.ui.theme.ClaudeWarmBgSubtle
 import com.localbill.recording.ui.viewmodel.BackupEvent
 import com.localbill.recording.ui.viewmodel.BackupViewModel
 import kotlinx.coroutines.flow.collectLatest
@@ -93,7 +92,7 @@ fun BackupScreen(
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
-        containerColor = MaterialTheme.colorScheme.background
+        containerColor = ClaudeWarmBg
     ) { innerPadding ->
         LazyColumn(
             modifier = Modifier
@@ -108,45 +107,43 @@ fun BackupScreen(
                         text = "数据管理与备份",
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold,
-                        color = PrismBlack
+                        color = ClaudeInk
                     )
                     Spacer(modifier = Modifier.height(2.dp))
                     Text(
                         text = "100% 纯本地离线隐私安全，支持 JSON 全量备份与 Excel/CSV 报表导出",
                         style = MaterialTheme.typography.bodySmall,
-                        color = PrismTextSecondary
+                        color = ClaudeTextSecondary
                     )
                 }
             }
 
-            // 隐私宣言卡片
+            // 隐私宣言毛玻璃卡片
             item {
-                Card(
+                Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .border(1.dp, PrismBorder, RoundedCornerShape(16.dp)),
-                    shape = RoundedCornerShape(16.dp),
-                    colors = CardDefaults.cardColors(containerColor = PrismWhite),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+                        .clip(RoundedCornerShape(16.dp))
+                        .background(Color.White.copy(alpha = 0.75f))
+                        .border(1.2.dp, Color.White.copy(alpha = 0.9f), RoundedCornerShape(16.dp))
+                        .padding(14.dp)
                 ) {
                     Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(14.dp),
+                        modifier = Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Box(
                             modifier = Modifier
                                 .size(36.dp)
                                 .clip(RoundedCornerShape(10.dp))
-                                .background(PrismSlate)
-                                .border(1.dp, PrismBorder, RoundedCornerShape(10.dp)),
+                                .background(ClaudeTerracotta.copy(alpha = 0.12f))
+                                .border(1.dp, ClaudeTerracotta.copy(alpha = 0.3f), RoundedCornerShape(10.dp)),
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Security,
                                 contentDescription = null,
-                                tint = PrismBlack,
+                                tint = ClaudeTerracotta,
                                 modifier = Modifier.size(18.dp)
                             )
                         }
@@ -156,44 +153,40 @@ fun BackupScreen(
                                 text = "离线安全保障",
                                 style = MaterialTheme.typography.titleSmall,
                                 fontWeight = FontWeight.Bold,
-                                color = PrismBlack
+                                color = ClaudeInk
                             )
                             Text(
                                 text = "所有财务记录仅存于当前设备本地 SQLite 中，杜绝数据泄露风险。",
                                 style = MaterialTheme.typography.bodySmall,
-                                color = PrismTextSecondary
+                                color = ClaudeTextSecondary
                             )
                         }
                     }
                 }
             }
 
-            // JSON 备份与恢复
+            // JSON 备份与恢复毛玻璃卡片
             item {
-                Card(
+                Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .border(1.dp, PrismBorder, RoundedCornerShape(16.dp)),
-                    shape = RoundedCornerShape(16.dp),
-                    colors = CardDefaults.cardColors(containerColor = PrismWhite),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+                        .clip(RoundedCornerShape(16.dp))
+                        .background(Color.White.copy(alpha = 0.75f))
+                        .border(1.2.dp, Color.White.copy(alpha = 0.9f), RoundedCornerShape(16.dp))
+                        .padding(16.dp)
                 ) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp)
-                    ) {
+                    Column(modifier = Modifier.fillMaxWidth()) {
                         Text(
                             text = "全量数据备份 (JSON)",
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
-                            color = PrismBlack
+                            color = ClaudeInk
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
                             text = "包含全部主分类、子分类以及所有历史流水账单，适用于换机迁移与归档。",
                             style = MaterialTheme.typography.bodySmall,
-                            color = PrismTextSecondary
+                            color = ClaudeTextSecondary
                         )
 
                         Spacer(modifier = Modifier.height(14.dp))
@@ -205,7 +198,7 @@ fun BackupScreen(
                             Button(
                                 onClick = { viewModel.exportBackupJson() },
                                 modifier = Modifier.weight(1f),
-                                colors = ButtonDefaults.buttonColors(containerColor = PrismBlack),
+                                colors = ButtonDefaults.buttonColors(containerColor = ClaudeTerracotta),
                                 shape = RoundedCornerShape(10.dp)
                             ) {
                                 Icon(imageVector = Icons.Default.CloudUpload, contentDescription = null, modifier = Modifier.size(16.dp))
@@ -221,41 +214,37 @@ fun BackupScreen(
                                 modifier = Modifier.weight(1f),
                                 shape = RoundedCornerShape(10.dp)
                             ) {
-                                Icon(imageVector = Icons.Default.CloudDownload, contentDescription = null, modifier = Modifier.size(16.dp))
+                                Icon(imageVector = Icons.Default.CloudDownload, contentDescription = null, tint = ClaudeInk, modifier = Modifier.size(16.dp))
                                 Spacer(modifier = Modifier.width(6.dp))
-                                Text(text = "导入恢复", fontWeight = FontWeight.Bold, color = PrismBlack)
+                                Text(text = "导入恢复", fontWeight = FontWeight.Bold, color = ClaudeInk)
                             }
                         }
                     }
                 }
             }
 
-            // CSV 导出
+            // CSV 导出毛玻璃卡片
             item {
-                Card(
+                Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .border(1.dp, PrismBorder, RoundedCornerShape(16.dp)),
-                    shape = RoundedCornerShape(16.dp),
-                    colors = CardDefaults.cardColors(containerColor = PrismWhite),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+                        .clip(RoundedCornerShape(16.dp))
+                        .background(Color.White.copy(alpha = 0.75f))
+                        .border(1.2.dp, Color.White.copy(alpha = 0.9f), RoundedCornerShape(16.dp))
+                        .padding(16.dp)
                 ) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp)
-                    ) {
+                    Column(modifier = Modifier.fillMaxWidth()) {
                         Text(
                             text = "导出为 Excel 表格 (CSV)",
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
-                            color = PrismBlack
+                            color = ClaudeInk
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
                             text = "生成带 UTF-8 BOM 的标准 CSV 表格文件，可直接用 Excel 或 WPS 开启多维分析。",
                             style = MaterialTheme.typography.bodySmall,
-                            color = PrismTextSecondary
+                            color = ClaudeTextSecondary
                         )
 
                         Spacer(modifier = Modifier.height(14.dp))
@@ -263,12 +252,13 @@ fun BackupScreen(
                         Button(
                             onClick = { viewModel.exportToCsv(context) },
                             modifier = Modifier.fillMaxWidth(),
-                            colors = ButtonDefaults.buttonColors(containerColor = PrismSlate),
+                            colors = ButtonDefaults.buttonColors(containerColor = Color.White.copy(alpha = 0.85f)),
+                            border = androidx.compose.foundation.BorderStroke(1.dp, Color.White),
                             shape = RoundedCornerShape(10.dp)
                         ) {
-                            Icon(imageVector = Icons.Default.FileDownload, contentDescription = null, tint = PrismBlack, modifier = Modifier.size(16.dp))
+                            Icon(imageVector = Icons.Default.FileDownload, contentDescription = null, tint = ClaudeInk, modifier = Modifier.size(16.dp))
                             Spacer(modifier = Modifier.width(6.dp))
-                            Text(text = "导出 CSV 表格文件", fontWeight = FontWeight.Bold, color = PrismBlack)
+                            Text(text = "导出 CSV 表格文件", fontWeight = FontWeight.Bold, color = ClaudeInk)
                         }
                     }
                 }
@@ -279,14 +269,14 @@ fun BackupScreen(
     if (isJsonResultDialogVisible) {
         AlertDialog(
             onDismissRequest = { isJsonResultDialogVisible = false },
-            containerColor = PrismWhite,
-            title = { Text(text = "备份已生成", fontWeight = FontWeight.Bold, color = PrismBlack) },
+            containerColor = Color.White.copy(alpha = 0.95f),
+            title = { Text(text = "备份已生成", fontWeight = FontWeight.Bold, color = ClaudeInk) },
             text = {
                 Column {
                     Text(
                         text = "以下为导出的 JSON 备份数据：",
                         style = MaterialTheme.typography.bodySmall,
-                        color = PrismTextSecondary
+                        color = ClaudeTextSecondary
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     OutlinedTextField(
@@ -309,7 +299,7 @@ fun BackupScreen(
                         Toast.makeText(context, "备份内容已复制到剪贴板", Toast.LENGTH_SHORT).show()
                         isJsonResultDialogVisible = false
                     },
-                    colors = ButtonDefaults.buttonColors(containerColor = PrismBlack)
+                    colors = ButtonDefaults.buttonColors(containerColor = ClaudeTerracotta)
                 ) {
                     Icon(imageVector = Icons.Default.ContentCopy, contentDescription = null, modifier = Modifier.size(16.dp))
                     Spacer(modifier = Modifier.width(4.dp))
@@ -318,7 +308,7 @@ fun BackupScreen(
             },
             dismissButton = {
                 TextButton(onClick = { isJsonResultDialogVisible = false }) {
-                    Text("关闭", color = PrismTextSecondary)
+                    Text("关闭", color = ClaudeTextSecondary)
                 }
             }
         )
@@ -327,8 +317,8 @@ fun BackupScreen(
     if (isRestoreDialogVisible) {
         AlertDialog(
             onDismissRequest = { isRestoreDialogVisible = false },
-            containerColor = PrismWhite,
-            title = { Text(text = "从 JSON 恢复备份", fontWeight = FontWeight.Bold, color = PrismBlack) },
+            containerColor = Color.White.copy(alpha = 0.95f),
+            title = { Text(text = "从 JSON 恢复备份", fontWeight = FontWeight.Bold, color = ClaudeInk) },
             text = {
                 Column {
                     Text(
@@ -365,7 +355,7 @@ fun BackupScreen(
             },
             dismissButton = {
                 TextButton(onClick = { isRestoreDialogVisible = false }) {
-                    Text("取消", color = PrismTextSecondary)
+                    Text("取消", color = ClaudeTextSecondary)
                 }
             }
         )

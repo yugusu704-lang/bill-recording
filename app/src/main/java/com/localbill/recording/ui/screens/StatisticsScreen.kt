@@ -22,11 +22,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ChevronLeft
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -49,15 +46,13 @@ import com.localbill.recording.data.model.PeriodType
 import com.localbill.recording.ui.components.BezierTrendChart
 import com.localbill.recording.ui.components.CategoryIconBadge
 import com.localbill.recording.ui.components.DonutPieChart
-import com.localbill.recording.ui.theme.PrismBlack
-import com.localbill.recording.ui.theme.PrismBorder
-import com.localbill.recording.ui.theme.PrismLavender
-import com.localbill.recording.ui.theme.PrismPink
-import com.localbill.recording.ui.theme.PrismSlate
-import com.localbill.recording.ui.theme.PrismSpectralBrush
-import com.localbill.recording.ui.theme.PrismTextSecondary
-import com.localbill.recording.ui.theme.PrismTextTertiary
-import com.localbill.recording.ui.theme.PrismWhite
+import com.localbill.recording.ui.theme.ClaudeBorder
+import com.localbill.recording.ui.theme.ClaudeInk
+import com.localbill.recording.ui.theme.ClaudeTerracotta
+import com.localbill.recording.ui.theme.ClaudeTextSecondary
+import com.localbill.recording.ui.theme.ClaudeTextTertiary
+import com.localbill.recording.ui.theme.ClaudeWarmBg
+import com.localbill.recording.ui.theme.ClaudeWarmBgSubtle
 import com.localbill.recording.ui.viewmodel.StatisticsViewModel
 import java.util.Locale
 
@@ -71,7 +66,7 @@ fun StatisticsScreen(
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
-        containerColor = MaterialTheme.colorScheme.background
+        containerColor = ClaudeWarmBg
     ) { innerPadding ->
         LazyColumn(
             modifier = Modifier
@@ -82,7 +77,7 @@ fun StatisticsScreen(
         ) {
             // 1. 周期分段切换器
             item {
-                LightcorePeriodTabs(
+                ClaudePeriodTabs(
                     selectedType = uiState.periodType,
                     onSelectType = { viewModel.setPeriodType(it) }
                 )
@@ -90,16 +85,16 @@ fun StatisticsScreen(
 
             // 2. 日期导航条
             item {
-                LightcoreDateNavigator(
+                ClaudeDateNavigator(
                     title = uiState.periodTitle,
                     onPrev = { viewModel.navigatePeriod(-1) },
                     onNext = { viewModel.navigatePeriod(1) }
                 )
             }
 
-            // 3. 统计核心指标总览卡片
+            // 3. 统计核心指标总览卡片 (毛玻璃)
             item {
-                LightcoreMetricsCard(
+                ClaudeMetricsGlassCard(
                     totalAmount = uiState.summary.totalAmount,
                     dailyAverage = uiState.summary.dailyAverage,
                     recordCount = uiState.summary.recordCount,
@@ -108,14 +103,14 @@ fun StatisticsScreen(
                 )
             }
 
-            // 4. 贝塞尔微光走势图 (复刻图例 9)
+            // 4. 贝塞尔柔光走势图
             item {
                 BezierTrendChart(
                     points = uiState.trendPoints
                 )
             }
 
-            // 5. 全彩光谱折射环形图 (复刻图例 9)
+            // 5. 全彩环形图
             item {
                 DonutPieChart(
                     aggregations = uiState.categoryAggregations,
@@ -134,12 +129,12 @@ fun StatisticsScreen(
                             text = "分类支出榜单",
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
-                            color = PrismBlack
+                            color = ClaudeInk
                         )
                         Text(
                             text = "点击分类查看细分子类构成与占比",
                             style = MaterialTheme.typography.bodySmall,
-                            color = PrismTextSecondary
+                            color = ClaudeTextSecondary
                         )
                     }
                 }
@@ -148,7 +143,7 @@ fun StatisticsScreen(
                     items = uiState.categoryAggregations,
                     key = { it.mainCategory.id }
                 ) { aggregation ->
-                    LightcoreRankingItem(
+                    ClaudeRankingGlassItem(
                         item = aggregation,
                         onClick = { selectedCategoryForDetail = aggregation }
                     )
@@ -163,7 +158,7 @@ fun StatisticsScreen(
 
     // 子分类下钻弹窗
     selectedCategoryForDetail?.let { detail ->
-        LightcoreCategoryDetailDialog(
+        ClaudeCategoryDetailDialog(
             aggregation = detail,
             onDismiss = { selectedCategoryForDetail = null }
         )
@@ -174,7 +169,7 @@ fun StatisticsScreen(
  * 分段切换器 (日 / 周 / 月)
  */
 @Composable
-private fun LightcorePeriodTabs(
+private fun ClaudePeriodTabs(
     selectedType: PeriodType,
     onSelectType: (PeriodType) -> Unit
 ) {
@@ -182,8 +177,8 @@ private fun LightcorePeriodTabs(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(12.dp))
-            .background(PrismSlate)
-            .border(1.dp, PrismBorder, RoundedCornerShape(12.dp))
+            .background(Color.White.copy(alpha = 0.65f))
+            .border(1.dp, Color.White.copy(alpha = 0.85f), RoundedCornerShape(12.dp))
             .padding(3.dp),
         horizontalArrangement = Arrangement.spacedBy(4.dp)
     ) {
@@ -193,10 +188,10 @@ private fun LightcorePeriodTabs(
                 modifier = Modifier
                     .weight(1f)
                     .clip(RoundedCornerShape(9.dp))
-                    .background(if (isSelected) PrismWhite else Color.Transparent)
+                    .background(if (isSelected) Color.White else Color.Transparent)
                     .border(
                         width = if (isSelected) 1.dp else 0.dp,
-                        color = if (isSelected) PrismBorder else Color.Transparent,
+                        color = if (isSelected) Color.White else Color.Transparent,
                         shape = RoundedCornerShape(9.dp)
                     )
                     .clickable { onSelectType(type) }
@@ -207,7 +202,7 @@ private fun LightcorePeriodTabs(
                     text = "按${type.label}",
                     style = MaterialTheme.typography.labelLarge,
                     fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                    color = if (isSelected) PrismBlack else PrismTextSecondary
+                    color = if (isSelected) ClaudeTerracotta else ClaudeTextSecondary
                 )
             }
         }
@@ -218,7 +213,7 @@ private fun LightcorePeriodTabs(
  * 日期导航器
  */
 @Composable
-private fun LightcoreDateNavigator(
+private fun ClaudeDateNavigator(
     title: String,
     onPrev: () -> Unit,
     onNext: () -> Unit
@@ -234,15 +229,15 @@ private fun LightcoreDateNavigator(
             modifier = Modifier
                 .size(32.dp)
                 .clip(RoundedCornerShape(10.dp))
-                .background(PrismWhite)
-                .border(1.dp, PrismBorder, RoundedCornerShape(10.dp))
+                .background(Color.White.copy(alpha = 0.72f))
+                .border(1.dp, Color.White.copy(alpha = 0.9f), RoundedCornerShape(10.dp))
                 .clickable(onClick = onPrev),
             contentAlignment = Alignment.Center
         ) {
             Icon(
                 imageVector = Icons.Default.ChevronLeft,
                 contentDescription = "上一周期",
-                tint = PrismBlack,
+                tint = ClaudeInk,
                 modifier = Modifier.size(18.dp)
             )
         }
@@ -251,22 +246,22 @@ private fun LightcoreDateNavigator(
             text = title,
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.Bold,
-            color = PrismBlack
+            color = ClaudeInk
         )
 
         Box(
             modifier = Modifier
                 .size(32.dp)
                 .clip(RoundedCornerShape(10.dp))
-                .background(PrismWhite)
-                .border(1.dp, PrismBorder, RoundedCornerShape(10.dp))
+                .background(Color.White.copy(alpha = 0.72f))
+                .border(1.dp, Color.White.copy(alpha = 0.9f), RoundedCornerShape(10.dp))
                 .clickable(onClick = onNext),
             contentAlignment = Alignment.Center
         ) {
             Icon(
                 imageVector = Icons.Default.ChevronRight,
                 contentDescription = "下一周期",
-                tint = PrismBlack,
+                tint = ClaudeInk,
                 modifier = Modifier.size(18.dp)
             )
         }
@@ -274,33 +269,29 @@ private fun LightcoreDateNavigator(
 }
 
 /**
- * 指标总览卡片
+ * 指标总览毛玻璃卡片
  */
 @Composable
-private fun LightcoreMetricsCard(
+private fun ClaudeMetricsGlassCard(
     totalAmount: Double,
     dailyAverage: Double,
     recordCount: Int,
     topCategoryName: String?,
     periodType: PeriodType
 ) {
-    Card(
+    Box(
         modifier = Modifier
             .fillMaxWidth()
-            .border(1.dp, PrismBorder, RoundedCornerShape(16.dp)),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = PrismWhite),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+            .clip(RoundedCornerShape(18.dp))
+            .background(Color.White.copy(alpha = 0.78f))
+            .border(1.2.dp, Color.White.copy(alpha = 0.92f), RoundedCornerShape(18.dp))
+            .padding(16.dp)
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp)
-        ) {
+        Column(modifier = Modifier.fillMaxWidth()) {
             Text(
-                text = "周期总支出 (Total Spending)",
+                text = "周期总支出",
                 style = MaterialTheme.typography.labelSmall,
-                color = PrismTextTertiary,
+                color = ClaudeTextSecondary,
                 letterSpacing = 0.5.sp
             )
             Spacer(modifier = Modifier.height(4.dp))
@@ -308,7 +299,7 @@ private fun LightcoreMetricsCard(
                 Text(
                     text = "¥",
                     style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
-                    color = PrismBlack,
+                    color = ClaudeInk,
                     modifier = Modifier.padding(end = 4.dp, bottom = 2.dp)
                 )
                 Text(
@@ -317,12 +308,12 @@ private fun LightcoreMetricsCard(
                         fontSize = 30.sp,
                         fontWeight = FontWeight.ExtraBold
                     ),
-                    color = PrismBlack
+                    color = ClaudeInk
                 )
             }
 
             Spacer(modifier = Modifier.height(12.dp))
-            HorizontalDivider(color = PrismBorder, thickness = 0.8.dp)
+            HorizontalDivider(color = ClaudeBorder.copy(alpha = 0.5f), thickness = 0.8.dp)
             Spacer(modifier = Modifier.height(10.dp))
 
             Row(
@@ -333,14 +324,14 @@ private fun LightcoreMetricsCard(
                     Text(
                         text = if (periodType == PeriodType.DAY) "消费笔数" else "日均支出",
                         style = MaterialTheme.typography.bodySmall,
-                        color = PrismTextSecondary
+                        color = ClaudeTextSecondary
                     )
                     Spacer(modifier = Modifier.height(2.dp))
                     Text(
                         text = if (periodType == PeriodType.DAY) "${recordCount} 笔" else "¥ " + String.format(Locale.US, "%.2f", dailyAverage),
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.Bold,
-                        color = PrismBlack
+                        color = ClaudeInk
                     )
                 }
 
@@ -348,14 +339,14 @@ private fun LightcoreMetricsCard(
                     Text(
                         text = "首要开销",
                         style = MaterialTheme.typography.bodySmall,
-                        color = PrismTextSecondary
+                        color = ClaudeTextSecondary
                     )
                     Spacer(modifier = Modifier.height(2.dp))
                     Text(
                         text = topCategoryName ?: "暂无支出",
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.Bold,
-                        color = if (topCategoryName != null) PrismLavender else PrismBlack
+                        color = if (topCategoryName != null) ClaudeTerracotta else ClaudeInk
                     )
                 }
             }
@@ -364,27 +355,23 @@ private fun LightcoreMetricsCard(
 }
 
 /**
- * 分类排行条目卡片
+ * 分类排行条目透明玻璃卡片
  */
 @Composable
-private fun LightcoreRankingItem(
+private fun ClaudeRankingGlassItem(
     item: CategoryAggregation,
     onClick: () -> Unit
 ) {
-    Card(
+    Box(
         modifier = Modifier
             .fillMaxWidth()
-            .border(1.dp, PrismBorder, RoundedCornerShape(14.dp))
-            .clickable(onClick = onClick),
-        shape = RoundedCornerShape(14.dp),
-        colors = CardDefaults.cardColors(containerColor = PrismWhite),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+            .clip(RoundedCornerShape(14.dp))
+            .background(Color.White.copy(alpha = 0.72f))
+            .border(1.dp, Color.White.copy(alpha = 0.88f), RoundedCornerShape(14.dp))
+            .clickable(onClick = onClick)
+            .padding(12.dp)
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(12.dp)
-        ) {
+        Column(modifier = Modifier.fillMaxWidth()) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
@@ -404,14 +391,14 @@ private fun LightcoreRankingItem(
                             text = item.mainCategory.name,
                             style = MaterialTheme.typography.bodyLarge,
                             fontWeight = FontWeight.SemiBold,
-                            color = PrismBlack
+                            color = ClaudeInk
                         )
                         Text(
                             text = if (item.subCategoryBreakdowns.isNotEmpty())
                                 "含 ${item.subCategoryBreakdowns.size} 个细分子类"
                             else "${item.count} 笔明细",
                             style = MaterialTheme.typography.bodySmall,
-                            color = PrismTextSecondary
+                            color = ClaudeTextSecondary
                         )
                     }
                 }
@@ -421,7 +408,7 @@ private fun LightcoreRankingItem(
                         text = "¥ " + String.format(Locale.US, "%.2f", item.totalAmount),
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.Bold,
-                        color = PrismBlack
+                        color = ClaudeInk
                     )
                     Text(
                         text = String.format(Locale.US, "%.1f%%", item.percentage),
@@ -438,7 +425,7 @@ private fun LightcoreRankingItem(
                     .fillMaxWidth()
                     .height(3.dp)
                     .clip(RoundedCornerShape(1.5.dp))
-                    .background(PrismSlate)
+                    .background(Color.White.copy(alpha = 0.5f))
             ) {
                 Box(
                     modifier = Modifier
@@ -456,13 +443,13 @@ private fun LightcoreRankingItem(
  * 子分类明细下钻弹窗
  */
 @Composable
-private fun LightcoreCategoryDetailDialog(
+private fun ClaudeCategoryDetailDialog(
     aggregation: CategoryAggregation,
     onDismiss: () -> Unit
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        containerColor = PrismWhite,
+        containerColor = Color.White.copy(alpha = 0.95f),
         title = {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
@@ -481,12 +468,12 @@ private fun LightcoreCategoryDetailDialog(
                         text = "${aggregation.mainCategory.name} · 子类构成",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
-                        color = PrismBlack
+                        color = ClaudeInk
                     )
                     Text(
                         text = "总计 ¥ " + String.format(Locale.US, "%.2f", aggregation.totalAmount),
                         style = MaterialTheme.typography.bodySmall,
-                        color = PrismTextSecondary
+                        color = ClaudeTextSecondary
                     )
                 }
             }
@@ -496,7 +483,7 @@ private fun LightcoreCategoryDetailDialog(
                 Text(
                     text = "该分类下暂无细分子类记录",
                     style = MaterialTheme.typography.bodyMedium,
-                    color = PrismTextSecondary
+                    color = ClaudeTextSecondary
                 )
             } else {
                 Column(
@@ -525,12 +512,12 @@ private fun LightcoreCategoryDetailDialog(
                                         text = subItem.category.name,
                                         style = MaterialTheme.typography.bodyMedium,
                                         fontWeight = FontWeight.Medium,
-                                        color = PrismBlack
+                                        color = ClaudeInk
                                     )
                                     Text(
                                         text = "${subItem.count} 笔",
                                         style = MaterialTheme.typography.bodySmall,
-                                        color = PrismTextSecondary
+                                        color = ClaudeTextSecondary
                                     )
                                 }
                             }
@@ -540,7 +527,7 @@ private fun LightcoreCategoryDetailDialog(
                                     text = "¥ " + String.format(Locale.US, "%.2f", subItem.amount),
                                     style = MaterialTheme.typography.titleSmall,
                                     fontWeight = FontWeight.Bold,
-                                    color = PrismBlack
+                                    color = ClaudeInk
                                 )
                                 Text(
                                     text = String.format(Locale.US, "占 %.1f%%", subItem.percentage),
@@ -555,7 +542,7 @@ private fun LightcoreCategoryDetailDialog(
         },
         confirmButton = {
             TextButton(onClick = onDismiss) {
-                Text(text = "关闭", fontWeight = FontWeight.Bold, color = PrismBlack)
+                Text(text = "关闭", fontWeight = FontWeight.Bold, color = ClaudeTerracotta)
             }
         }
     )

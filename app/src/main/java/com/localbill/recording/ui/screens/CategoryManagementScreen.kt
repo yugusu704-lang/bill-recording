@@ -29,8 +29,6 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.DeleteOutline
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -51,6 +49,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -59,13 +58,14 @@ import androidx.compose.ui.unit.sp
 import com.localbill.recording.data.entity.CategoryEntity
 import com.localbill.recording.ui.components.CategoryIconBadge
 import com.localbill.recording.ui.components.CategoryIcons
-import com.localbill.recording.ui.theme.LightcoreCategoryColors
-import com.localbill.recording.ui.theme.PrismBlack
-import com.localbill.recording.ui.theme.PrismBorder
-import com.localbill.recording.ui.theme.PrismSlate
-import com.localbill.recording.ui.theme.PrismTextSecondary
-import com.localbill.recording.ui.theme.PrismTextTertiary
-import com.localbill.recording.ui.theme.PrismWhite
+import com.localbill.recording.ui.theme.ClaudeBorder
+import com.localbill.recording.ui.theme.ClaudeCategoryColors
+import com.localbill.recording.ui.theme.ClaudeInk
+import com.localbill.recording.ui.theme.ClaudeTerracotta
+import com.localbill.recording.ui.theme.ClaudeTextSecondary
+import com.localbill.recording.ui.theme.ClaudeTextTertiary
+import com.localbill.recording.ui.theme.ClaudeWarmBg
+import com.localbill.recording.ui.theme.ClaudeWarmBgSubtle
 import com.localbill.recording.ui.viewmodel.CategoryEvent
 import com.localbill.recording.ui.viewmodel.CategoryNode
 import com.localbill.recording.ui.viewmodel.CategoryViewModel
@@ -100,7 +100,7 @@ fun CategoryManagementScreen(
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
-        containerColor = MaterialTheme.colorScheme.background,
+        containerColor = ClaudeWarmBg,
         floatingActionButton = {
             FloatingActionButton(
                 onClick = {
@@ -108,10 +108,12 @@ fun CategoryManagementScreen(
                     parentCategoryForNewSub = null
                     isEditDialogVisible = true
                 },
-                containerColor = PrismBlack,
-                contentColor = PrismWhite,
+                containerColor = ClaudeTerracotta,
+                contentColor = Color.White,
                 shape = CircleShape,
-                modifier = Modifier.padding(bottom = 16.dp)
+                modifier = Modifier
+                    .padding(bottom = 16.dp)
+                    .shadow(8.dp, CircleShape, spotColor = ClaudeTerracotta.copy(alpha = 0.4f))
             ) {
                 Row(
                     modifier = Modifier.padding(horizontal = 16.dp),
@@ -137,13 +139,13 @@ fun CategoryManagementScreen(
                         text = "分类系统与层级",
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold,
-                        color = PrismBlack
+                        color = ClaudeInk
                     )
                     Spacer(modifier = Modifier.height(2.dp))
                     Text(
                         text = "支持主分类与子分类自由拓展，自动汇总下辖流水",
                         style = MaterialTheme.typography.bodySmall,
-                        color = PrismTextSecondary
+                        color = ClaudeTextSecondary
                     )
                 }
             }
@@ -152,7 +154,7 @@ fun CategoryManagementScreen(
                 items = uiState.categoryNodes,
                 key = { it.mainCategory.id }
             ) { node ->
-                LightcoreCategoryCard(
+                ClaudeGlassCategoryCard(
                     node = node,
                     onAddSubCategory = {
                         parentCategoryForNewSub = node.mainCategory
@@ -177,7 +179,7 @@ fun CategoryManagementScreen(
     }
 
     if (isEditDialogVisible) {
-        LightcoreAddEditCategoryDialog(
+        ClaudeAddEditCategoryDialog(
             category = editingCategory,
             parentCategory = parentCategoryForNewSub,
             onDismiss = {
@@ -201,25 +203,21 @@ fun CategoryManagementScreen(
 }
 
 @Composable
-private fun LightcoreCategoryCard(
+private fun ClaudeGlassCategoryCard(
     node: CategoryNode,
     onAddSubCategory: () -> Unit,
     onEditCategory: (CategoryEntity) -> Unit,
     onDeleteCategory: (CategoryEntity) -> Unit
 ) {
-    Card(
+    Box(
         modifier = Modifier
             .fillMaxWidth()
-            .border(1.dp, PrismBorder, RoundedCornerShape(16.dp)),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = PrismWhite),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+            .clip(RoundedCornerShape(16.dp))
+            .background(Color.White.copy(alpha = 0.75f))
+            .border(1.2.dp, Color.White.copy(alpha = 0.9f), RoundedCornerShape(16.dp))
+            .padding(14.dp)
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(14.dp)
-        ) {
+        Column(modifier = Modifier.fillMaxWidth()) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
@@ -240,21 +238,21 @@ private fun LightcoreCategoryCard(
                                 text = node.mainCategory.name,
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold,
-                                color = PrismBlack
+                                color = ClaudeInk
                             )
                             if (node.mainCategory.isBuiltIn) {
                                 Spacer(modifier = Modifier.width(6.dp))
                                 Text(
                                     text = "内置",
                                     style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
-                                    color = PrismTextTertiary
+                                    color = ClaudeTextTertiary
                                 )
                             }
                         }
                         Text(
                             text = "${node.subCategories.size} 个子分类",
                             style = MaterialTheme.typography.bodySmall,
-                            color = PrismTextSecondary
+                            color = ClaudeTextSecondary
                         )
                     }
                 }
@@ -267,7 +265,7 @@ private fun LightcoreCategoryCard(
                         Icon(
                             imageVector = Icons.Default.Edit,
                             contentDescription = "编辑",
-                            tint = PrismTextSecondary,
+                            tint = ClaudeTextSecondary,
                             modifier = Modifier.size(16.dp)
                         )
                     }
@@ -279,7 +277,7 @@ private fun LightcoreCategoryCard(
                             Icon(
                                 imageVector = Icons.Default.DeleteOutline,
                                 contentDescription = "删除",
-                                tint = PrismTextTertiary,
+                                tint = ClaudeTextTertiary,
                                 modifier = Modifier.size(16.dp)
                             )
                         }
@@ -288,7 +286,7 @@ private fun LightcoreCategoryCard(
             }
 
             Spacer(modifier = Modifier.height(10.dp))
-            HorizontalDivider(color = PrismBorder, thickness = 0.8.dp)
+            HorizontalDivider(color = ClaudeBorder.copy(alpha = 0.5f), thickness = 0.8.dp)
             Spacer(modifier = Modifier.height(8.dp))
 
             Column(
@@ -315,7 +313,7 @@ private fun LightcoreCategoryCard(
                             Text(
                                 text = sub.name,
                                 style = MaterialTheme.typography.bodyMedium,
-                                color = PrismBlack
+                                color = ClaudeInk
                             )
                         }
 
@@ -327,7 +325,7 @@ private fun LightcoreCategoryCard(
                                 Icon(
                                     imageVector = Icons.Default.Edit,
                                     contentDescription = "编辑",
-                                    tint = PrismTextSecondary,
+                                    tint = ClaudeTextSecondary,
                                     modifier = Modifier.size(14.dp)
                                 )
                             }
@@ -338,7 +336,7 @@ private fun LightcoreCategoryCard(
                                 Icon(
                                     imageVector = Icons.Default.DeleteOutline,
                                     contentDescription = "删除",
-                                    tint = PrismTextTertiary,
+                                    tint = ClaudeTextTertiary,
                                     modifier = Modifier.size(14.dp)
                                 )
                             }
@@ -361,14 +359,14 @@ private fun LightcoreCategoryCard(
                         Icon(
                             imageVector = Icons.Default.Add,
                             contentDescription = null,
-                            tint = PrismTextSecondary,
+                            tint = ClaudeTerracotta,
                             modifier = Modifier.size(14.dp)
                         )
                         Spacer(modifier = Modifier.width(4.dp))
                         Text(
                             text = "添加子分类...",
                             style = MaterialTheme.typography.bodySmall,
-                            color = PrismTextSecondary,
+                            color = ClaudeTerracotta,
                             fontWeight = FontWeight.Medium
                         )
                     }
@@ -380,7 +378,7 @@ private fun LightcoreCategoryCard(
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun LightcoreAddEditCategoryDialog(
+private fun ClaudeAddEditCategoryDialog(
     category: CategoryEntity?,
     parentCategory: CategoryEntity?,
     onDismiss: () -> Unit,
@@ -391,7 +389,7 @@ private fun LightcoreAddEditCategoryDialog(
         mutableStateOf(category?.iconName ?: parentCategory?.iconName ?: "shopping_cart")
     }
     var selectedColorHex by remember {
-        mutableLongStateOf(category?.colorHex ?: parentCategory?.colorHex ?: LightcoreCategoryColors.first())
+        mutableLongStateOf(category?.colorHex ?: parentCategory?.colorHex ?: ClaudeCategoryColors.first())
     }
 
     val dialogTitle = when {
@@ -402,8 +400,8 @@ private fun LightcoreAddEditCategoryDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        containerColor = PrismWhite,
-        title = { Text(text = dialogTitle, fontWeight = FontWeight.Bold, color = PrismBlack) },
+        containerColor = Color.White.copy(alpha = 0.95f),
+        title = { Text(text = dialogTitle, fontWeight = FontWeight.Bold, color = ClaudeInk) },
         text = {
             Column(
                 modifier = Modifier.fillMaxWidth(),
@@ -422,7 +420,7 @@ private fun LightcoreAddEditCategoryDialog(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(text = "预览：", style = MaterialTheme.typography.bodySmall, color = PrismTextSecondary)
+                    Text(text = "预览：", style = MaterialTheme.typography.bodySmall, color = ClaudeTextSecondary)
                     Spacer(modifier = Modifier.width(6.dp))
                     CategoryIconBadge(
                         iconName = selectedIconName,
@@ -440,7 +438,7 @@ private fun LightcoreAddEditCategoryDialog(
                 }
 
                 // 图标选择
-                Text(text = "选择图标", style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.SemiBold, color = PrismBlack)
+                Text(text = "选择图标", style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.SemiBold, color = ClaudeInk)
                 FlowRow(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -452,15 +450,15 @@ private fun LightcoreAddEditCategoryDialog(
                             modifier = Modifier
                                 .size(34.dp)
                                 .clip(RoundedCornerShape(8.dp))
-                                .background(if (isSelected) PrismBlack else PrismSlate)
-                                .border(1.dp, PrismBorder, RoundedCornerShape(8.dp))
+                                .background(if (isSelected) ClaudeTerracotta else Color.White.copy(alpha = 0.8f))
+                                .border(1.dp, if (isSelected) ClaudeTerracotta else ClaudeBorder, RoundedCornerShape(8.dp))
                                 .clickable { selectedIconName = iconKey },
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(
                                 imageVector = vector,
                                 contentDescription = iconKey,
-                                tint = if (isSelected) Color.White else PrismBlack,
+                                tint = if (isSelected) Color.White else ClaudeInk,
                                 modifier = Modifier.size(16.dp)
                             )
                         }
@@ -468,14 +466,14 @@ private fun LightcoreAddEditCategoryDialog(
                 }
 
                 // 色彩选择
-                Text(text = "选择色调", style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.SemiBold, color = PrismBlack)
+                Text(text = "选择色调", style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.SemiBold, color = ClaudeInk)
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
                         .horizontalScroll(rememberScrollState()),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    LightcoreCategoryColors.forEach { colorVal ->
+                    ClaudeCategoryColors.forEach { colorVal ->
                         val isSelected = selectedColorHex == colorVal
                         Box(
                             modifier = Modifier
@@ -484,7 +482,7 @@ private fun LightcoreAddEditCategoryDialog(
                                 .background(Color(colorVal))
                                 .border(
                                     width = if (isSelected) 2.5.dp else 0.dp,
-                                    color = if (isSelected) PrismBlack else Color.Transparent,
+                                    color = if (isSelected) ClaudeInk else Color.Transparent,
                                     shape = CircleShape
                                 )
                                 .clickable { selectedColorHex = colorVal }
@@ -497,12 +495,12 @@ private fun LightcoreAddEditCategoryDialog(
             TextButton(
                 onClick = { onSave(name, selectedIconName, selectedColorHex) }
             ) {
-                Text(text = "保存", fontWeight = FontWeight.Bold, color = PrismBlack)
+                Text(text = "保存", fontWeight = FontWeight.Bold, color = ClaudeTerracotta)
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text(text = "取消", color = PrismTextSecondary)
+                Text(text = "取消", color = ClaudeTextSecondary)
             }
         }
     )

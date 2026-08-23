@@ -4,75 +4,57 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 
 // ==========================================
-// LIGHTCORE PRISM UI DESIGN SYSTEM
+// CLAUDE WARM CREAM & TRANSLUCENT GLASS
 // ==========================================
 
-// 1. 核心色彩 (1. COLOR)
-val PrismWhite = Color(0xFFFFFFFF)          // White - 纯白卡片表层
-val PrismSnow = Color(0xFFFAFAFC)           // Snow - 极其纯净通透的雪域白背景
-val PrismSlate = Color(0xFFF2F4F8)          // Slate - 胶囊按钮/微容器浅灰
-val PrismBorder = Color(0xFFE6E8EF)         // Border - 1px 极细微光高精度描边
-val PrismBlack = Color(0xFF0A0A0C)          // Black - 深邃高对比墨黑文字/图标
+// 1. Claude 经典温润象牙/米沙纸质背景
+val ClaudeWarmBg = Color(0xFFFBF9F5)          // 温暖奶油米白底色
+val ClaudeWarmBgSubtle = Color(0xFFF3EDE2)    // 暖沙色微底/微容器
+val ClaudeBorder = Color(0xFFE8E2D6)          // 暖调纸质细描边
+val ClaudeBorderLight = Color(0xFFF0EBE1)     // 极淡分界线
 
-// 次级文本与注释
-val PrismTextSecondary = Color(0xFF64748B)  // 蓝调副标题灰
-val PrismTextTertiary = Color(0xFF94A3B8)   // 浅注释灰
-val PrismTextQuaternary = Color(0xFFCBD5E1) // 极淡占位灰
+// 2. 玻璃拟态 (Glassmorphism) 透明材质
+val GlassCardBackground = Color(0xCCFFFFFF)   // 80% 不透明度纯白毛玻璃
+val GlassCardBackgroundLight = Color(0x99FFFFFF) // 60% 不透明度轻薄毛玻璃
+val GlassCardBorder = Color(0xEEFFFFFF)       // 93% 高光玻璃边缘
+val GlassPillBackground = Color(0x80F3EDE2)   // 半透明微胶囊底色
 
-// 2. 棱镜折射五彩光谱渐变 (2. PRISM GRADIENTS)
-val PrismPeach = Color(0xFFFFB86B)          // 珊瑚橙 / 蜜桃
-val PrismGold = Color(0xFFFFE57A)           // 闪金 / 柔黄
-val PrismCyan = Color(0xFF7EE8FF)           // 青空蓝 / 霓虹青
-val PrismLavender = Color(0xFFC588FF)       // 薰衣草紫 / 幻紫
-val PrismPink = Color(0xFFFF8ED8)           // 玫粉 / 霓虹粉
+// 3. Claude 标志性陶土红与文字墨色
+val ClaudeTerracotta = Color(0xFFD96B43)      // Claude 标志性陶土红 (Terracotta)
+val ClaudePeach = Color(0xFFF2A97B)           // 柔和珊瑚蜜桃
+val ClaudeInk = Color(0xFF2C2B29)             // 温暖石墨黑墨水字
+val ClaudeTextSecondary = Color(0xFF73706A)   // 温暖中灰副标题
+val ClaudeTextTertiary = Color(0xFFA8A39A)    // 极淡注释灰
 
-// 五彩光谱画刷
-val PrismSpectralBrush = Brush.linearGradient(
+// 4. 棱镜与 Claude 暖光交融渐变 (Warm Prism Gradient)
+val PrismWarmSpectralBrush = Brush.linearGradient(
     colors = listOf(
-        PrismPeach,
-        PrismGold,
-        PrismCyan,
-        PrismLavender,
-        PrismPink
+        Color(0xFFD96B43), // 陶土红
+        Color(0xFFF59E0B), // 暖琥珀金
+        Color(0xFF2DD4BF), // 薄荷极光青
+        Color(0xFFA855F7), // 梦幻薰衣草紫
+        Color(0xFFF43F5E)  // 霓虹珊瑚粉
     )
 )
 
-// 蓝紫微光画刷 (用于主折线走势图与核心光晕)
-val PrismLuminousBrush = Brush.linearGradient(
+val PrismSoftGlowBrush = Brush.linearGradient(
     colors = listOf(
-        PrismCyan,
-        PrismLavender,
-        PrismPink
+        Color(0xFFF2A97B),
+        Color(0xFFC084FC),
+        Color(0xFF818CF8)
     )
 )
 
-// 暖光渐变画刷
-val PrismWarmBrush = Brush.linearGradient(
-    colors = listOf(
-        PrismPeach,
-        PrismGold,
-        PrismPink
-    )
-)
-
-// 暗色主题 (Darkcore Prism)
-val PrismDarkBackground = Color(0xFF0D0E12)
-val PrismDarkSurface = Color(0xFF16181F)
-val PrismDarkSlate = Color(0xFF222530)
-val PrismDarkBorder = Color(0xFF2E3342)
-val PrismDarkTextPrimary = Color(0xFFF8FAFC)
-val PrismDarkTextSecondary = Color(0xFF94A3B8)
-
-// 3. Lightcore 分类全彩光谱调色盘
-val LightcoreCategoryColors = listOf(
-    0xFF0284C7L, // 青空电光蓝 (学习/科技)
-    0xFF16A34AL, // 翡翠薄荷绿 (饮食/日常)
-    0xFFEA580CL, // 珊瑚炽热橙 (餐饮/外出)
-    0xFF7C3AEDL, // 幻光薰衣草紫 (交通/出行)
-    0xFFE11D48L, // 霓虹玫红 (服饰/美妆)
-    0xFF0D9488L, // 极光冷青 (居家/生活)
-    0xFFD97706L, // 琥珀日光 (数码/娱乐)
-    0xFF4F46E5L, // 皇家星际靛 (商务/金融)
-    0xFF475569L, // 钛金属灰 (其他/杂项)
-    0xFFDB2777L  // 樱花霓虹粉 (医疗/健康)
+// 5. Claude 风格分类高级调色盘
+val ClaudeCategoryColors = listOf(
+    0xFFD96B43L, // 陶土红 (饮食/日常)
+    0xFF2563EBL, // 蔚蓝 (学习/科技)
+    0xFF059669L, // 翡翠绿 (自然/水果)
+    0xFF7C3AEDL, // 紫罗兰 (交通/出行)
+    0xFFE11D48L, // 浆果红 (服饰/美妆)
+    0xFFD97706L, // 暖琥珀 (日用/居家)
+    0xFF0891B2L, // 碧海青 (数码/娱乐)
+    0xFF4F46E5L, // 皇家蓝 (商务/财务)
+    0xFF57534EL, // 暖石灰 (其他/杂项)
+    0xFFDB2777L  // 樱花粉 (医疗/健康)
 )

@@ -6,6 +6,8 @@ import com.localbill.recording.data.entity.CategoryEntity
 import com.localbill.recording.data.entity.RecordEntity
 import com.localbill.recording.data.entity.RecordWithCategory
 import com.localbill.recording.data.model.CategoryAggregation
+import com.localbill.recording.data.model.KakeiboPillar
+import com.localbill.recording.data.model.KakeiboPillarStat
 import com.localbill.recording.data.model.PeriodSummary
 import com.localbill.recording.data.model.PeriodType
 import com.localbill.recording.data.model.SubCategoryAggregation
@@ -59,6 +61,51 @@ class RecordRepository(
     }
 
     /**
+     * 智能推断或解析记账的 Kakeibo 四支柱属性
+     */
+    fun resolveKakeiboPillar(item: RecordWithCategory): KakeiboPillar {
+        val note = item.record.note
+        // 若备注包含 [WANTS], [CULTURE], [UNEXPECTED] 等标记直接解析
+        if (note.contains("心动") || note.contains("浪费") || note.contains("想要")) return KakeiboPillar.WANTS
+        if (note.contains("文化") || note.contains("学习") || note.contains("投资") || note.contains("提升")) return KakeiboPillar.CULTURE
+        if (note.contains("突发") || note.contains("意外") || note.contains("维修") || note.contains("医疗")) return KakeiboPillar.UNEXPECTED
+
+        // 根据分类名称启发式归纳
+        val catName = item.displayCategoryName
+        return when {
+            catName.contains("学习") || catName.contains("书籍") || catName.contains("运动") -> KakeiboPillar.CULTURE
+            catName.contains("娱乐") || catName.contains("数码") || catName.contains("服饰") || catName.contains("外卖") || catName.contains("零食") -> KakeiboPillar.WANTS
+            catName.contains("医疗") || catName.contains("维修") || catName.contains("突发") -> KakeiboPillar.UNEXPECTED
+            else -> KakeiboPillar.NEEDS
+        }
+    }
+
+    /**
+     * 计算日本家计簿 (Kakeibo) 四大消费支柱统计
+     */
+    fun calculateKakeiboPillars(records: List<RecordWithCategory>): List<KakeiboPillarStat> {
+        val total = records.sumOf { it.record.amount }
+        val pillarMap = mutableMapOf<KakeiboPillar, MutableList<RecordWithCategory>>()
+
+        records.forEach { r ->
+            val p = resolveKakeiboPillar(r)
+            pillarMap.getOrPut(p) { mutableListOf() }.add(r)
+        }
+
+        return KakeiboPillar.values().map { pillar ->
+            val list = pillarMap[pillar] ?: emptyList()
+            val amount = list.sumOf { it.record.amount }
+            val percentage = if (total > 0) ((amount / total) * 100).toFloat() else 0f
+            KakeiboPillarStat(
+                pillar = pillar,
+                amount = amount,
+                count = list.size,
+                percentage = percentage
+            )
+        }
+    }
+
+    /**
      * 计算周期统计概览 (纯函数)
      */
     fun calculatePeriodSummary(records: List<RecordWithCategory>, daysCount: Int): PeriodSummary {
@@ -75,19 +122,30 @@ class RecordRepository(
         val aggregations = calculateCategoryAggregations(records)
         val topCategory = aggregations.firstOrNull()
 
+        // 统计 Kakeibo 四支柱
+        val pillars = calculateKakeiboPillars(records)
+
+        val wantsPercentage = pillars.find { it.pillar == KakeiboPillar.WANTS }?.percentage ?: 0f
+        val quote = when {
+            wantsPercentage > 40f -> "本月「心动·浪費」支出偏高，适度克制冲动，把温暖留给更持久的热爱。"
+            wantsPercentage < 15f -> "理智而克制的一段生活，「必要」井井有条，手账里的每一笔都在守护未来。"
+            else -> "生活张弛有度，心动与必需平衡恰好，愿每一份开销都换来内心的丰盛。"
+        }
+
         return PeriodSummary(
             totalAmount = totalAmount,
             dailyAverage = dailyAverage,
             recordCount = recordCount,
             topCategoryName = topCategory?.mainCategory?.name,
             topCategoryAmount = topCategory?.totalAmount ?: 0.0,
-            highestSingleExpense = highest
+            highestSingleExpense = highest,
+            kakeiboPillars = pillars,
+            reflectionQuote = quote
         )
     }
 
     /**
-     * 核心分类聚合算法 (纯函数)：
-     * 自动聚合同一主分类下直接记录及所有子分类的金额，并计算各大类及子类占比
+     * 核心分类聚合算法 (纯函数)
      */
     fun calculateCategoryAggregations(records: List<RecordWithCategory>): List<CategoryAggregation> {
         if (records.isEmpty()) return emptyList()
@@ -97,7 +155,6 @@ class RecordRepository(
 
         // 1. 按主分类分组
         val groupedByMain = records.groupBy { it.category }
-
         val resultList = mutableListOf<CategoryAggregation>()
 
         for ((mainCategory, mainRecords) in groupedByMain) {
@@ -137,7 +194,6 @@ class RecordRepository(
                 )
             }
 
-            // 若有直接未选子分类的支出，也可以作为一个"直接支出"子项展示
             if (directWithoutSubCount > 0 && subBreakdowns.isNotEmpty()) {
                 val directPercentage = ((directWithoutSubTotal / mainCategoryTotal) * 100).toFloat()
                 val directPseudoCategory = CategoryEntity(
@@ -157,7 +213,6 @@ class RecordRepository(
                 )
             }
 
-            // 按金额降序排列子分类
             subBreakdowns.sortByDescending { it.amount }
 
             resultList.add(
@@ -171,7 +226,6 @@ class RecordRepository(
             )
         }
 
-        // 按主分类总金额降序排列
         resultList.sortByDescending { it.totalAmount }
         return resultList
     }
@@ -187,7 +241,6 @@ class RecordRepository(
     ): List<TrendPoint> {
         return when (periodType) {
             PeriodType.DAY -> {
-                // 拆分为 6 个时段区间：00-04, 04-08, 08-12, 12-16, 16-20, 20-24
                 val timeBuckets = listOf("0-4时", "4-8时", "8-12时", "12-16时", "16-20时", "20-24时")
                 val bucketAmounts = DoubleArray(6) { 0.0 }
 
@@ -208,7 +261,6 @@ class RecordRepository(
             }
 
             PeriodType.WEEK -> {
-                // 一周 7 天（周一到周日）
                 val (weekStart, _) = DateTimeUtils.getWeekRange(selectedDate)
                 val mondayDate = DateTimeUtils.toLocalDate(weekStart)
 
@@ -240,7 +292,6 @@ class RecordRepository(
             }
 
             PeriodType.MONTH -> {
-                // 当月所有天数 (1号至月末)
                 val yearMonth = YearMonth.from(selectedDate)
                 val lengthOfMonth = yearMonth.lengthOfMonth()
                 val today = LocalDate.now()

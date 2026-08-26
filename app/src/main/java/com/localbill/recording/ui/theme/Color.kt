@@ -3,65 +3,73 @@ package com.localbill.recording.ui.theme
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 
-// ==========================================
-// 🌸 JAPANESE AIRY & WABI-SABI COLOR PALETTE
-// ==========================================
+// =========================================================================
+// 🌸 ほぼ日手帳 (Hobonichi Techo) × 日本家計簿 (Kakeibo) 设计色彩系统
+// =========================================================================
 
-// 1. 和纸宣白基底 (Washi Paper Backgrounds)
-val WashiPaperBg = Color(0xFFFAF8F5)          // 温润手工宣纸米白底色
-val WashiPaperSubtle = Color(0xFFF3EEE6)      // 柔和纸质浅灰/微容器色
-val WashiCardBg = Color(0xFFFFFFFF)           // 纯净和纸卡片纯白
-val WashiBorder = Color(0xFFE8E2D6)          // 纸质细线描边 (0.8dp 细腻透光)
-val WashiBorderSubtle = Color(0xFFF1ECE3)    // 极淡分界线
+// 1. 巴川纸 (Tomoe River Paper) 与手账纸质底色
+val TomoePaperBg = Color(0xFFFAF7F2)            // 巴川纸温润象牙米白
+val TomoePaperPage = Color(0xFFFFFFFF)          // 手账内页纯白
+val TomoePaperGrid = Color(0x122D2B2A)          // 3.7mm 方眼点阵/浅灰网格线
+val TomoePaperSpine = Color(0xFFEADBCE)         // 账本折页与书脊阴影
+val TomoeBorder = Color(0xFFE4DCD0)             // 纸质边缘细腻细线
 
-// 2. 和风自然与意境主色调 (Nature & Zen Aesthetics)
-val MatchaPrimary = Color(0xFF587A63)        // 若草抹茶绿 (主色：沉静、自然、克制)
-val MatchaLight = Color(0xFF7D9F88)          // 浅抹茶绿 (微高亮)
-val MatchaContainer = Color(0xFFEBF2EC)      // 抹茶淡色容器底色
+// 兼容别名
+val WashiPaperBg = TomoePaperBg
+val WashiPaperSubtle = Color(0xFFF3EEE6)
+val WashiCardBg = TomoePaperPage
+val WashiBorder = TomoeBorder
 
-val SakuraAccent = Color(0xFFD87D88)         // 樱落浅粉 (强调色：优雅、柔和、治愈)
-val SakuraSoft = Color(0xFFF7E6E9)           // 樱花柔粉微底色
+// 2. 朱红印章 (Hanko 判子)
+val HankoRed = Color(0xFFC83838)                // 朱红印泥原色
+val HankoRedLight = Color(0x22C83838)           // 浅朱红盖印晕开
+val HankoSealBg = Color(0xFFFFF0F0)             // 印章微容器底
 
-val YamabukiGold = Color(0xFFD4973B)         // 山吹金 (点缀色：丰盈、温煦、阳光)
-val YamabukiLight = Color(0xFFFAF0DE)        // 山吹淡金容器
+// 3. 日本家计簿 (Kakeibo) 消费四支柱专属色
+val PillarNeeds = Color(0xFF5B7382)             // 【必要·消費】 灰蓝/灰石
+val PillarNeedsLight = Color(0xFFEBF0F3)
 
-// 3. 和风水墨墨色 (Sumi Calligraphy Inks)
-val SumiInk = Color(0xFF2A2E2B)              // 暖砚浓墨 (主标题、金额、高权重文字)
-val SumiSecondary = Color(0xFF6D736E)        // 淡墨中灰 (副标题、分类说明)
-val SumiTertiary = Color(0xFFA4AAA5)         // 极淡墨微灰 (时间戳、辅助注释、空态文字)
+val PillarWants = Color(0xFFD47A88)             // 【心动·浪費】 落樱珊瑚粉
+val PillarWantsLight = Color(0xFFFBF0F2)
 
-// 4. 和风意境渐变 (Zen Atmosphere Gradients)
-val WashiZenGradient = Brush.verticalGradient(
-    colors = listOf(
-        Color(0xFFFAF8F5),
-        Color(0xFFF4EFE7)
-    )
-)
+val PillarCulture = Color(0xFF5D8469)           // 【文化·投資】 抹茶/若草绿
+val PillarCultureLight = Color(0xFFEDF4EF)
 
-val MatchaGradient = Brush.horizontalGradient(
-    colors = listOf(
-        Color(0xFF587A63),
-        Color(0xFF6F947B)
-    )
-)
+val PillarUnexpected = Color(0xFFD4973B)        // 【突发·予想外】 山吹金
+val PillarUnexpectedLight = Color(0xFFFCF5EB)
 
-val SakuraGlowGradient = Brush.linearGradient(
-    colors = listOf(
-        Color(0xFFF7E6E9),
-        Color(0xFFEBF2EC)
-    )
-)
+// 常用别名兼容
+val MatchaPrimary = PillarCulture
+val SakuraAccent = PillarWants
+val SakuraSoft = PillarWantsLight
+val YamabukiGold = PillarUnexpected
 
-// 5. 和风分类雅致色系 (Japanese Aesthetic Category Palette)
+// 4. 和纸胶带 (Washi Tape) 撕边半透明色彩
+val WashiTapeMatcha = Color(0xCCE2EFE5)         // 抹茶和纸胶带
+val WashiTapeSakura = Color(0xCCFBE8EB)         // 樱落和纸胶带
+val WashiTapeGold = Color(0xCCFDF3E3)           // 暖金和纸胶带
+val WashiTapeBlue = Color(0xCCE6EFF3)           // 浅葱和纸胶带
+
+// 5. 传统手写墨水字阶 (Handwriting Sumi Ink)
+val SumiDark = Color(0xFF2B2826)                // 浓墨深石褐
+val SumiMedium = Color(0xFF6B6560)              // 淡墨中灰
+val SumiLight = Color(0xFFA8A29C)               // 极淡铅笔灰
+
+// 别名兼容
+val SumiInk = SumiDark
+val SumiSecondary = SumiMedium
+val SumiTertiary = SumiLight
+
+// 6. 和风雅致分类调色板
 val JapaneseCategoryColors = listOf(
-    0xFF587A63L, // 若草 (餐饮/饮食)
-    0xFF5B8A99L, // 浅葱 (学习/科技/知识)
-    0xFF4A8576L, // 若竹 (健康/水果/自然)
-    0xFF7F7199L, // 桔梗 (交通/出行/远方)
-    0xFFD87D88L, // 樱花 (服饰/美容/生活)
-    0xFFD4973BL, // 山吹 (日用/居家/生活)
-    0xFFC25353L, // 茜红 (娱乐/数码/好物)
-    0xFF5C6F84L, // 蓝鼠 (商务/办公/账务)
-    0xFF996B54L, // 落叶 (其他/杂项)
-    0xFF8C7355L  // 柴染 (文具/手作)
+    0xFF5D8469L, // 若草 (餐饮)
+    0xFF5B7382L, // 浅葱 (学习)
+    0xFF4A8576L, // 若竹 (健康/自然)
+    0xFF7F7199L, // 桔梗 (出行)
+    0xFFD47A88L, // 樱花 (服饰/生活)
+    0xFFD4973BL, // 山吹 (居家)
+    0xFFC83838L, // 朱红 (娱乐)
+    0xFF64748BL, // 蓝灰 (办公)
+    0xFF9A7B66L, // 栗皮 (其他)
+    0xFF8C7355L  // 柴染 (手作)
 )

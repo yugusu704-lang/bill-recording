@@ -31,11 +31,20 @@ data class TrendPoint(
     val isCurrent: Boolean = false
 )
 
+data class KakeiboPillarStat(
+    val pillar: KakeiboPillar,
+    val amount: Double,
+    val count: Int,
+    val percentage: Float
+)
+
 data class PeriodSummary(
     val totalAmount: Double = 0.0,
     val dailyAverage: Double = 0.0,
     val recordCount: Int = 0,
     val topCategoryName: String? = null,
     val topCategoryAmount: Double = 0.0,
-    val highestSingleExpense: Double = 0.0
+    val highestSingleExpense: Double = 0.0,
+    val kakeiboPillars: List<KakeiboPillarStat> = emptyList(),
+    val reflectionQuote: String = "花钱如泼水，省钱如针挑。理智审视每一笔心动支出。"
 )

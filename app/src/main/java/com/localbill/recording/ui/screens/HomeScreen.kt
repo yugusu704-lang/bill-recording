@@ -20,7 +20,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ReceiptLong
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.DeleteOutline
 import androidx.compose.material3.AlertDialog
@@ -49,16 +48,16 @@ import androidx.compose.ui.unit.sp
 import com.localbill.recording.data.entity.RecordWithCategory
 import com.localbill.recording.ui.components.CalculatorBottomSheet
 import com.localbill.recording.ui.components.CategoryIconBadge
-import com.localbill.recording.ui.theme.MatchaPrimary
-import com.localbill.recording.ui.theme.SakuraAccent
-import com.localbill.recording.ui.theme.SakuraSoft
-import com.localbill.recording.ui.theme.SumiInk
-import com.localbill.recording.ui.theme.SumiSecondary
-import com.localbill.recording.ui.theme.SumiTertiary
-import com.localbill.recording.ui.theme.WashiBorder
-import com.localbill.recording.ui.theme.WashiCardBg
-import com.localbill.recording.ui.theme.WashiPaperBg
-import com.localbill.recording.ui.theme.WashiPaperSubtle
+import com.localbill.recording.ui.components.HankoStampBadge
+import com.localbill.recording.ui.components.WashiTapeTab
+import com.localbill.recording.ui.theme.HankoRed
+import com.localbill.recording.ui.theme.PillarCulture
+import com.localbill.recording.ui.theme.SumiDark
+import com.localbill.recording.ui.theme.SumiLight
+import com.localbill.recording.ui.theme.SumiMedium
+import com.localbill.recording.ui.theme.TomoeBorder
+import com.localbill.recording.ui.theme.TomoePaperBg
+import com.localbill.recording.ui.theme.TomoePaperPage
 import com.localbill.recording.ui.viewmodel.HomeViewModel
 import com.localbill.recording.util.DateTimeUtils
 import java.time.LocalDate
@@ -77,25 +76,36 @@ fun HomeScreen(
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
-        containerColor = WashiPaperBg,
+        containerColor = TomoePaperBg,
         floatingActionButton = {
             FloatingActionButton(
                 onClick = {
                     editingRecord = null
                     isBottomSheetOpen = true
                 },
-                containerColor = MatchaPrimary,
+                containerColor = PillarCulture,
                 contentColor = Color.White,
                 shape = CircleShape,
                 modifier = Modifier
                     .padding(bottom = 16.dp)
-                    .shadow(8.dp, CircleShape, spotColor = MatchaPrimary.copy(alpha = 0.35f))
+                    .shadow(6.dp, CircleShape, spotColor = PillarCulture.copy(alpha = 0.35f))
             ) {
-                Icon(
-                    imageVector = Icons.Default.Add,
-                    contentDescription = "记一笔",
-                    modifier = Modifier.size(24.dp)
-                )
+                Row(
+                    modifier = Modifier.padding(horizontal = 16.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Add,
+                        contentDescription = "记一笔",
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        text = "记一笔",
+                        fontWeight = FontWeight.Bold,
+                        style = MaterialTheme.typography.labelLarge
+                    )
+                }
             }
         }
     ) { innerPadding ->
@@ -104,11 +114,11 @@ fun HomeScreen(
                 .fillMaxSize()
                 .padding(innerPadding),
             contentPadding = PaddingValues(horizontal = 18.dp, vertical = 12.dp),
-            verticalArrangement = Arrangement.spacedBy(14.dp)
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            // 1. 和纸手账本月财务总览大卡片
-            item {
-                WashiFinancialOverviewCard(
+            // 1. 月度总览手账大卡片
+            item(key = "home_cover_card", contentType = "header") {
+                HobonichiCoverCard(
                     monthAmount = uiState.monthExpense,
                     todayAmount = uiState.todayExpense,
                     weekAmount = uiState.weekExpense,
@@ -116,32 +126,40 @@ fun HomeScreen(
                 )
             }
 
-            // 2. 流水明细列表标题
-            item {
+            // 2. 流水明细手账内页标题
+            item(key = "home_section_title", contentType = "header") {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(top = 4.dp),
+                        .padding(start = 2.dp, end = 2.dp, top = 4.dp),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        WashiTapeTab(
+                            title = "每日流水",
+                            tapeColor = PillarCulture.copy(alpha = 0.15f),
+                            textColor = PillarCulture
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = "手账明细",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = SumiDark
+                        )
+                    }
                     Text(
-                        text = "流水明细",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = SumiInk
-                    )
-                    Text(
-                        text = "本月共 ${uiState.totalRecordCount} 笔",
+                        text = "本月累计 ${uiState.totalRecordCount} 笔",
                         style = MaterialTheme.typography.bodySmall,
-                        color = SumiSecondary
+                        color = SumiMedium
                     )
                 }
             }
 
             if (uiState.groupedDays.isEmpty()) {
-                item {
-                    WashiEmptyStateCard(
+                item(key = "empty_state") {
+                    HobonichiEmptyStateCard(
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(180.dp)
@@ -153,7 +171,7 @@ fun HomeScreen(
                         key = "header_${dayGroup.date}",
                         contentType = "date_header"
                     ) {
-                        WashiDateHeader(
+                        HobonichiDateBanner(
                             date = dayGroup.date,
                             dayTotal = dayGroup.totalAmount
                         )
@@ -164,7 +182,7 @@ fun HomeScreen(
                         key = { it.record.id },
                         contentType = { "record_item" }
                     ) { recordItem ->
-                        WashiRecordItem(
+                        HobonichiRecordCard(
                             item = recordItem,
                             onClick = {
                                 editingRecord = recordItem
@@ -178,7 +196,7 @@ fun HomeScreen(
                 }
             }
 
-            item {
+            item(key = "bottom_spacer") {
                 Spacer(modifier = Modifier.height(72.dp))
             }
         }
@@ -210,13 +228,13 @@ fun HomeScreen(
         AlertDialog(
             onDismissRequest = { recordToDelete = null },
             containerColor = Color.White,
-            title = { Text(text = "删除此账单？", fontWeight = FontWeight.Bold, color = SumiInk) },
+            title = { Text(text = "划去此条记账？", fontWeight = FontWeight.Bold, color = SumiDark) },
             text = {
                 Text(
-                    text = "即将删除「${recordItem.displayCategoryName}」支出 ¥ ${
+                    text = "即将划去「${recordItem.displayCategoryName}」支出 ¥ ${
                         String.format(Locale.US, "%.2f", recordItem.record.amount)
-                    }，此操作不可撤销。",
-                    color = SumiSecondary
+                    }，此手账记录将从本地清除。",
+                    color = SumiMedium
                 )
             },
             confirmButton = {
@@ -226,12 +244,12 @@ fun HomeScreen(
                         recordToDelete = null
                     }
                 ) {
-                    Text(text = "确认删除", color = SakuraAccent, fontWeight = FontWeight.Bold)
+                    Text(text = "确认划去", color = HankoRed, fontWeight = FontWeight.Bold)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { recordToDelete = null }) {
-                    Text(text = "取消", color = SumiSecondary)
+                    Text(text = "保留", color = SumiMedium)
                 }
             }
         )
@@ -239,24 +257,24 @@ fun HomeScreen(
 }
 
 /**
- * 和纸财务总览大卡片 (温润和风宣纸质感)
+ * 封面月度总览大卡片
  */
 @Composable
-private fun WashiFinancialOverviewCard(
+private fun HobonichiCoverCard(
     monthAmount: Double,
     todayAmount: Double,
     weekAmount: Double,
     totalCount: Int
 ) {
-    val now = LocalDate.now()
-    val monthTitle = "${now.year} 年 ${now.monthValue} 月"
+    val now = remember { LocalDate.now() }
+    val monthTitle = remember { "${now.year} 年 ${now.monthValue} 月" }
 
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(18.dp))
-            .background(WashiCardBg)
-            .border(0.8.dp, WashiBorder, RoundedCornerShape(18.dp))
+            .clip(RoundedCornerShape(16.dp))
+            .background(TomoePaperPage)
+            .border(1.dp, TomoeBorder, RoundedCornerShape(16.dp))
             .padding(18.dp)
     ) {
         Column(modifier = Modifier.fillMaxWidth()) {
@@ -266,71 +284,85 @@ private fun WashiFinancialOverviewCard(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
+                    WashiTapeTab(
+                        title = "月度总览",
+                        tapeColor = HankoRed.copy(alpha = 0.12f),
+                        textColor = HankoRed
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = "🌸 ${monthTitle} · 支出总览",
-                        style = MaterialTheme.typography.titleSmall,
+                        text = "${monthTitle} · 支出总览",
+                        style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
-                        color = MatchaPrimary
+                        color = SumiDark
                     )
                 }
 
-                Text(
-                    text = "记账 ${totalCount} 笔",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = SumiSecondary
+                HankoStampBadge(
+                    text = if (monthAmount > 0) "已" else "初",
+                    size = 28.dp,
+                    angle = -6f
                 )
             }
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(10.dp))
 
-            // 本月总支出大字号
+            // 本月总支出
             Row(verticalAlignment = Alignment.Bottom) {
                 Text(
                     text = "¥",
                     style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
-                    color = SumiInk,
-                    modifier = Modifier.padding(end = 4.dp, bottom = 2.dp)
+                    color = PillarCulture,
+                    modifier = Modifier.padding(end = 6.dp, bottom = 2.dp)
                 )
                 Text(
                     text = String.format(Locale.US, "%.2f", monthAmount),
                     style = MaterialTheme.typography.displayLarge.copy(
-                        fontSize = 34.sp,
-                        fontWeight = FontWeight.ExtraBold,
+                        fontSize = 36.sp,
+                        fontWeight = FontWeight.Bold,
                         letterSpacing = (-0.5).sp
                     ),
-                    color = SumiInk
+                    color = SumiDark
                 )
             }
 
             Spacer(modifier = Modifier.height(14.dp))
-            HorizontalDivider(color = WashiBorder.copy(alpha = 0.5f), thickness = 0.8.dp)
+            HorizontalDivider(color = TomoeBorder.copy(alpha = 0.6f), thickness = 0.8.dp)
             Spacer(modifier = Modifier.height(12.dp))
 
-            // 今日支出与本周支出对比
+            // 今日支出 & 本周支出
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Column {
-                    Text(text = "今日支出", style = MaterialTheme.typography.bodySmall, color = SumiSecondary)
+                    Text(
+                        text = "今日支出",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = SumiMedium
+                    )
                     Spacer(modifier = Modifier.height(2.dp))
                     Text(
                         text = "¥ " + String.format(Locale.US, "%.2f", todayAmount),
-                        style = MaterialTheme.typography.titleSmall,
+                        style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
-                        color = SumiInk
+                        color = SumiDark
                     )
                 }
 
                 Column(horizontalAlignment = Alignment.End) {
-                    Text(text = "本周支出", style = MaterialTheme.typography.bodySmall, color = SumiSecondary)
+                    Text(
+                        text = "本周支出",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = SumiMedium
+                    )
                     Spacer(modifier = Modifier.height(2.dp))
                     Text(
                         text = "¥ " + String.format(Locale.US, "%.2f", weekAmount),
-                        style = MaterialTheme.typography.titleSmall,
+                        style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
-                        color = SumiInk
+                        color = SumiDark
                     )
                 }
             }
@@ -339,59 +371,61 @@ private fun WashiFinancialOverviewCard(
 }
 
 /**
- * 和风日期表头
+ * 手账日期标签横幅
  */
 @Composable
-private fun WashiDateHeader(
+private fun HobonichiDateBanner(
     date: LocalDate,
     dayTotal: Double
 ) {
     val today = remember { LocalDate.now() }
     val yesterday = remember { today.minusDays(1) }
 
-    val dateTitle = when (date) {
-        today -> "今天"
-        yesterday -> "昨天"
-        else -> "${date.monthValue}月${date.dayOfMonth}日"
+    val dateTitle = remember(date) {
+        when (date) {
+            today -> "今天 · ${date.monthValue}月${date.dayOfMonth}日"
+            yesterday -> "昨天 · ${date.monthValue}月${date.dayOfMonth}日"
+            else -> "${date.monthValue}月${date.dayOfMonth}日"
+        }
     }
     val weekday = remember(date) { DateTimeUtils.formatWeekday(date) }
 
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(top = 8.dp, bottom = 4.dp, start = 2.dp, end = 2.dp),
+            .padding(top = 8.dp, bottom = 2.dp, start = 2.dp, end = 2.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
+            WashiTapeTab(
+                title = weekday,
+                tapeColor = if (date == today) PillarCulture.copy(alpha = 0.2f) else TomoeBorder.copy(alpha = 0.5f),
+                textColor = if (date == today) PillarCulture else SumiMedium
+            )
+            Spacer(modifier = Modifier.width(8.dp))
             Text(
                 text = dateTitle,
                 style = MaterialTheme.typography.titleSmall,
                 fontWeight = FontWeight.Bold,
-                color = SumiInk
-            )
-            Spacer(modifier = Modifier.width(6.dp))
-            Text(
-                text = weekday,
-                style = MaterialTheme.typography.bodySmall,
-                color = SumiSecondary
+                color = SumiDark
             )
         }
 
         Text(
             text = "当日 ¥ " + String.format(Locale.US, "%.2f", dayTotal),
             style = MaterialTheme.typography.bodySmall,
-            fontWeight = FontWeight.Medium,
-            color = SumiSecondary
+            fontWeight = FontWeight.Bold,
+            color = SumiMedium
         )
     }
 }
 
 /**
- * 和纸单条流水账单卡片
+ * 单条记账便签小卡 (高性能优化版本)
  */
 @Composable
-private fun WashiRecordItem(
+private fun HobonichiRecordCard(
     item: RecordWithCategory,
     onClick: () -> Unit,
     onDelete: () -> Unit
@@ -399,15 +433,17 @@ private fun WashiRecordItem(
     val timeStr = remember(item.record.timestamp) {
         DateTimeUtils.toLocalDateTime(item.record.timestamp).format(DateTimeUtils.TIME_FORMATTER)
     }
+    val pillar = item.resolvedPillar
+    val cleanNote = item.cleanNote
 
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(14.dp))
-            .background(WashiCardBg)
-            .border(0.8.dp, WashiBorder, RoundedCornerShape(14.dp))
+            .clip(RoundedCornerShape(12.dp))
+            .background(TomoePaperPage)
+            .border(0.8.dp, TomoeBorder, RoundedCornerShape(12.dp))
             .clickable(onClick = onClick)
-            .padding(horizontal = 12.dp, vertical = 10.dp)
+            .padding(horizontal = 14.dp, vertical = 12.dp)
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -433,42 +469,41 @@ private fun WashiRecordItem(
                         Text(
                             text = item.displayCategoryName,
                             style = MaterialTheme.typography.bodyLarge,
-                            fontWeight = FontWeight.SemiBold,
-                            color = SumiInk
+                            fontWeight = FontWeight.Bold,
+                            color = SumiDark
+                        )
+
+                        Spacer(modifier = Modifier.width(6.dp))
+
+                        WashiTapeTab(
+                            title = pillar.title,
+                            tapeColor = pillar.containerColor,
+                            textColor = pillar.color
                         )
 
                         if (item.displaySubCategoryName != null) {
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Box(
-                                modifier = Modifier
-                                    .clip(RoundedCornerShape(4.dp))
-                                    .background(Color(item.displayColorHex).copy(alpha = 0.1f))
-                                    .border(0.8.dp, Color(item.displayColorHex).copy(alpha = 0.25f), RoundedCornerShape(4.dp))
-                                    .padding(horizontal = 4.dp, vertical = 1.dp)
-                            ) {
-                                Text(
-                                    text = item.displaySubCategoryName!!,
-                                    style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
-                                    color = Color(item.displayColorHex),
-                                    fontWeight = FontWeight.Medium
-                                )
-                            }
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                text = "· ${item.displaySubCategoryName}",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = SumiMedium
+                            )
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(2.dp))
+                    Spacer(modifier = Modifier.height(3.dp))
 
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text(
                             text = timeStr,
                             style = MaterialTheme.typography.bodySmall,
-                            color = SumiTertiary
+                            color = SumiLight
                         )
-                        if (item.record.note.isNotBlank()) {
+                        if (cleanNote.isNotBlank()) {
                             Text(
-                                text = " · ${item.record.note}",
+                                text = "  ${cleanNote}",
                                 style = MaterialTheme.typography.bodySmall,
-                                color = SumiSecondary,
+                                color = SumiMedium,
                                 maxLines = 1
                             )
                         }
@@ -481,17 +516,19 @@ private fun WashiRecordItem(
                     text = "- ¥ " + String.format(Locale.US, "%.2f", item.record.amount),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
-                    color = SumiInk
+                    color = SumiDark
                 )
+
+                Spacer(modifier = Modifier.width(4.dp))
 
                 IconButton(
                     onClick = onDelete,
-                    modifier = Modifier.size(28.dp)
+                    modifier = Modifier.size(26.dp)
                 ) {
                     Icon(
                         imageVector = Icons.Default.DeleteOutline,
-                        contentDescription = "删除",
-                        tint = SumiTertiary,
+                        contentDescription = "划去",
+                        tint = SumiLight,
                         modifier = Modifier.size(16.dp)
                     )
                 }
@@ -500,38 +537,36 @@ private fun WashiRecordItem(
     }
 }
 
+/**
+ * 空状态插画便签
+ */
 @Composable
-private fun WashiEmptyStateCard(modifier: Modifier = Modifier) {
+private fun HobonichiEmptyStateCard(modifier: Modifier = Modifier) {
     Box(
         modifier = modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(16.dp))
-            .background(WashiCardBg)
-            .border(0.8.dp, WashiBorder, RoundedCornerShape(16.dp)),
+            .background(TomoePaperPage)
+            .border(0.8.dp, TomoeBorder, RoundedCornerShape(16.dp)),
         contentAlignment = Alignment.Center
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            Icon(
-                imageVector = Icons.AutoMirrored.Filled.ReceiptLong,
-                contentDescription = null,
-                tint = MatchaPrimary.copy(alpha = 0.6f),
-                modifier = Modifier.size(42.dp)
-            )
-            Spacer(modifier = Modifier.height(8.dp))
+            HankoStampBadge(text = "空", size = 44.dp, angle = -10f)
+            Spacer(modifier = Modifier.height(10.dp))
             Text(
-                text = "暂无近期账单",
+                text = "今日尚未记账，静候落笔",
                 style = MaterialTheme.typography.titleSmall,
-                color = SumiInk,
+                color = SumiDark,
                 fontWeight = FontWeight.Bold
             )
             Spacer(modifier = Modifier.height(4.dp))
             Text(
-                text = "点击右下角开启和风手账记账",
+                text = "“生活如流水，每一笔都是时间的印记。”",
                 style = MaterialTheme.typography.bodySmall,
-                color = SumiSecondary
+                color = SumiMedium
             )
         }
     }

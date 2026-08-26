@@ -9,37 +9,37 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 
-private val JapaneseWashiColorScheme = lightColorScheme(
-    primary = MatchaPrimary,
-    onPrimary = WashiPaperBg,
-    primaryContainer = MatchaContainer,
-    onPrimaryContainer = MatchaPrimary,
-    secondary = SakuraAccent,
-    onSecondary = WashiPaperBg,
-    secondaryContainer = SakuraSoft,
-    onSecondaryContainer = SakuraAccent,
-    background = WashiPaperBg,
-    onBackground = SumiInk,
-    surface = WashiCardBg,
-    onSurface = SumiInk,
-    surfaceVariant = WashiPaperSubtle,
-    onSurfaceVariant = SumiSecondary,
-    outline = WashiBorder
+private val HobonichiTechoColorScheme = lightColorScheme(
+    primary = PillarCulture,          // 抹茶绿
+    onPrimary = TomoePaperBg,
+    primaryContainer = PillarCultureLight,
+    onPrimaryContainer = PillarCulture,
+    secondary = HankoRed,             // 朱红印章
+    onSecondary = TomoePaperBg,
+    secondaryContainer = HankoSealBg,
+    onSecondaryContainer = HankoRed,
+    background = TomoePaperBg,
+    onBackground = SumiDark,
+    surface = TomoePaperPage,
+    onSurface = SumiDark,
+    surfaceVariant = TomoePaperBg,
+    onSurfaceVariant = SumiMedium,
+    outline = TomoeBorder
 )
 
 @Composable
 fun BillRecordingTheme(
-    darkTheme: Boolean = false, // 锁定日式和风小清新纸质质感
+    darkTheme: Boolean = false,
     content: @Composable () -> Unit
 ) {
-    val colorScheme = JapaneseWashiColorScheme
+    val colorScheme = HobonichiTechoColorScheme
     val view = LocalView.current
 
     if (!view.isInEditMode) {
         SideEffect {
             val window = (view.context as Activity).window
-            window.statusBarColor = WashiPaperBg.toArgb()
-            window.navigationBarColor = WashiPaperBg.toArgb()
+            window.statusBarColor = TomoePaperBg.toArgb()
+            window.navigationBarColor = TomoePaperBg.toArgb()
             WindowCompat.getInsetsController(window, view).apply {
                 isAppearanceLightStatusBars = true
                 isAppearanceLightNavigationBars = true

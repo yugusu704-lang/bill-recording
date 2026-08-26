@@ -7,9 +7,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ReceiptLong
+import androidx.compose.material.icons.automirrored.filled.MenuBook
 import androidx.compose.material.icons.filled.AutoGraph
-import androidx.compose.material.icons.filled.Category
+import androidx.compose.material.icons.filled.CollectionsBookmark
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
@@ -33,18 +33,18 @@ import com.localbill.recording.ui.screens.BackupScreen
 import com.localbill.recording.ui.screens.CategoryManagementScreen
 import com.localbill.recording.ui.screens.HomeScreen
 import com.localbill.recording.ui.screens.StatisticsScreen
-import com.localbill.recording.ui.theme.MatchaPrimary
-import com.localbill.recording.ui.theme.SumiSecondary
-import com.localbill.recording.ui.theme.WashiPaperBg
+import com.localbill.recording.ui.theme.PillarCulture
+import com.localbill.recording.ui.theme.SumiMedium
+import com.localbill.recording.ui.theme.TomoePaperBg
 import com.localbill.recording.ui.viewmodel.BackupViewModel
 import com.localbill.recording.ui.viewmodel.CategoryViewModel
 import com.localbill.recording.ui.viewmodel.HomeViewModel
 import com.localbill.recording.ui.viewmodel.StatisticsViewModel
 
 sealed class Screen(val route: String, val title: String, val icon: ImageVector) {
-    object Home : Screen("home", "流水", Icons.AutoMirrored.Filled.ReceiptLong)
+    object Home : Screen("home", "流水", Icons.AutoMirrored.Filled.MenuBook)
     object Statistics : Screen("statistics", "统计", Icons.Default.AutoGraph)
-    object Categories : Screen("categories", "分类", Icons.Default.Category)
+    object Categories : Screen("categories", "分类", Icons.Default.CollectionsBookmark)
     object Backup : Screen("backup", "管理", Icons.Default.Settings)
 }
 
@@ -69,7 +69,7 @@ fun MainAppNavigation(
     Scaffold(
         bottomBar = {
             NavigationBar(
-                containerColor = WashiPaperBg,
+                containerColor = TomoePaperBg,
                 tonalElevation = 0.dp
             ) {
                 bottomNavScreens.forEach { screen ->
@@ -101,11 +101,11 @@ fun MainAppNavigation(
                             }
                         },
                         colors = NavigationBarItemDefaults.colors(
-                            selectedIconColor = MatchaPrimary,
-                            selectedTextColor = MatchaPrimary,
-                            indicatorColor = MatchaPrimary.copy(alpha = 0.15f),
-                            unselectedIconColor = SumiSecondary,
-                            unselectedTextColor = SumiSecondary
+                            selectedIconColor = PillarCulture,
+                            selectedTextColor = PillarCulture,
+                            indicatorColor = PillarCulture.copy(alpha = 0.16f),
+                            unselectedIconColor = SumiMedium,
+                            unselectedTextColor = SumiMedium
                         )
                     )
                 }
@@ -118,8 +118,8 @@ fun MainAppNavigation(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding),
-            enterTransition = { fadeIn(animationSpec = tween(220)) },
-            exitTransition = { fadeOut(animationSpec = tween(220)) }
+            enterTransition = { fadeIn(animationSpec = tween(200)) },
+            exitTransition = { fadeOut(animationSpec = tween(200)) }
         ) {
             composable(Screen.Home.route) {
                 HomeScreen(viewModel = homeViewModel)

@@ -3,7 +3,30 @@
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
+
+    <!-- 和风米白手账本本体 (微圆角账本) -->
     <path
-        android:fillColor="#FFFFFF"
-        android:pathData="M31,34h46c1.66,0 3,1.34 3,3v34c0,1.66 -1.34,3 -3,3H31c-1.66,0 -3,-1.34 -3,-3V37C28,35.34 29.34,34 31,34zM54,42c-6.63,0 -12,5.37 -12,12s5.37,12 12,12 12,-5.37 12,-12S60.63,42 54,42zM54,60c-3.31,0 -6,-2.69 -6,-6s2.69,-6 6,-6 6,2.69 6,6 -2.69,6 -6,6z"/>
+        android:fillColor="#FAF8F5"
+        android:pathData="M34,26 h38 c3.3,0 6,2.7 6,6 v44 c0,3.3 -2.7,6 -6,6 H34 c-3.3,0 -6,-2.7 -6,-6 V32 c0,-3.3 2.7,-6 6,-6 z" />
+
+    <!-- 账本脊背与若草绑带装饰 -->
+    <path
+        android:fillColor="#E6DFC9"
+        android:pathData="M28,32 c0,-3.3 2.7,-6 6,-6 h4 v56 h-4 c-3.3,0 -6,-2.7 -6,-6 z" />
+
+    <!-- 手账内页横线 (极淡墨细线) -->
+    <path
+        android:fillColor="#6D736E"
+        android:pathData="M44,38 h26 v2 h-26 z M44,46 h26 v2 h-26 z M44,54 h26 v2 h-26 z M44,62 h16 v2 h-16 z" />
+
+    <!-- 飘落的樱花花瓣 1 (落樱浅粉) -->
+    <path
+        android:fillColor="#D87D88"
+        android:pathData="M66,60 c0,0 8,-1 11,3 c3,4 0,9 -4,9 c-4,0 -7,-6 -7,-12 z" />
+
+    <!-- 飘落的樱花花瓣 2 (微小副花瓣，山吹金点缀) -->
+    <path
+        android:fillColor="#D4973B"
+        android:pathData="M70,30 c0,0 4,-1 6,2 c2,3 0,6 -3,6 c-3,0 -5,-4 -5,-8 z" />
+
 </vector>

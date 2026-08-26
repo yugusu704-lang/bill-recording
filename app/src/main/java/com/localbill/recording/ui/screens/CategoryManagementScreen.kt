@@ -58,14 +58,16 @@ import androidx.compose.ui.unit.sp
 import com.localbill.recording.data.entity.CategoryEntity
 import com.localbill.recording.ui.components.CategoryIconBadge
 import com.localbill.recording.ui.components.CategoryIcons
-import com.localbill.recording.ui.theme.ClaudeBorder
-import com.localbill.recording.ui.theme.ClaudeCategoryColors
-import com.localbill.recording.ui.theme.ClaudeInk
-import com.localbill.recording.ui.theme.ClaudeTerracotta
-import com.localbill.recording.ui.theme.ClaudeTextSecondary
-import com.localbill.recording.ui.theme.ClaudeTextTertiary
-import com.localbill.recording.ui.theme.ClaudeWarmBg
-import com.localbill.recording.ui.theme.ClaudeWarmBgSubtle
+import com.localbill.recording.ui.theme.JapaneseCategoryColors
+import com.localbill.recording.ui.theme.MatchaPrimary
+import com.localbill.recording.ui.theme.SakuraAccent
+import com.localbill.recording.ui.theme.SumiInk
+import com.localbill.recording.ui.theme.SumiSecondary
+import com.localbill.recording.ui.theme.SumiTertiary
+import com.localbill.recording.ui.theme.WashiBorder
+import com.localbill.recording.ui.theme.WashiCardBg
+import com.localbill.recording.ui.theme.WashiPaperBg
+import com.localbill.recording.ui.theme.WashiPaperSubtle
 import com.localbill.recording.ui.viewmodel.CategoryEvent
 import com.localbill.recording.ui.viewmodel.CategoryNode
 import com.localbill.recording.ui.viewmodel.CategoryViewModel
@@ -100,7 +102,7 @@ fun CategoryManagementScreen(
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
-        containerColor = ClaudeWarmBg,
+        containerColor = WashiPaperBg,
         floatingActionButton = {
             FloatingActionButton(
                 onClick = {
@@ -108,12 +110,12 @@ fun CategoryManagementScreen(
                     parentCategoryForNewSub = null
                     isEditDialogVisible = true
                 },
-                containerColor = ClaudeTerracotta,
+                containerColor = MatchaPrimary,
                 contentColor = Color.White,
                 shape = CircleShape,
                 modifier = Modifier
                     .padding(bottom = 16.dp)
-                    .shadow(8.dp, CircleShape, spotColor = ClaudeTerracotta.copy(alpha = 0.4f))
+                    .shadow(8.dp, CircleShape, spotColor = MatchaPrimary.copy(alpha = 0.35f))
             ) {
                 Row(
                     modifier = Modifier.padding(horizontal = 16.dp),
@@ -139,13 +141,13 @@ fun CategoryManagementScreen(
                         text = "分类系统与层级",
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold,
-                        color = ClaudeInk
+                        color = SumiInk
                     )
                     Spacer(modifier = Modifier.height(2.dp))
                     Text(
                         text = "支持主分类与子分类自由拓展，自动汇总下辖流水",
                         style = MaterialTheme.typography.bodySmall,
-                        color = ClaudeTextSecondary
+                        color = SumiSecondary
                     )
                 }
             }
@@ -154,7 +156,7 @@ fun CategoryManagementScreen(
                 items = uiState.categoryNodes,
                 key = { it.mainCategory.id }
             ) { node ->
-                ClaudeGlassCategoryCard(
+                WashiCategoryCard(
                     node = node,
                     onAddSubCategory = {
                         parentCategoryForNewSub = node.mainCategory
@@ -179,7 +181,7 @@ fun CategoryManagementScreen(
     }
 
     if (isEditDialogVisible) {
-        ClaudeAddEditCategoryDialog(
+        WashiAddEditCategoryDialog(
             category = editingCategory,
             parentCategory = parentCategoryForNewSub,
             onDismiss = {
@@ -203,7 +205,7 @@ fun CategoryManagementScreen(
 }
 
 @Composable
-private fun ClaudeGlassCategoryCard(
+private fun WashiCategoryCard(
     node: CategoryNode,
     onAddSubCategory: () -> Unit,
     onEditCategory: (CategoryEntity) -> Unit,
@@ -213,8 +215,8 @@ private fun ClaudeGlassCategoryCard(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(16.dp))
-            .background(Color.White.copy(alpha = 0.75f))
-            .border(1.2.dp, Color.White.copy(alpha = 0.9f), RoundedCornerShape(16.dp))
+            .background(WashiCardBg)
+            .border(0.8.dp, WashiBorder, RoundedCornerShape(16.dp))
             .padding(14.dp)
     ) {
         Column(modifier = Modifier.fillMaxWidth()) {
@@ -227,7 +229,7 @@ private fun ClaudeGlassCategoryCard(
                     CategoryIconBadge(
                         iconName = node.mainCategory.iconName,
                         colorHex = node.mainCategory.colorHex,
-                        size = 36.dp,
+                        size = 38.dp,
                         iconSize = 18.dp,
                         cornerRadius = 10.dp
                     )
@@ -238,21 +240,21 @@ private fun ClaudeGlassCategoryCard(
                                 text = node.mainCategory.name,
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold,
-                                color = ClaudeInk
+                                color = SumiInk
                             )
                             if (node.mainCategory.isBuiltIn) {
                                 Spacer(modifier = Modifier.width(6.dp))
                                 Text(
                                     text = "内置",
                                     style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
-                                    color = ClaudeTextTertiary
+                                    color = SumiTertiary
                                 )
                             }
                         }
                         Text(
                             text = "${node.subCategories.size} 个子分类",
                             style = MaterialTheme.typography.bodySmall,
-                            color = ClaudeTextSecondary
+                            color = SumiSecondary
                         )
                     }
                 }
@@ -265,7 +267,7 @@ private fun ClaudeGlassCategoryCard(
                         Icon(
                             imageVector = Icons.Default.Edit,
                             contentDescription = "编辑",
-                            tint = ClaudeTextSecondary,
+                            tint = SumiSecondary,
                             modifier = Modifier.size(16.dp)
                         )
                     }
@@ -277,7 +279,7 @@ private fun ClaudeGlassCategoryCard(
                             Icon(
                                 imageVector = Icons.Default.DeleteOutline,
                                 contentDescription = "删除",
-                                tint = ClaudeTextTertiary,
+                                tint = SumiTertiary,
                                 modifier = Modifier.size(16.dp)
                             )
                         }
@@ -286,7 +288,7 @@ private fun ClaudeGlassCategoryCard(
             }
 
             Spacer(modifier = Modifier.height(10.dp))
-            HorizontalDivider(color = ClaudeBorder.copy(alpha = 0.5f), thickness = 0.8.dp)
+            HorizontalDivider(color = WashiBorder.copy(alpha = 0.5f), thickness = 0.8.dp)
             Spacer(modifier = Modifier.height(8.dp))
 
             Column(
@@ -305,15 +307,15 @@ private fun ClaudeGlassCategoryCard(
                             CategoryIconBadge(
                                 iconName = sub.iconName,
                                 colorHex = sub.colorHex,
-                                size = 26.dp,
-                                iconSize = 13.dp,
+                                size = 28.dp,
+                                iconSize = 14.dp,
                                 cornerRadius = 6.dp
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
                                 text = sub.name,
                                 style = MaterialTheme.typography.bodyMedium,
-                                color = ClaudeInk
+                                color = SumiInk
                             )
                         }
 
@@ -325,7 +327,7 @@ private fun ClaudeGlassCategoryCard(
                                 Icon(
                                     imageVector = Icons.Default.Edit,
                                     contentDescription = "编辑",
-                                    tint = ClaudeTextSecondary,
+                                    tint = SumiSecondary,
                                     modifier = Modifier.size(14.dp)
                                 )
                             }
@@ -336,7 +338,7 @@ private fun ClaudeGlassCategoryCard(
                                 Icon(
                                     imageVector = Icons.Default.DeleteOutline,
                                     contentDescription = "删除",
-                                    tint = ClaudeTextTertiary,
+                                    tint = SumiTertiary,
                                     modifier = Modifier.size(14.dp)
                                 )
                             }
@@ -359,14 +361,14 @@ private fun ClaudeGlassCategoryCard(
                         Icon(
                             imageVector = Icons.Default.Add,
                             contentDescription = null,
-                            tint = ClaudeTerracotta,
+                            tint = MatchaPrimary,
                             modifier = Modifier.size(14.dp)
                         )
                         Spacer(modifier = Modifier.width(4.dp))
                         Text(
                             text = "添加子分类...",
                             style = MaterialTheme.typography.bodySmall,
-                            color = ClaudeTerracotta,
+                            color = MatchaPrimary,
                             fontWeight = FontWeight.Medium
                         )
                     }
@@ -378,7 +380,7 @@ private fun ClaudeGlassCategoryCard(
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun ClaudeAddEditCategoryDialog(
+private fun WashiAddEditCategoryDialog(
     category: CategoryEntity?,
     parentCategory: CategoryEntity?,
     onDismiss: () -> Unit,
@@ -389,7 +391,7 @@ private fun ClaudeAddEditCategoryDialog(
         mutableStateOf(category?.iconName ?: parentCategory?.iconName ?: "shopping_cart")
     }
     var selectedColorHex by remember {
-        mutableLongStateOf(category?.colorHex ?: parentCategory?.colorHex ?: ClaudeCategoryColors.first())
+        mutableLongStateOf(category?.colorHex ?: parentCategory?.colorHex ?: JapaneseCategoryColors.first())
     }
 
     val dialogTitle = when {
@@ -400,8 +402,8 @@ private fun ClaudeAddEditCategoryDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        containerColor = Color.White.copy(alpha = 0.95f),
-        title = { Text(text = dialogTitle, fontWeight = FontWeight.Bold, color = ClaudeInk) },
+        containerColor = Color.White,
+        title = { Text(text = dialogTitle, fontWeight = FontWeight.Bold, color = SumiInk) },
         text = {
             Column(
                 modifier = Modifier.fillMaxWidth(),
@@ -420,7 +422,7 @@ private fun ClaudeAddEditCategoryDialog(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(text = "预览：", style = MaterialTheme.typography.bodySmall, color = ClaudeTextSecondary)
+                    Text(text = "预览：", style = MaterialTheme.typography.bodySmall, color = SumiSecondary)
                     Spacer(modifier = Modifier.width(6.dp))
                     CategoryIconBadge(
                         iconName = selectedIconName,
@@ -438,7 +440,7 @@ private fun ClaudeAddEditCategoryDialog(
                 }
 
                 // 图标选择
-                Text(text = "选择图标", style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.SemiBold, color = ClaudeInk)
+                Text(text = "选择图标", style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.SemiBold, color = SumiInk)
                 FlowRow(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -450,15 +452,15 @@ private fun ClaudeAddEditCategoryDialog(
                             modifier = Modifier
                                 .size(34.dp)
                                 .clip(RoundedCornerShape(8.dp))
-                                .background(if (isSelected) ClaudeTerracotta else Color.White.copy(alpha = 0.8f))
-                                .border(1.dp, if (isSelected) ClaudeTerracotta else ClaudeBorder, RoundedCornerShape(8.dp))
-                                .clickable { selectedIconName = iconKey },
+                                .background(if (isSelected) MatchaPrimary else WashiPaperSubtle)
+                                .border(0.8.dp, if (isSelected) MatchaPrimary else WashiBorder, RoundedCornerShape(8.dp))
+                            .clickable { selectedIconName = iconKey },
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(
                                 imageVector = vector,
                                 contentDescription = iconKey,
-                                tint = if (isSelected) Color.White else ClaudeInk,
+                                tint = if (isSelected) Color.White else SumiInk,
                                 modifier = Modifier.size(16.dp)
                             )
                         }
@@ -466,14 +468,14 @@ private fun ClaudeAddEditCategoryDialog(
                 }
 
                 // 色彩选择
-                Text(text = "选择色调", style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.SemiBold, color = ClaudeInk)
+                Text(text = "选择和风色调", style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.SemiBold, color = SumiInk)
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
                         .horizontalScroll(rememberScrollState()),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    ClaudeCategoryColors.forEach { colorVal ->
+                    JapaneseCategoryColors.forEach { colorVal ->
                         val isSelected = selectedColorHex == colorVal
                         Box(
                             modifier = Modifier
@@ -482,7 +484,7 @@ private fun ClaudeAddEditCategoryDialog(
                                 .background(Color(colorVal))
                                 .border(
                                     width = if (isSelected) 2.5.dp else 0.dp,
-                                    color = if (isSelected) ClaudeInk else Color.Transparent,
+                                    color = if (isSelected) SumiInk else Color.Transparent,
                                     shape = CircleShape
                                 )
                                 .clickable { selectedColorHex = colorVal }
@@ -495,12 +497,12 @@ private fun ClaudeAddEditCategoryDialog(
             TextButton(
                 onClick = { onSave(name, selectedIconName, selectedColorHex) }
             ) {
-                Text(text = "保存", fontWeight = FontWeight.Bold, color = ClaudeTerracotta)
+                Text(text = "保存", fontWeight = FontWeight.Bold, color = MatchaPrimary)
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text(text = "取消", color = ClaudeTextSecondary)
+                Text(text = "取消", color = SumiSecondary)
             }
         }
     )

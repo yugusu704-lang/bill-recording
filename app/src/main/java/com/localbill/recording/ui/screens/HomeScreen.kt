@@ -20,9 +20,9 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ReceiptLong
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.DeleteOutline
-import androidx.compose.material.icons.filled.ReceiptLong
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.HorizontalDivider
@@ -49,12 +49,16 @@ import androidx.compose.ui.unit.sp
 import com.localbill.recording.data.entity.RecordWithCategory
 import com.localbill.recording.ui.components.CalculatorBottomSheet
 import com.localbill.recording.ui.components.CategoryIconBadge
-import com.localbill.recording.ui.theme.ClaudeBorder
-import com.localbill.recording.ui.theme.ClaudeInk
-import com.localbill.recording.ui.theme.ClaudeTerracotta
-import com.localbill.recording.ui.theme.ClaudeTextSecondary
-import com.localbill.recording.ui.theme.ClaudeTextTertiary
-import com.localbill.recording.ui.theme.ClaudeWarmBg
+import com.localbill.recording.ui.theme.MatchaPrimary
+import com.localbill.recording.ui.theme.SakuraAccent
+import com.localbill.recording.ui.theme.SakuraSoft
+import com.localbill.recording.ui.theme.SumiInk
+import com.localbill.recording.ui.theme.SumiSecondary
+import com.localbill.recording.ui.theme.SumiTertiary
+import com.localbill.recording.ui.theme.WashiBorder
+import com.localbill.recording.ui.theme.WashiCardBg
+import com.localbill.recording.ui.theme.WashiPaperBg
+import com.localbill.recording.ui.theme.WashiPaperSubtle
 import com.localbill.recording.ui.viewmodel.HomeViewModel
 import com.localbill.recording.util.DateTimeUtils
 import java.time.LocalDate
@@ -73,19 +77,19 @@ fun HomeScreen(
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
-        containerColor = ClaudeWarmBg,
+        containerColor = WashiPaperBg,
         floatingActionButton = {
             FloatingActionButton(
                 onClick = {
                     editingRecord = null
                     isBottomSheetOpen = true
                 },
-                containerColor = ClaudeTerracotta,
+                containerColor = MatchaPrimary,
                 contentColor = Color.White,
                 shape = CircleShape,
                 modifier = Modifier
                     .padding(bottom = 16.dp)
-                    .shadow(8.dp, CircleShape, spotColor = ClaudeTerracotta.copy(alpha = 0.4f))
+                    .shadow(8.dp, CircleShape, spotColor = MatchaPrimary.copy(alpha = 0.35f))
             ) {
                 Icon(
                     imageVector = Icons.Default.Add,
@@ -102,9 +106,9 @@ fun HomeScreen(
             contentPadding = PaddingValues(horizontal = 18.dp, vertical = 12.dp),
             verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
-            // 1. 真实纯粹的本月财务总览大卡片 (去除所有假曲线、假标签与假通知图标)
+            // 1. 和纸手账本月财务总览大卡片
             item {
-                PureFinancialOverviewCard(
+                WashiFinancialOverviewCard(
                     monthAmount = uiState.monthExpense,
                     todayAmount = uiState.todayExpense,
                     weekAmount = uiState.weekExpense,
@@ -125,19 +129,19 @@ fun HomeScreen(
                         text = "流水明细",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
-                        color = ClaudeInk
+                        color = SumiInk
                     )
                     Text(
                         text = "本月共 ${uiState.totalRecordCount} 笔",
                         style = MaterialTheme.typography.bodySmall,
-                        color = ClaudeTextSecondary
+                        color = SumiSecondary
                     )
                 }
             }
 
             if (uiState.groupedDays.isEmpty()) {
                 item {
-                    PureEmptyStateCard(
+                    WashiEmptyStateCard(
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(180.dp)
@@ -149,7 +153,7 @@ fun HomeScreen(
                         key = "header_${dayGroup.date}",
                         contentType = "date_header"
                     ) {
-                        PureDateHeader(
+                        WashiDateHeader(
                             date = dayGroup.date,
                             dayTotal = dayGroup.totalAmount
                         )
@@ -160,7 +164,7 @@ fun HomeScreen(
                         key = { it.record.id },
                         contentType = { "record_item" }
                     ) { recordItem ->
-                        PureGlassRecordItem(
+                        WashiRecordItem(
                             item = recordItem,
                             onClick = {
                                 editingRecord = recordItem
@@ -205,14 +209,14 @@ fun HomeScreen(
     recordToDelete?.let { recordItem ->
         AlertDialog(
             onDismissRequest = { recordToDelete = null },
-            containerColor = Color.White.copy(alpha = 0.95f),
-            title = { Text(text = "删除此账单？", fontWeight = FontWeight.Bold, color = ClaudeInk) },
+            containerColor = Color.White,
+            title = { Text(text = "删除此账单？", fontWeight = FontWeight.Bold, color = SumiInk) },
             text = {
                 Text(
                     text = "即将删除「${recordItem.displayCategoryName}」支出 ¥ ${
                         String.format(Locale.US, "%.2f", recordItem.record.amount)
                     }，此操作不可撤销。",
-                    color = ClaudeTextSecondary
+                    color = SumiSecondary
                 )
             },
             confirmButton = {
@@ -222,12 +226,12 @@ fun HomeScreen(
                         recordToDelete = null
                     }
                 ) {
-                    Text(text = "确认删除", color = MaterialTheme.colorScheme.error, fontWeight = FontWeight.Bold)
+                    Text(text = "确认删除", color = SakuraAccent, fontWeight = FontWeight.Bold)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { recordToDelete = null }) {
-                    Text(text = "取消", color = ClaudeTextSecondary)
+                    Text(text = "取消", color = SumiSecondary)
                 }
             }
         )
@@ -235,10 +239,10 @@ fun HomeScreen(
 }
 
 /**
- * 真实纯粹的财务总览卡片 (无假曲线、无假英文字符、无死图标)
+ * 和纸财务总览大卡片 (温润和风宣纸质感)
  */
 @Composable
-private fun PureFinancialOverviewCard(
+private fun WashiFinancialOverviewCard(
     monthAmount: Double,
     todayAmount: Double,
     weekAmount: Double,
@@ -251,28 +255,29 @@ private fun PureFinancialOverviewCard(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(18.dp))
-            .background(Color.White.copy(alpha = 0.78f))
-            .border(1.2.dp, Color.White.copy(alpha = 0.92f), RoundedCornerShape(18.dp))
+            .background(WashiCardBg)
+            .border(0.8.dp, WashiBorder, RoundedCornerShape(18.dp))
             .padding(18.dp)
     ) {
         Column(modifier = Modifier.fillMaxWidth()) {
-            // 真实动态年份与月份
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    text = "${monthTitle} · 支出总览",
-                    style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.Bold,
-                    color = ClaudeTerracotta
-                )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = "🌸 ${monthTitle} · 支出总览",
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = MatchaPrimary
+                    )
+                }
 
                 Text(
                     text = "记账 ${totalCount} 笔",
                     style = MaterialTheme.typography.labelSmall,
-                    color = ClaudeTextSecondary
+                    color = SumiSecondary
                 )
             }
 
@@ -283,7 +288,7 @@ private fun PureFinancialOverviewCard(
                 Text(
                     text = "¥",
                     style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
-                    color = ClaudeInk,
+                    color = SumiInk,
                     modifier = Modifier.padding(end = 4.dp, bottom = 2.dp)
                 )
                 Text(
@@ -293,12 +298,12 @@ private fun PureFinancialOverviewCard(
                         fontWeight = FontWeight.ExtraBold,
                         letterSpacing = (-0.5).sp
                     ),
-                    color = ClaudeInk
+                    color = SumiInk
                 )
             }
 
             Spacer(modifier = Modifier.height(14.dp))
-            HorizontalDivider(color = ClaudeBorder.copy(alpha = 0.45f), thickness = 0.8.dp)
+            HorizontalDivider(color = WashiBorder.copy(alpha = 0.5f), thickness = 0.8.dp)
             Spacer(modifier = Modifier.height(12.dp))
 
             // 今日支出与本周支出对比
@@ -308,24 +313,24 @@ private fun PureFinancialOverviewCard(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Column {
-                    Text(text = "今日支出", style = MaterialTheme.typography.bodySmall, color = ClaudeTextSecondary)
+                    Text(text = "今日支出", style = MaterialTheme.typography.bodySmall, color = SumiSecondary)
                     Spacer(modifier = Modifier.height(2.dp))
                     Text(
                         text = "¥ " + String.format(Locale.US, "%.2f", todayAmount),
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.Bold,
-                        color = ClaudeInk
+                        color = SumiInk
                     )
                 }
 
                 Column(horizontalAlignment = Alignment.End) {
-                    Text(text = "本周支出", style = MaterialTheme.typography.bodySmall, color = ClaudeTextSecondary)
+                    Text(text = "本周支出", style = MaterialTheme.typography.bodySmall, color = SumiSecondary)
                     Spacer(modifier = Modifier.height(2.dp))
                     Text(
                         text = "¥ " + String.format(Locale.US, "%.2f", weekAmount),
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.Bold,
-                        color = ClaudeInk
+                        color = SumiInk
                     )
                 }
             }
@@ -334,10 +339,10 @@ private fun PureFinancialOverviewCard(
 }
 
 /**
- * 日期表头
+ * 和风日期表头
  */
 @Composable
-private fun PureDateHeader(
+private fun WashiDateHeader(
     date: LocalDate,
     dayTotal: Double
 ) {
@@ -363,13 +368,13 @@ private fun PureDateHeader(
                 text = dateTitle,
                 style = MaterialTheme.typography.titleSmall,
                 fontWeight = FontWeight.Bold,
-                color = ClaudeInk
+                color = SumiInk
             )
             Spacer(modifier = Modifier.width(6.dp))
             Text(
                 text = weekday,
                 style = MaterialTheme.typography.bodySmall,
-                color = ClaudeTextSecondary
+                color = SumiSecondary
             )
         }
 
@@ -377,16 +382,16 @@ private fun PureDateHeader(
             text = "当日 ¥ " + String.format(Locale.US, "%.2f", dayTotal),
             style = MaterialTheme.typography.bodySmall,
             fontWeight = FontWeight.Medium,
-            color = ClaudeTextSecondary
+            color = SumiSecondary
         )
     }
 }
 
 /**
- * 单条流水账单卡片
+ * 和纸单条流水账单卡片
  */
 @Composable
-private fun PureGlassRecordItem(
+private fun WashiRecordItem(
     item: RecordWithCategory,
     onClick: () -> Unit,
     onDelete: () -> Unit
@@ -399,8 +404,8 @@ private fun PureGlassRecordItem(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(14.dp))
-            .background(Color.White.copy(alpha = 0.72f))
-            .border(1.dp, Color.White.copy(alpha = 0.88f), RoundedCornerShape(14.dp))
+            .background(WashiCardBg)
+            .border(0.8.dp, WashiBorder, RoundedCornerShape(14.dp))
             .clickable(onClick = onClick)
             .padding(horizontal = 12.dp, vertical = 10.dp)
     ) {
@@ -429,7 +434,7 @@ private fun PureGlassRecordItem(
                             text = item.displayCategoryName,
                             style = MaterialTheme.typography.bodyLarge,
                             fontWeight = FontWeight.SemiBold,
-                            color = ClaudeInk
+                            color = SumiInk
                         )
 
                         if (item.displaySubCategoryName != null) {
@@ -437,8 +442,8 @@ private fun PureGlassRecordItem(
                             Box(
                                 modifier = Modifier
                                     .clip(RoundedCornerShape(4.dp))
-                                    .background(Color.White.copy(alpha = 0.8f))
-                                    .border(0.8.dp, Color(item.displayColorHex).copy(alpha = 0.3f), RoundedCornerShape(4.dp))
+                                    .background(Color(item.displayColorHex).copy(alpha = 0.1f))
+                                    .border(0.8.dp, Color(item.displayColorHex).copy(alpha = 0.25f), RoundedCornerShape(4.dp))
                                     .padding(horizontal = 4.dp, vertical = 1.dp)
                             ) {
                                 Text(
@@ -457,13 +462,13 @@ private fun PureGlassRecordItem(
                         Text(
                             text = timeStr,
                             style = MaterialTheme.typography.bodySmall,
-                            color = ClaudeTextTertiary
+                            color = SumiTertiary
                         )
                         if (item.record.note.isNotBlank()) {
                             Text(
                                 text = " · ${item.record.note}",
                                 style = MaterialTheme.typography.bodySmall,
-                                color = ClaudeTextSecondary,
+                                color = SumiSecondary,
                                 maxLines = 1
                             )
                         }
@@ -476,7 +481,7 @@ private fun PureGlassRecordItem(
                     text = "- ¥ " + String.format(Locale.US, "%.2f", item.record.amount),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
-                    color = ClaudeInk
+                    color = SumiInk
                 )
 
                 IconButton(
@@ -486,7 +491,7 @@ private fun PureGlassRecordItem(
                     Icon(
                         imageVector = Icons.Default.DeleteOutline,
                         contentDescription = "删除",
-                        tint = ClaudeTextTertiary,
+                        tint = SumiTertiary,
                         modifier = Modifier.size(16.dp)
                     )
                 }
@@ -496,13 +501,13 @@ private fun PureGlassRecordItem(
 }
 
 @Composable
-private fun PureEmptyStateCard(modifier: Modifier = Modifier) {
+private fun WashiEmptyStateCard(modifier: Modifier = Modifier) {
     Box(
         modifier = modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(16.dp))
-            .background(Color.White.copy(alpha = 0.65f))
-            .border(1.dp, Color.White.copy(alpha = 0.85f), RoundedCornerShape(16.dp)),
+            .background(WashiCardBg)
+            .border(0.8.dp, WashiBorder, RoundedCornerShape(16.dp)),
         contentAlignment = Alignment.Center
     ) {
         Column(
@@ -510,23 +515,23 @@ private fun PureEmptyStateCard(modifier: Modifier = Modifier) {
             verticalArrangement = Arrangement.Center
         ) {
             Icon(
-                imageVector = Icons.Default.ReceiptLong,
+                imageVector = Icons.AutoMirrored.Filled.ReceiptLong,
                 contentDescription = null,
-                tint = ClaudeTextTertiary,
+                tint = MatchaPrimary.copy(alpha = 0.6f),
                 modifier = Modifier.size(42.dp)
             )
             Spacer(modifier = Modifier.height(8.dp))
             Text(
                 text = "暂无近期账单",
                 style = MaterialTheme.typography.titleSmall,
-                color = ClaudeInk,
+                color = SumiInk,
                 fontWeight = FontWeight.Bold
             )
             Spacer(modifier = Modifier.height(4.dp))
             Text(
-                text = "点击右下角按钮开启极简记账",
+                text = "点击右下角开启和风手账记账",
                 style = MaterialTheme.typography.bodySmall,
-                color = ClaudeTextSecondary
+                color = SumiSecondary
             )
         }
     }

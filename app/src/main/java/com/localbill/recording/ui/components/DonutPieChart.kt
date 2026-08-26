@@ -42,11 +42,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.localbill.recording.data.model.CategoryAggregation
-import com.localbill.recording.ui.theme.ClaudeBorder
-import com.localbill.recording.ui.theme.ClaudeInk
-import com.localbill.recording.ui.theme.ClaudeTextSecondary
-import com.localbill.recording.ui.theme.ClaudeTextTertiary
-import com.localbill.recording.ui.theme.ClaudeWarmBgSubtle
+import com.localbill.recording.ui.theme.MatchaPrimary
+import com.localbill.recording.ui.theme.SumiInk
+import com.localbill.recording.ui.theme.SumiSecondary
+import com.localbill.recording.ui.theme.SumiTertiary
+import com.localbill.recording.ui.theme.WashiBorder
+import com.localbill.recording.ui.theme.WashiCardBg
+import com.localbill.recording.ui.theme.WashiPaperSubtle
 import java.util.Locale
 import kotlin.math.atan2
 import kotlin.math.sqrt
@@ -69,7 +71,7 @@ fun DonutPieChart(
             Text(
                 text = "暂无分类支出数据",
                 style = MaterialTheme.typography.bodyMedium,
-                color = ClaudeTextSecondary
+                color = SumiSecondary
             )
         }
         return
@@ -89,43 +91,33 @@ fun DonutPieChart(
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(18.dp))
-            .background(Color.White.copy(alpha = 0.78f))
-            .border(1.2.dp, Color.White.copy(alpha = 0.92f), RoundedCornerShape(18.dp))
+            .clip(RoundedCornerShape(16.dp))
+            .background(WashiCardBg)
+            .border(0.8.dp, WashiBorder, RoundedCornerShape(16.dp))
             .padding(16.dp)
     ) {
         Column(
             modifier = Modifier.fillMaxWidth(),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = "分类占比",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = ClaudeInk
-                )
-                Text(
-                    text = "共 ${aggregations.size} 个分类",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = ClaudeTextSecondary
-                )
-            }
+            Text(
+                text = "分类支出占比",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold,
+                color = SumiInk,
+                modifier = Modifier.fillMaxWidth()
+            )
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // 环形图与中心数据
+            // 环形图与中心指标
             Box(
-                modifier = Modifier.size(200.dp),
+                modifier = Modifier.size(190.dp),
                 contentAlignment = Alignment.Center
             ) {
                 Canvas(
                     modifier = Modifier
-                        .size(200.dp)
+                        .size(175.dp)
                         .pointerInput(aggregations) {
                             detectTapGestures { offset ->
                                 val center = Offset(size.width / 2f, size.height / 2f)
@@ -133,139 +125,130 @@ fun DonutPieChart(
                                 val dy = offset.y - center.y
                                 val dist = sqrt(dx * dx + dy * dy)
                                 val outerRadius = size.width / 2f
-                                val innerRadius = outerRadius - 26.dp.toPx()
+                                val innerRadius = outerRadius - 28.dp.toPx()
 
                                 if (dist in innerRadius..outerRadius) {
                                     var angle = Math.toDegrees(atan2(dy.toDouble(), dx.toDouble())).toFloat()
                                     if (angle < 0) angle += 360f
-                                    var angleFromTop = (angle + 90f) % 360f
+                                    val rotAngle = (angle + 90f) % 360f
 
-                                    var currentAngle = 0f
+                                    var curAngle = 0f
                                     for (i in aggregations.indices) {
-                                        val sweep = (aggregations[i].percentage / 100f * 360f).toFloat()
-                                        if (angleFromTop in currentAngle..(currentAngle + sweep)) {
+                                        val sweep = (aggregations[i].totalAmount / totalAmount * 360f).toFloat()
+                                        if (rotAngle in curAngle..(curAngle + sweep)) {
                                             selectedIndex = i
                                             onCategoryClick?.invoke(aggregations[i])
                                             break
                                         }
-                                        currentAngle += sweep
+                                        curAngle += sweep
                                     }
                                 }
                             }
                         }
                 ) {
-                    val strokeWidthPx = 22.dp.toPx()
-                    val diameter = size.minDimension - strokeWidthPx - 6.dp.toPx()
-                    val topLeft = Offset(
-                        (size.width - diameter) / 2f,
-                        (size.height - diameter) / 2f
-                    )
-                    val arcSize = Size(diameter, diameter)
+                    val strokeWidthBase = 22.dp.toPx()
+                    val strokeWidthSelected = 28.dp.toPx()
+                    val outerPadding = 14.dp.toPx()
+                    val arcSize = Size(size.width - outerPadding * 2, size.height - outerPadding * 2)
+                    val arcTopLeft = Offset(outerPadding, outerPadding)
 
-                    drawArc(
-                        color = Color.White.copy(alpha = 0.5f),
-                        startAngle = 0f,
-                        sweepAngle = 360f,
-                        useCenter = false,
-                        topLeft = topLeft,
-                        size = arcSize,
-                        style = Stroke(width = strokeWidthPx, cap = StrokeCap.Round)
-                    )
+                    var startAngle = -90f
 
-                    var currentStartAngle = -90f
-                    aggregations.forEachIndexed { index, item ->
-                        val sweepAngle = (item.percentage / 100f * 360f).toFloat() * progress.value
+                    aggregations.forEachIndexed { index, agg ->
+                        val sweepAngle = ((agg.totalAmount / totalAmount) * 360f * progress.value).toFloat()
                         val isSelected = index == safeSelectedIndex
-                        val catColor = Color(item.mainCategory.colorHex)
+                        val catColor = Color(agg.mainCategory.colorHex)
 
-                        val arcStroke = if (isSelected) strokeWidthPx + 4.dp.toPx() else strokeWidthPx
-
-                        if (sweepAngle > 0f) {
-                            drawArc(
-                                color = catColor,
-                                startAngle = currentStartAngle + 1.5f,
-                                sweepAngle = (sweepAngle - 3f).coerceAtLeast(0.5f),
-                                useCenter = false,
-                                topLeft = topLeft,
-                                size = arcSize,
-                                style = Stroke(width = arcStroke, cap = StrokeCap.Round)
+                        drawArc(
+                            color = if (isSelected) catColor else catColor.copy(alpha = 0.85f),
+                            startAngle = startAngle,
+                            sweepAngle = (sweepAngle - 2.5f).coerceAtLeast(0.5f),
+                            useCenter = false,
+                            topLeft = arcTopLeft,
+                            size = arcSize,
+                            style = Stroke(
+                                width = if (isSelected) strokeWidthSelected else strokeWidthBase,
+                                cap = StrokeCap.Round
                             )
-                        }
-                        currentStartAngle += sweepAngle
+                        )
+                        startAngle += sweepAngle
                     }
                 }
 
-                // 中心统计
-                val selectedItem = aggregations.getOrNull(safeSelectedIndex) ?: aggregations.first()
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center
-                ) {
+                // 中心聚焦数据卡
+                val selCategory = aggregations[safeSelectedIndex]
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text(
-                        text = String.format(Locale.US, "%.1f%%", selectedItem.percentage),
-                        style = MaterialTheme.typography.headlineMedium.copy(
-                            fontSize = 24.sp,
-                            fontWeight = FontWeight.ExtraBold
-                        ),
-                        color = Color(selectedItem.mainCategory.colorHex)
-                    )
-                    Text(
-                        text = selectedItem.mainCategory.name,
-                        style = MaterialTheme.typography.bodySmall,
+                        text = selCategory.mainCategory.name,
+                        style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
-                        color = ClaudeInk
+                        color = SumiInk
                     )
                     Text(
-                        text = "¥ " + String.format(Locale.US, "%.2f", selectedItem.totalAmount),
-                        style = MaterialTheme.typography.labelSmall,
-                        color = ClaudeTextSecondary
+                        text = String.format(Locale.US, "%.1f%%", selCategory.percentage),
+                        style = MaterialTheme.typography.headlineMedium,
+                        fontWeight = FontWeight.ExtraBold,
+                        color = Color(selCategory.mainCategory.colorHex)
+                    )
+                    Text(
+                        text = "¥ " + String.format(Locale.US, "%.2f", selCategory.totalAmount),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = SumiSecondary
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.height(18.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
-            // 底部图例胶囊列表
+            // 底部图例列表 (FlowRow 弹性排列)
             FlowRow(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalArrangement = Arrangement.spacedBy(6.dp)
+                verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                aggregations.forEachIndexed { index, item ->
+                aggregations.forEachIndexed { index, agg ->
                     val isSelected = index == safeSelectedIndex
-                    val color = Color(item.mainCategory.colorHex)
+                    val catColor = Color(agg.mainCategory.colorHex)
 
-                    Row(
+                    Box(
                         modifier = Modifier
                             .clip(RoundedCornerShape(8.dp))
-                            .background(if (isSelected) Color.White.copy(alpha = 0.9f) else Color.White.copy(alpha = 0.5f))
+                            .background(if (isSelected) catColor.copy(alpha = 0.12f) else WashiPaperSubtle)
                             .border(
-                                width = 1.dp,
-                                color = if (isSelected) color.copy(alpha = 0.6f) else Color.White.copy(alpha = 0.8f),
+                                width = if (isSelected) 1.dp else 0.dp,
+                                color = if (isSelected) catColor else Color.Transparent,
                                 shape = RoundedCornerShape(8.dp)
                             )
-                            .padding(horizontal = 8.dp, vertical = 4.dp),
-                        verticalAlignment = Alignment.CenterVertically
+                            .pointerInput(Unit) {
+                                detectTapGestures {
+                                    selectedIndex = index
+                                    onCategoryClick?.invoke(agg)
+                                }
+                            }
+                            .padding(horizontal = 10.dp, vertical = 6.dp)
                     ) {
-                        Box(
-                            modifier = Modifier
-                                .size(7.dp)
-                                .clip(CircleShape)
-                                .background(color)
-                        )
-                        Spacer(modifier = Modifier.width(5.dp))
-                        Text(
-                            text = item.mainCategory.name,
-                            style = MaterialTheme.typography.labelSmall,
-                            color = ClaudeInk,
-                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
-                        )
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text(
-                            text = String.format(Locale.US, "%.0f%%", item.percentage),
-                            style = MaterialTheme.typography.labelSmall,
-                            color = ClaudeTextSecondary
-                        )
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Box(
+                                modifier = Modifier
+                                    .size(8.dp)
+                                    .clip(CircleShape)
+                                    .background(catColor)
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(
+                                text = agg.mainCategory.name,
+                                style = MaterialTheme.typography.bodySmall,
+                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                                color = if (isSelected) SumiInk else SumiSecondary
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                text = String.format(Locale.US, "%.1f%%", agg.percentage),
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.SemiBold,
+                                color = if (isSelected) catColor else SumiTertiary
+                            )
+                        }
                     }
                 }
             }

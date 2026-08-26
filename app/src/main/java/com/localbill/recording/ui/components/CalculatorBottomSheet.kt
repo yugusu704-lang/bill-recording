@@ -27,7 +27,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Backspace
-
 import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.EditNote
@@ -52,7 +51,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
-
 import androidx.compose.ui.hapticfeedback.HapticFeedback
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalContext
@@ -62,14 +60,15 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.localbill.recording.data.entity.CategoryEntity
 import com.localbill.recording.data.entity.RecordWithCategory
-import com.localbill.recording.ui.theme.ClaudeBorder
-import com.localbill.recording.ui.theme.ClaudeInk
-import com.localbill.recording.ui.theme.ClaudeTerracotta
-import com.localbill.recording.ui.theme.ClaudeTextSecondary
-import com.localbill.recording.ui.theme.ClaudeTextTertiary
-import com.localbill.recording.ui.theme.ClaudeWarmBg
-import com.localbill.recording.ui.theme.ClaudeWarmBgSubtle
-import com.localbill.recording.ui.theme.PrismWarmSpectralBrush
+import com.localbill.recording.ui.theme.MatchaPrimary
+import com.localbill.recording.ui.theme.SakuraAccent
+import com.localbill.recording.ui.theme.SakuraSoft
+import com.localbill.recording.ui.theme.SumiInk
+import com.localbill.recording.ui.theme.SumiSecondary
+import com.localbill.recording.ui.theme.SumiTertiary
+import com.localbill.recording.ui.theme.WashiBorder
+import com.localbill.recording.ui.theme.WashiPaperBg
+import com.localbill.recording.ui.theme.WashiPaperSubtle
 import com.localbill.recording.util.DateTimeUtils
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -104,153 +103,186 @@ fun CalculatorBottomSheet(
         mutableStateOf(editingRecord?.subCategory)
     }
 
-    var noteText by remember { mutableStateOf(editingRecord?.record?.note ?: "") }
+    var note by remember {
+        mutableStateOf(editingRecord?.record?.note ?: "")
+    }
+
     var selectedTimestamp by remember {
         mutableLongStateOf(editingRecord?.record?.timestamp ?: System.currentTimeMillis())
     }
 
-    LaunchedEffect(allMainCategories) {
-        if (selectedMainCategory == null && allMainCategories.isNotEmpty()) {
-            selectedMainCategory = allMainCategories.first()
+    var isNoteInputVisible by remember {
+        mutableStateOf(editingRecord?.record?.note?.isNotEmpty() == true)
+    }
+
+    LaunchedEffect(selectedMainCategory) {
+        val currentSub = selectedSubCategory
+        if (currentSub != null && currentSub.parentId != selectedMainCategory?.id) {
+            selectedSubCategory = null
         }
     }
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = sheetState,
-        containerColor = Color.White.copy(alpha = 0.96f),
-        shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
-        dragHandle = null
+        containerColor = WashiPaperBg,
+        dragHandle = null,
+        shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .navigationBarsPadding()
-                .padding(bottom = 8.dp)
+                .padding(horizontal = 18.dp, vertical = 12.dp)
         ) {
-            // 1. 顶部陶土流光指示线
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(3.dp)
-                    .background(PrismWarmSpectralBrush)
-            )
-
-            // 2. 标题栏
+            // 顶部和风手账栏：标题与关闭
             Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 18.dp, vertical = 10.dp),
+                modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = if (editingRecord != null) "编辑账单" else "记一笔",
+                    text = if (editingRecord == null) "🌸 记一笔 (和风手账)" else "✏️ 编辑记账",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
-                    color = ClaudeInk
+                    color = SumiInk
                 )
-                IconButton(
-                    onClick = onDismiss,
-                    modifier = Modifier.size(28.dp)
-                ) {
-                    Icon(imageVector = Icons.Default.Close, contentDescription = "关闭", tint = ClaudeTextSecondary, modifier = Modifier.size(18.dp))
+                IconButton(onClick = onDismiss, modifier = Modifier.size(32.dp)) {
+                    Icon(
+                        imageVector = Icons.Default.Close,
+                        contentDescription = "关闭",
+                        tint = SumiSecondary
+                    )
                 }
             }
 
-            // 3. 大字号金额展示
+            Spacer(modifier = Modifier.height(10.dp))
+
+            // 1. 金额展示与算式面板 (和纸纯白质感)
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(Color.White)
+                    .border(0.8.dp, WashiBorder, RoundedCornerShape(16.dp))
+                    .padding(horizontal = 16.dp, vertical = 12.dp)
+            ) {
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = if (isExpression(expression)) "= 实时计算" else "金额",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = SumiSecondary
+                        )
+
+                        // 关联选中的分类指示
+                        selectedMainCategory?.let { main ->
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(6.dp)
+                                        .clip(RoundedCornerShape(3.dp))
+                                        .background(Color(main.colorHex))
+                                )
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text(
+                                    text = if (selectedSubCategory != null) "${main.name} · ${selectedSubCategory?.name}" else main.name,
+                                    style = MaterialTheme.typography.labelSmall,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = Color(main.colorHex)
+                                )
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(4.dp))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.Bottom
+                    ) {
+                        Text(
+                            text = "¥",
+                            style = MaterialTheme.typography.headlineMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MatchaPrimary
+                        )
+                        Text(
+                            text = expression,
+                            style = MaterialTheme.typography.displayMedium.copy(fontSize = 32.sp),
+                            fontWeight = FontWeight.Bold,
+                            color = SumiInk
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            // 2. 主分类横向选择 (和纸胶囊)
+            val mainScrollState = rememberScrollState()
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 20.dp, vertical = 4.dp),
-                horizontalArrangement = Arrangement.End,
-                verticalAlignment = Alignment.Bottom
+                    .horizontalScroll(mainScrollState),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                Text(
-                    text = "¥",
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold,
-                    color = ClaudeTerracotta,
-                    modifier = Modifier.padding(end = 6.dp, bottom = 4.dp)
-                )
-                Text(
-                    text = expression,
-                    style = MaterialTheme.typography.displayLarge.copy(
-                        fontSize = if (expression.length > 8) 30.sp else 38.sp,
-                        fontWeight = FontWeight.ExtraBold,
-                        letterSpacing = (-0.5).sp
-                    ),
-                    color = ClaudeInk,
-                    maxLines = 1
-                )
-            }
+                allMainCategories.forEach { mainCat ->
+                    val isSelected = selectedMainCategory?.id == mainCat.id
+                    val catColor = Color(mainCat.colorHex)
 
-            // 4. 两级分类选择器
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 6.dp)
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .horizontalScroll(rememberScrollState())
-                        .padding(horizontal = 16.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    allMainCategories.forEach { mainCat ->
-                        val isSelected = selectedMainCategory?.id == mainCat.id
-                        val catColor = Color(mainCat.colorHex)
-
-                        Row(
-                            modifier = Modifier
-                                .clip(RoundedCornerShape(12.dp))
-                                .background(if (isSelected) ClaudeTerracotta.copy(alpha = 0.12f) else Color.White.copy(alpha = 0.7f))
-                                .border(
-                                    width = 1.dp,
-                                    color = if (isSelected) ClaudeTerracotta else ClaudeBorder.copy(alpha = 0.7f),
-                                    shape = RoundedCornerShape(12.dp)
-                                )
-                                .clickable {
-                                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                                    if (selectedMainCategory?.id != mainCat.id) {
-                                        selectedMainCategory = mainCat
-                                        selectedSubCategory = null
-                                    }
-                                }
-                                .padding(horizontal = 10.dp, vertical = 6.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            CategoryIconBadge(
-                                iconName = mainCat.iconName,
-                                colorHex = mainCat.colorHex,
-                                size = 26.dp,
-                                iconSize = 14.dp,
-                                cornerRadius = 6.dp
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(if (isSelected) catColor.copy(alpha = 0.14f) else Color.White)
+                            .border(
+                                width = if (isSelected) 1.2.dp else 0.8.dp,
+                                color = if (isSelected) catColor else WashiBorder,
+                                shape = RoundedCornerShape(12.dp)
+                            )
+                            .clickable {
+                                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                selectedMainCategory = mainCat
+                            }
+                            .padding(horizontal = 12.dp, vertical = 8.dp)
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = CategoryIcons.getIcon(mainCat.iconName),
+                                contentDescription = null,
+                                tint = if (isSelected) catColor else SumiSecondary,
+                                modifier = Modifier.size(16.dp)
                             )
                             Spacer(modifier = Modifier.width(6.dp))
                             Text(
                                 text = mainCat.name,
-                                style = MaterialTheme.typography.labelLarge,
+                                style = MaterialTheme.typography.bodyMedium,
                                 fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                                color = if (isSelected) ClaudeTerracotta else ClaudeInk
+                                color = if (isSelected) catColor else SumiInk
                             )
                         }
                     }
                 }
+            }
 
-                // 子分类标签
-                val currentSubList = selectedMainCategory?.let { subCategoriesMap[it.id] } ?: emptyList()
-                AnimatedVisibility(
-                    visible = currentSubList.isNotEmpty(),
-                    enter = expandVertically() + fadeIn(),
-                    exit = shrinkVertically() + fadeOut()
-                ) {
+            // 3. 子分类横向选择 (如果有)
+            val currentSubList = selectedMainCategory?.let { subCategoriesMap[it.id] } ?: emptyList()
+            AnimatedVisibility(
+                visible = currentSubList.isNotEmpty(),
+                enter = expandVertically() + fadeIn(),
+                exit = shrinkVertically() + fadeOut()
+            ) {
+                Column(modifier = Modifier.padding(top = 8.dp)) {
+                    val subScrollState = rememberScrollState()
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .horizontalScroll(rememberScrollState())
-                            .padding(start = 16.dp, end = 16.dp, top = 6.dp),
+                            .horizontalScroll(subScrollState),
                         horizontalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
                         currentSubList.forEach { subCat ->
@@ -260,19 +292,23 @@ fun CalculatorBottomSheet(
                             Box(
                                 modifier = Modifier
                                     .clip(RoundedCornerShape(8.dp))
-                                    .background(if (isSubSelected) subColor else Color.White.copy(alpha = 0.7f))
-                                    .border(1.dp, if (isSubSelected) subColor else ClaudeBorder.copy(alpha = 0.6f), RoundedCornerShape(8.dp))
+                                    .background(if (isSubSelected) subColor.copy(alpha = 0.15f) else WashiPaperSubtle)
+                                    .border(
+                                        width = if (isSubSelected) 1.dp else 0.dp,
+                                        color = if (isSubSelected) subColor else Color.Transparent,
+                                        shape = RoundedCornerShape(8.dp)
+                                    )
                                     .clickable {
                                         haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                                         selectedSubCategory = if (isSubSelected) null else subCat
                                     }
-                                    .padding(horizontal = 10.dp, vertical = 4.dp)
+                                    .padding(horizontal = 10.dp, vertical = 6.dp)
                             ) {
                                 Text(
                                     text = subCat.name,
-                                    style = MaterialTheme.typography.labelSmall,
-                                    fontWeight = if (isSubSelected) FontWeight.Bold else FontWeight.Medium,
-                                    color = if (isSubSelected) Color.White else ClaudeTextSecondary
+                                    style = MaterialTheme.typography.bodySmall,
+                                    fontWeight = if (isSubSelected) FontWeight.Bold else FontWeight.Normal,
+                                    color = if (isSubSelected) subColor else SumiSecondary
                                 )
                             }
                         }
@@ -280,303 +316,338 @@ fun CalculatorBottomSheet(
                 }
             }
 
-            // 5. 日期与备注行
+            Spacer(modifier = Modifier.height(10.dp))
+
+            // 4. 辅助工具栏：选择记账日期 & 展开备注
             Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 4.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                val ldt = DateTimeUtils.toLocalDateTime(selectedTimestamp)
-                Row(
+                // 日期选择胶囊
+                val dateStr = DateTimeUtils.formatFriendlyDate(selectedTimestamp)
+                Box(
                     modifier = Modifier
-                        .clip(RoundedCornerShape(10.dp))
-                        .background(Color.White.copy(alpha = 0.8f))
-                        .border(1.dp, ClaudeBorder.copy(alpha = 0.8f), RoundedCornerShape(10.dp))
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(Color.White)
+                        .border(0.8.dp, WashiBorder, RoundedCornerShape(8.dp))
                         .clickable {
-                            val currentDate = ldt.toLocalDate()
+                            val curDate = DateTimeUtils.toLocalDate(selectedTimestamp)
                             DatePickerDialog(
                                 context,
                                 { _, year, month, dayOfMonth ->
                                     val newDate = LocalDate.of(year, month + 1, dayOfMonth)
-                                    val newLdt = LocalDateTime.of(newDate, ldt.toLocalTime())
+                                    val nowTime = LocalDateTime.now().toLocalTime()
+                                    val newLdt = newDate.atTime(nowTime)
                                     selectedTimestamp = DateTimeUtils.toMillis(newLdt)
                                 },
-                                currentDate.year,
-                                currentDate.monthValue - 1,
-                                currentDate.dayOfMonth
+                                curDate.year,
+                                curDate.monthValue - 1,
+                                curDate.dayOfMonth
                             ).show()
                         }
-                        .padding(horizontal = 10.dp, vertical = 6.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                        .padding(horizontal = 10.dp, vertical = 6.dp)
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.CalendarToday,
-                        contentDescription = "日期",
-                        tint = ClaudeTerracotta,
-                        modifier = Modifier.size(14.dp)
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text(
-                        text = "${ldt.monthValue}/${ldt.dayOfMonth}",
-                        style = MaterialTheme.typography.bodySmall,
-                        fontWeight = FontWeight.SemiBold,
-                        color = ClaudeInk
-                    )
-                }
-
-                Box(
-                    modifier = Modifier
-                        .weight(1f)
-                        .clip(RoundedCornerShape(10.dp))
-                        .background(Color.White.copy(alpha = 0.85f))
-                        .border(1.dp, ClaudeBorder.copy(alpha = 0.8f), RoundedCornerShape(10.dp))
-                        .padding(horizontal = 10.dp, vertical = 7.dp),
-                    contentAlignment = Alignment.CenterStart
-                ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(
-                            imageVector = Icons.Default.EditNote,
-                            contentDescription = null,
-                            tint = ClaudeTextSecondary,
-                            modifier = Modifier.size(16.dp)
+                            imageVector = Icons.Default.CalendarToday,
+                            contentDescription = "日期",
+                            tint = MatchaPrimary,
+                            modifier = Modifier.size(14.dp)
                         )
                         Spacer(modifier = Modifier.width(6.dp))
-                        BasicTextField(
-                            value = noteText,
-                            onValueChange = { noteText = it },
-                            singleLine = true,
-                            textStyle = MaterialTheme.typography.bodyMedium.copy(
-                                color = ClaudeInk,
-                                fontSize = 13.sp
-                            ),
-                            cursorBrush = SolidColor(ClaudeTerracotta),
-                            modifier = Modifier.fillMaxWidth(),
-                            decorationBox = { innerTextField ->
-                                if (noteText.isEmpty()) {
-                                    Text(
-                                        text = "添加备注...",
-                                        style = MaterialTheme.typography.bodyMedium.copy(fontSize = 13.sp),
-                                        color = ClaudeTextTertiary
-                                    )
-                                }
-                                innerTextField()
-                            }
+                        Text(
+                            text = dateStr,
+                            style = MaterialTheme.typography.bodySmall,
+                            fontWeight = FontWeight.Medium,
+                            color = SumiInk
                         )
                     }
                 }
 
+                // 备注开关按钮
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(if (isNoteInputVisible || note.isNotEmpty()) SakuraSoft else Color.White)
+                        .border(0.8.dp, if (isNoteInputVisible || note.isNotEmpty()) SakuraAccent else WashiBorder, RoundedCornerShape(8.dp))
+                        .clickable {
+                            isNoteInputVisible = !isNoteInputVisible
+                        }
+                        .padding(horizontal = 10.dp, vertical = 6.dp)
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Default.EditNote,
+                            contentDescription = "备注",
+                            tint = if (isNoteInputVisible || note.isNotEmpty()) SakuraAccent else SumiSecondary,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = if (note.isNotEmpty()) note else "备注",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = if (isNoteInputVisible || note.isNotEmpty()) SakuraAccent else SumiSecondary
+                        )
+                    }
+                }
             }
 
-            // 6. Claude 风格触感数字键盘
-            ClaudeTactileKeyboard(
-                expression = expression,
-                haptic = haptic,
-                onExpressionChange = { expression = it },
-                onComplete = {
-                    val finalAmount = evaluateExpression(expression)
-                    if (finalAmount == null || finalAmount <= 0.0) {
-                        Toast.makeText(context, "请输入有效的支出金额", Toast.LENGTH_SHORT).show()
-                        return@ClaudeTactileKeyboard
-                    }
+            // 备注输入框展开
+            AnimatedVisibility(
+                visible = isNoteInputVisible,
+                enter = expandVertically() + fadeIn(),
+                exit = shrinkVertically() + fadeOut()
+            ) {
+                Column(modifier = Modifier.padding(top = 8.dp)) {
+                    BasicTextField(
+                        value = note,
+                        onValueChange = { note = it },
+                        textStyle = MaterialTheme.typography.bodyMedium.copy(color = SumiInk),
+                        cursorBrush = SolidColor(MatchaPrimary),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(10.dp))
+                            .background(Color.White)
+                            .border(0.8.dp, WashiBorder, RoundedCornerShape(10.dp))
+                            .padding(12.dp),
+                        decorationBox = { innerTextField ->
+                            if (note.isEmpty()) {
+                                Text(
+                                    text = "输入记账备注 (如：午餐黄焖鸡、咖啡、日用)",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = SumiTertiary
+                                )
+                            }
+                            innerTextField()
+                        }
+                    )
+                }
+            }
 
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // 5. 和风算盘质感 4x4 计算器键盘
+            WashiCalculatorKeypad(
+                expression = expression,
+                onExpressionChange = { expression = it },
+                onSave = {
                     val mainCat = selectedMainCategory
                     if (mainCat == null) {
-                        Toast.makeText(context, "请选择支出分类", Toast.LENGTH_SHORT).show()
-                        return@ClaudeTactileKeyboard
+                        Toast.makeText(context, "请先选择消费分类", Toast.LENGTH_SHORT).show()
+                        return@WashiCalculatorKeypad
+                    }
+
+                    val finalAmount = evaluateExpression(expression)
+                    if (finalAmount == null || finalAmount <= 0.0) {
+                        Toast.makeText(context, "请输入有效的记账金额", Toast.LENGTH_SHORT).show()
+                        return@WashiCalculatorKeypad
                     }
 
                     onSaveRecord(
                         finalAmount,
                         mainCat.id,
                         selectedSubCategory?.id,
-                        noteText,
+                        note,
                         selectedTimestamp,
-                        editingRecord?.record?.imagePath
+                        null
                     )
                     onDismiss()
-                }
+                },
+                haptic = haptic
             )
         }
     }
 }
 
 @Composable
-private fun ClaudeTactileKeyboard(
+private fun WashiCalculatorKeypad(
     expression: String,
-    haptic: HapticFeedback,
     onExpressionChange: (String) -> Unit,
-    onComplete: () -> Unit
+    onSave: () -> Unit,
+    haptic: HapticFeedback
 ) {
-    val keys = remember {
-        listOf(
-            listOf("7", "8", "9", "+"),
-            listOf("4", "5", "6", "-"),
-            listOf("1", "2", "3", "C"),
-            listOf(".", "0", "⌫", "完成")
-        )
-    }
+    val keys = listOf(
+        listOf("7", "8", "9", "+"),
+        listOf("4", "5", "6", "-"),
+        listOf("1", "2", "3", "del"),
+        listOf("C", "0", ".", "ok")
+    )
 
     Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 12.dp, vertical = 4.dp),
-        verticalArrangement = Arrangement.spacedBy(6.dp)
+        modifier = Modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         keys.forEach { rowKeys ->
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 rowKeys.forEach { key ->
-                    ClaudeKeypadButton(
-                        key = key,
+                    Box(
                         modifier = Modifier
                             .weight(1f)
-                            .height(48.dp),
-                        onClick = {
-                            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                            handleKeyPress(key, expression, onExpressionChange, onComplete)
+                            .height(52.dp)
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(
+                                when (key) {
+                                    "ok" -> MatchaPrimary
+                                    "+", "-" -> SakuraSoft
+                                    "del", "C" -> WashiPaperSubtle
+                                    else -> Color.White
+                                }
+                            )
+                            .border(
+                                width = 0.8.dp,
+                                color = when (key) {
+                                    "ok" -> MatchaPrimary
+                                    "+", "-" -> SakuraAccent.copy(alpha = 0.4f)
+                                    else -> WashiBorder
+                                },
+                                shape = RoundedCornerShape(12.dp)
+                            )
+                            .clickable {
+                                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                handleKeyClick(key, expression, onExpressionChange, onSave)
+                            },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        when (key) {
+                            "del" -> Icon(
+                                imageVector = Icons.AutoMirrored.Filled.Backspace,
+                                contentDescription = "退格",
+                                tint = SumiSecondary,
+                                modifier = Modifier.size(20.dp)
+                            )
+                            "ok" -> Text(
+                                text = "完成",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White
+                            )
+                            "+", "-" -> Text(
+                                text = key,
+                                style = MaterialTheme.typography.titleLarge,
+                                fontWeight = FontWeight.Bold,
+                                color = SakuraAccent
+                            )
+                            "C" -> Text(
+                                text = "清空",
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.SemiBold,
+                                color = SumiSecondary
+                            )
+                            else -> Text(
+                                text = key,
+                                style = MaterialTheme.typography.titleLarge,
+                                fontWeight = FontWeight.SemiBold,
+                                color = SumiInk
+                            )
                         }
-                    )
+                    }
                 }
             }
         }
     }
 }
 
-@Composable
-private fun ClaudeKeypadButton(
-    key: String,
-    modifier: Modifier = Modifier,
-    onClick: () -> Unit
-) {
-    val isActionKey = key == "完成"
-    val isOpKey = key in listOf("+", "-", "C", "⌫")
-
-    val bgModifier = if (isActionKey) {
-        Modifier.background(ClaudeTerracotta)
-    } else {
-        Modifier
-            .background(if (isOpKey) ClaudeWarmBgSubtle else Color.White.copy(alpha = 0.85f))
-            .border(1.dp, if (isOpKey) ClaudeBorder else Color.White, RoundedCornerShape(10.dp))
-    }
-
-    Box(
-        modifier = modifier
-            .clip(RoundedCornerShape(10.dp))
-            .then(bgModifier)
-            .clickable(onClick = onClick),
-        contentAlignment = Alignment.Center
-    ) {
-        if (key == "⌫") {
-            Icon(
-                imageVector = Icons.AutoMirrored.Filled.Backspace,
-                contentDescription = "删除",
-                tint = ClaudeInk,
-                modifier = Modifier.size(18.dp)
-            )
-        } else {
-            Text(
-                text = key,
-                style = MaterialTheme.typography.titleMedium.copy(
-                    fontWeight = if (isActionKey || isOpKey) FontWeight.Bold else FontWeight.SemiBold,
-                    fontSize = if (isActionKey) 15.sp else 19.sp
-                ),
-                color = if (isActionKey) Color.White else if (isOpKey) ClaudeTerracotta else ClaudeInk
-            )
-        }
-    }
-}
-
-private fun handleKeyPress(
+private fun handleKeyClick(
     key: String,
     current: String,
-    onExpressionChange: (String) -> Unit,
-    onComplete: () -> Unit
+    onUpdate: (String) -> Unit,
+    onSave: () -> Unit
 ) {
     when (key) {
-        "C" -> onExpressionChange("0")
-        "⌫" -> {
-            if (current.length <= 1 || current == "0") {
-                onExpressionChange("0")
+        "C" -> onUpdate("0")
+        "del" -> {
+            if (current.length <= 1) {
+                onUpdate("0")
             } else {
-                onExpressionChange(current.dropLast(1))
+                onUpdate(current.dropLast(1))
             }
         }
-        "完成" -> onComplete()
+        "ok" -> onSave()
         "+", "-" -> {
             val lastChar = current.lastOrNull()
-            if (lastChar != null && (lastChar == '+' || lastChar == '-')) {
-                onExpressionChange(current.dropLast(1) + key)
+            if (lastChar == '+' || lastChar == '-') {
+                onUpdate(current.dropLast(1) + key)
             } else {
-                val evaluated = evaluateExpression(current)
-                if (evaluated != null) {
-                    val formatted = if (evaluated % 1.0 == 0.0) evaluated.toLong().toString() else String.format(Locale.US, "%.2f", evaluated)
-                    onExpressionChange(formatted + key)
-                } else {
-                    onExpressionChange(current + key)
-                }
+                onUpdate(current + key)
             }
         }
         "." -> {
-            val parts = current.split("+", "-")
+            val parts = current.split('+', '-')
             val currentSegment = parts.lastOrNull() ?: ""
-            if (!currentSegment.contains(".")) {
-                onExpressionChange(if (currentSegment.isEmpty()) current + "0." else current + ".")
+            if (!currentSegment.contains('.')) {
+                onUpdate(current + ".")
             }
         }
         else -> {
             if (current == "0") {
-                onExpressionChange(key)
+                onUpdate(key)
             } else {
-                val parts = current.split("+", "-")
-                val currentSegment = parts.lastOrNull() ?: ""
-                if (currentSegment.contains(".") && currentSegment.substringAfter(".").length >= 2) {
-                    return
+                // 限制小数位数最多2位
+                val parts = current.split('+', '-')
+                val lastPart = parts.lastOrNull() ?: ""
+                if (lastPart.contains('.')) {
+                    val decimals = lastPart.substringAfter('.')
+                    if (decimals.length < 2) {
+                        onUpdate(current + key)
+                    }
+                } else {
+                    onUpdate(current + key)
                 }
-                onExpressionChange(current + key)
             }
         }
     }
 }
 
+fun isExpression(expr: String): Boolean {
+    return expr.contains('+') || (expr.contains('-') && !expr.startsWith("-") || expr.indexOf('-', 1) > 0)
+}
+
 fun evaluateExpression(expr: String): Double? {
-    try {
+    if (expr.isBlank()) return null
+    return try {
         var clean = expr.trim()
         if (clean.endsWith("+") || clean.endsWith("-")) {
             clean = clean.dropLast(1)
         }
         if (clean.isEmpty()) return null
 
-        var total = 0.0
-        var currentNum = ""
-        var currentOp = '+'
+        val tokens = mutableListOf<String>()
+        var currentNumber = StringBuilder()
 
         for (i in clean.indices) {
-            val ch = clean[i]
-            if (ch.isDigit() || ch == '.') {
-                currentNum += ch
-            }
-            if (ch == '+' || ch == '-' || i == clean.length - 1) {
-                if (currentNum.isNotEmpty()) {
-                    val num = currentNum.toDoubleOrNull() ?: 0.0
-                    if (currentOp == '+') {
-                        total += num
-                    } else if (currentOp == '-') {
-                        total -= num
-                    }
-                    currentNum = ""
+            val c = clean[i]
+            if (c == '+' || (c == '-' && i > 0 && clean[i - 1] != '+' && clean[i - 1] != '-')) {
+                if (currentNumber.isNotEmpty()) {
+                    tokens.add(currentNumber.toString())
+                    currentNumber = StringBuilder()
                 }
-                currentOp = ch
+                tokens.add(c.toString())
+            } else {
+                currentNumber.append(c)
             }
         }
-        return (Math.round(total * 100.0) / 100.0)
+        if (currentNumber.isNotEmpty()) {
+            tokens.add(currentNumber.toString())
+        }
+
+        if (tokens.isEmpty()) return null
+
+        var result = tokens[0].toDoubleOrNull() ?: return null
+        var i = 1
+        while (i < tokens.size) {
+            val op = tokens[i]
+            val nextVal = tokens.getOrNull(i + 1)?.toDoubleOrNull() ?: break
+            if (op == "+") result += nextVal
+            if (op == "-") result -= nextVal
+            i += 2
+        }
+
+        (Math.round(result * 100.0) / 100.0).coerceAtLeast(0.0)
     } catch (e: Exception) {
-        return null
+        null
     }
 }

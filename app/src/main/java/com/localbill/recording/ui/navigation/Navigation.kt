@@ -1,6 +1,5 @@
 package com.localbill.recording.ui.navigation
 
-import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -8,12 +7,11 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ReceiptLong
 import androidx.compose.material.icons.filled.AutoGraph
 import androidx.compose.material.icons.filled.Category
-import androidx.compose.material.icons.filled.ReceiptLong
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
@@ -22,7 +20,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -36,14 +33,16 @@ import com.localbill.recording.ui.screens.BackupScreen
 import com.localbill.recording.ui.screens.CategoryManagementScreen
 import com.localbill.recording.ui.screens.HomeScreen
 import com.localbill.recording.ui.screens.StatisticsScreen
+import com.localbill.recording.ui.theme.MatchaPrimary
+import com.localbill.recording.ui.theme.SumiSecondary
+import com.localbill.recording.ui.theme.WashiPaperBg
 import com.localbill.recording.ui.viewmodel.BackupViewModel
-
 import com.localbill.recording.ui.viewmodel.CategoryViewModel
 import com.localbill.recording.ui.viewmodel.HomeViewModel
 import com.localbill.recording.ui.viewmodel.StatisticsViewModel
 
 sealed class Screen(val route: String, val title: String, val icon: ImageVector) {
-    object Home : Screen("home", "流水", Icons.Default.ReceiptLong)
+    object Home : Screen("home", "流水", Icons.AutoMirrored.Filled.ReceiptLong)
     object Statistics : Screen("statistics", "统计", Icons.Default.AutoGraph)
     object Categories : Screen("categories", "分类", Icons.Default.Category)
     object Backup : Screen("backup", "管理", Icons.Default.Settings)
@@ -70,7 +69,7 @@ fun MainAppNavigation(
     Scaffold(
         bottomBar = {
             NavigationBar(
-                containerColor = com.localbill.recording.ui.theme.ClaudeWarmBg,
+                containerColor = WashiPaperBg,
                 tonalElevation = 0.dp
             ) {
                 bottomNavScreens.forEach { screen ->
@@ -102,17 +101,15 @@ fun MainAppNavigation(
                             }
                         },
                         colors = NavigationBarItemDefaults.colors(
-                            selectedIconColor = com.localbill.recording.ui.theme.ClaudeTerracotta,
-                            selectedTextColor = com.localbill.recording.ui.theme.ClaudeTerracotta,
-                            indicatorColor = com.localbill.recording.ui.theme.ClaudeTerracotta.copy(alpha = 0.14f),
-                            unselectedIconColor = com.localbill.recording.ui.theme.ClaudeTextSecondary,
-                            unselectedTextColor = com.localbill.recording.ui.theme.ClaudeTextSecondary
+                            selectedIconColor = MatchaPrimary,
+                            selectedTextColor = MatchaPrimary,
+                            indicatorColor = MatchaPrimary.copy(alpha = 0.15f),
+                            unselectedIconColor = SumiSecondary,
+                            unselectedTextColor = SumiSecondary
                         )
                     )
                 }
             }
-
-
         }
     ) { innerPadding ->
         NavHost(

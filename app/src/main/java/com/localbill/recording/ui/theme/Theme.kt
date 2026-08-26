@@ -9,37 +9,37 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 
-private val ClaudeGlassColorScheme = lightColorScheme(
-    primary = ClaudeInk,
-    onPrimary = ClaudeWarmBg,
-    primaryContainer = ClaudeWarmBgSubtle,
-    onPrimaryContainer = ClaudeInk,
-    secondary = ClaudeTerracotta,
-    onSecondary = ClaudeWarmBg,
-    secondaryContainer = ClaudeWarmBgSubtle,
-    onSecondaryContainer = ClaudeTerracotta,
-    background = ClaudeWarmBg,
-    onBackground = ClaudeInk,
-    surface = GlassCardBackground,
-    onSurface = ClaudeInk,
-    surfaceVariant = ClaudeWarmBgSubtle,
-    onSurfaceVariant = ClaudeTextSecondary,
-    outline = ClaudeBorder
+private val JapaneseWashiColorScheme = lightColorScheme(
+    primary = MatchaPrimary,
+    onPrimary = WashiPaperBg,
+    primaryContainer = MatchaContainer,
+    onPrimaryContainer = MatchaPrimary,
+    secondary = SakuraAccent,
+    onSecondary = WashiPaperBg,
+    secondaryContainer = SakuraSoft,
+    onSecondaryContainer = SakuraAccent,
+    background = WashiPaperBg,
+    onBackground = SumiInk,
+    surface = WashiCardBg,
+    onSurface = SumiInk,
+    surfaceVariant = WashiPaperSubtle,
+    onSurfaceVariant = SumiSecondary,
+    outline = WashiBorder
 )
 
 @Composable
 fun BillRecordingTheme(
-    darkTheme: Boolean = false, // 默认锁定纯净 Claude 暖奶油玻璃风，防止系统深色模式强制变纯黑
+    darkTheme: Boolean = false, // 锁定日式和风小清新纸质质感
     content: @Composable () -> Unit
 ) {
-    val colorScheme = ClaudeGlassColorScheme
+    val colorScheme = JapaneseWashiColorScheme
     val view = LocalView.current
 
     if (!view.isInEditMode) {
         SideEffect {
             val window = (view.context as Activity).window
-            window.statusBarColor = ClaudeWarmBg.toArgb()
-            window.navigationBarColor = ClaudeWarmBg.toArgb()
+            window.statusBarColor = WashiPaperBg.toArgb()
+            window.navigationBarColor = WashiPaperBg.toArgb()
             WindowCompat.getInsetsController(window, view).apply {
                 isAppearanceLightStatusBars = true
                 isAppearanceLightNavigationBars = true

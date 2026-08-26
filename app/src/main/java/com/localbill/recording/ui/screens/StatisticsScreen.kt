@@ -46,13 +46,15 @@ import com.localbill.recording.data.model.PeriodType
 import com.localbill.recording.ui.components.BezierTrendChart
 import com.localbill.recording.ui.components.CategoryIconBadge
 import com.localbill.recording.ui.components.DonutPieChart
-import com.localbill.recording.ui.theme.ClaudeBorder
-import com.localbill.recording.ui.theme.ClaudeInk
-import com.localbill.recording.ui.theme.ClaudeTerracotta
-import com.localbill.recording.ui.theme.ClaudeTextSecondary
-import com.localbill.recording.ui.theme.ClaudeTextTertiary
-import com.localbill.recording.ui.theme.ClaudeWarmBg
-import com.localbill.recording.ui.theme.ClaudeWarmBgSubtle
+import com.localbill.recording.ui.theme.MatchaPrimary
+import com.localbill.recording.ui.theme.SakuraAccent
+import com.localbill.recording.ui.theme.SumiInk
+import com.localbill.recording.ui.theme.SumiSecondary
+import com.localbill.recording.ui.theme.SumiTertiary
+import com.localbill.recording.ui.theme.WashiBorder
+import com.localbill.recording.ui.theme.WashiCardBg
+import com.localbill.recording.ui.theme.WashiPaperBg
+import com.localbill.recording.ui.theme.WashiPaperSubtle
 import com.localbill.recording.ui.viewmodel.StatisticsViewModel
 import java.util.Locale
 
@@ -66,7 +68,7 @@ fun StatisticsScreen(
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
-        containerColor = ClaudeWarmBg
+        containerColor = WashiPaperBg
     ) { innerPadding ->
         LazyColumn(
             modifier = Modifier
@@ -75,9 +77,9 @@ fun StatisticsScreen(
             contentPadding = PaddingValues(horizontal = 18.dp, vertical = 14.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // 1. 周期分段切换器
+            // 1. 周期分段切换器 (日 / 周 / 月)
             item {
-                ClaudePeriodTabs(
+                WashiPeriodTabs(
                     selectedType = uiState.periodType,
                     onSelectType = { viewModel.setPeriodType(it) }
                 )
@@ -85,16 +87,16 @@ fun StatisticsScreen(
 
             // 2. 日期导航条
             item {
-                ClaudeDateNavigator(
+                WashiDateNavigator(
                     title = uiState.periodTitle,
                     onPrev = { viewModel.navigatePeriod(-1) },
                     onNext = { viewModel.navigatePeriod(1) }
                 )
             }
 
-            // 3. 统计核心指标总览卡片 (毛玻璃)
+            // 3. 统计核心指标总览卡片 (和纸宣白)
             item {
-                ClaudeMetricsGlassCard(
+                WashiMetricsCard(
                     totalAmount = uiState.summary.totalAmount,
                     dailyAverage = uiState.summary.dailyAverage,
                     recordCount = uiState.summary.recordCount,
@@ -103,14 +105,14 @@ fun StatisticsScreen(
                 )
             }
 
-            // 4. 贝塞尔柔光走势图
+            // 4. 和风平滑贝塞尔走势图
             item {
                 BezierTrendChart(
                     points = uiState.trendPoints
                 )
             }
 
-            // 5. 全彩环形图
+            // 5. 和风全彩环形图
             item {
                 DonutPieChart(
                     aggregations = uiState.categoryAggregations,
@@ -129,12 +131,12 @@ fun StatisticsScreen(
                             text = "分类支出榜单",
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
-                            color = ClaudeInk
+                            color = SumiInk
                         )
                         Text(
                             text = "点击分类查看细分子类构成与占比",
                             style = MaterialTheme.typography.bodySmall,
-                            color = ClaudeTextSecondary
+                            color = SumiSecondary
                         )
                     }
                 }
@@ -143,7 +145,7 @@ fun StatisticsScreen(
                     items = uiState.categoryAggregations,
                     key = { it.mainCategory.id }
                 ) { aggregation ->
-                    ClaudeRankingGlassItem(
+                    WashiRankingItem(
                         item = aggregation,
                         onClick = { selectedCategoryForDetail = aggregation }
                     )
@@ -158,7 +160,7 @@ fun StatisticsScreen(
 
     // 子分类下钻弹窗
     selectedCategoryForDetail?.let { detail ->
-        ClaudeCategoryDetailDialog(
+        WashiCategoryDetailDialog(
             aggregation = detail,
             onDismiss = { selectedCategoryForDetail = null }
         )
@@ -169,7 +171,7 @@ fun StatisticsScreen(
  * 分段切换器 (日 / 周 / 月)
  */
 @Composable
-private fun ClaudePeriodTabs(
+private fun WashiPeriodTabs(
     selectedType: PeriodType,
     onSelectType: (PeriodType) -> Unit
 ) {
@@ -177,8 +179,8 @@ private fun ClaudePeriodTabs(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(12.dp))
-            .background(Color.White.copy(alpha = 0.65f))
-            .border(1.dp, Color.White.copy(alpha = 0.85f), RoundedCornerShape(12.dp))
+            .background(WashiCardBg)
+            .border(0.8.dp, WashiBorder, RoundedCornerShape(12.dp))
             .padding(3.dp),
         horizontalArrangement = Arrangement.spacedBy(4.dp)
     ) {
@@ -188,12 +190,7 @@ private fun ClaudePeriodTabs(
                 modifier = Modifier
                     .weight(1f)
                     .clip(RoundedCornerShape(9.dp))
-                    .background(if (isSelected) Color.White else Color.Transparent)
-                    .border(
-                        width = if (isSelected) 1.dp else 0.dp,
-                        color = if (isSelected) Color.White else Color.Transparent,
-                        shape = RoundedCornerShape(9.dp)
-                    )
+                    .background(if (isSelected) MatchaPrimary else Color.Transparent)
                     .clickable { onSelectType(type) }
                     .padding(vertical = 6.dp),
                 contentAlignment = Alignment.Center
@@ -202,7 +199,7 @@ private fun ClaudePeriodTabs(
                     text = "按${type.label}",
                     style = MaterialTheme.typography.labelLarge,
                     fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                    color = if (isSelected) ClaudeTerracotta else ClaudeTextSecondary
+                    color = if (isSelected) Color.White else SumiSecondary
                 )
             }
         }
@@ -213,7 +210,7 @@ private fun ClaudePeriodTabs(
  * 日期导航器
  */
 @Composable
-private fun ClaudeDateNavigator(
+private fun WashiDateNavigator(
     title: String,
     onPrev: () -> Unit,
     onNext: () -> Unit
@@ -227,17 +224,17 @@ private fun ClaudeDateNavigator(
     ) {
         Box(
             modifier = Modifier
-                .size(32.dp)
+                .size(34.dp)
                 .clip(RoundedCornerShape(10.dp))
-                .background(Color.White.copy(alpha = 0.72f))
-                .border(1.dp, Color.White.copy(alpha = 0.9f), RoundedCornerShape(10.dp))
+                .background(WashiCardBg)
+                .border(0.8.dp, WashiBorder, RoundedCornerShape(10.dp))
                 .clickable(onClick = onPrev),
             contentAlignment = Alignment.Center
         ) {
             Icon(
                 imageVector = Icons.Default.ChevronLeft,
                 contentDescription = "上一周期",
-                tint = ClaudeInk,
+                tint = SumiInk,
                 modifier = Modifier.size(18.dp)
             )
         }
@@ -246,22 +243,22 @@ private fun ClaudeDateNavigator(
             text = title,
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.Bold,
-            color = ClaudeInk
+            color = SumiInk
         )
 
         Box(
             modifier = Modifier
-                .size(32.dp)
+                .size(34.dp)
                 .clip(RoundedCornerShape(10.dp))
-                .background(Color.White.copy(alpha = 0.72f))
-                .border(1.dp, Color.White.copy(alpha = 0.9f), RoundedCornerShape(10.dp))
+                .background(WashiCardBg)
+                .border(0.8.dp, WashiBorder, RoundedCornerShape(10.dp))
                 .clickable(onClick = onNext),
             contentAlignment = Alignment.Center
         ) {
             Icon(
                 imageVector = Icons.Default.ChevronRight,
                 contentDescription = "下一周期",
-                tint = ClaudeInk,
+                tint = SumiInk,
                 modifier = Modifier.size(18.dp)
             )
         }
@@ -269,10 +266,10 @@ private fun ClaudeDateNavigator(
 }
 
 /**
- * 指标总览毛玻璃卡片
+ * 指标总览卡片
  */
 @Composable
-private fun ClaudeMetricsGlassCard(
+private fun WashiMetricsCard(
     totalAmount: Double,
     dailyAverage: Double,
     recordCount: Int,
@@ -283,15 +280,15 @@ private fun ClaudeMetricsGlassCard(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(18.dp))
-            .background(Color.White.copy(alpha = 0.78f))
-            .border(1.2.dp, Color.White.copy(alpha = 0.92f), RoundedCornerShape(18.dp))
+            .background(WashiCardBg)
+            .border(0.8.dp, WashiBorder, RoundedCornerShape(18.dp))
             .padding(16.dp)
     ) {
         Column(modifier = Modifier.fillMaxWidth()) {
             Text(
                 text = "周期总支出",
                 style = MaterialTheme.typography.labelSmall,
-                color = ClaudeTextSecondary,
+                color = SumiSecondary,
                 letterSpacing = 0.5.sp
             )
             Spacer(modifier = Modifier.height(4.dp))
@@ -299,7 +296,7 @@ private fun ClaudeMetricsGlassCard(
                 Text(
                     text = "¥",
                     style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
-                    color = ClaudeInk,
+                    color = SumiInk,
                     modifier = Modifier.padding(end = 4.dp, bottom = 2.dp)
                 )
                 Text(
@@ -308,12 +305,12 @@ private fun ClaudeMetricsGlassCard(
                         fontSize = 30.sp,
                         fontWeight = FontWeight.ExtraBold
                     ),
-                    color = ClaudeInk
+                    color = SumiInk
                 )
             }
 
             Spacer(modifier = Modifier.height(12.dp))
-            HorizontalDivider(color = ClaudeBorder.copy(alpha = 0.5f), thickness = 0.8.dp)
+            HorizontalDivider(color = WashiBorder.copy(alpha = 0.5f), thickness = 0.8.dp)
             Spacer(modifier = Modifier.height(10.dp))
 
             Row(
@@ -324,14 +321,14 @@ private fun ClaudeMetricsGlassCard(
                     Text(
                         text = if (periodType == PeriodType.DAY) "消费笔数" else "日均支出",
                         style = MaterialTheme.typography.bodySmall,
-                        color = ClaudeTextSecondary
+                        color = SumiSecondary
                     )
                     Spacer(modifier = Modifier.height(2.dp))
                     Text(
                         text = if (periodType == PeriodType.DAY) "${recordCount} 笔" else "¥ " + String.format(Locale.US, "%.2f", dailyAverage),
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.Bold,
-                        color = ClaudeInk
+                        color = SumiInk
                     )
                 }
 
@@ -339,14 +336,14 @@ private fun ClaudeMetricsGlassCard(
                     Text(
                         text = "首要开销",
                         style = MaterialTheme.typography.bodySmall,
-                        color = ClaudeTextSecondary
+                        color = SumiSecondary
                     )
                     Spacer(modifier = Modifier.height(2.dp))
                     Text(
                         text = topCategoryName ?: "暂无支出",
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.Bold,
-                        color = if (topCategoryName != null) ClaudeTerracotta else ClaudeInk
+                        color = if (topCategoryName != null) MatchaPrimary else SumiInk
                     )
                 }
             }
@@ -355,10 +352,10 @@ private fun ClaudeMetricsGlassCard(
 }
 
 /**
- * 分类排行条目透明玻璃卡片
+ * 分类排行条目卡片
  */
 @Composable
-private fun ClaudeRankingGlassItem(
+private fun WashiRankingItem(
     item: CategoryAggregation,
     onClick: () -> Unit
 ) {
@@ -366,8 +363,8 @@ private fun ClaudeRankingGlassItem(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(14.dp))
-            .background(Color.White.copy(alpha = 0.72f))
-            .border(1.dp, Color.White.copy(alpha = 0.88f), RoundedCornerShape(14.dp))
+            .background(WashiCardBg)
+            .border(0.8.dp, WashiBorder, RoundedCornerShape(14.dp))
             .clickable(onClick = onClick)
             .padding(12.dp)
     ) {
@@ -381,9 +378,9 @@ private fun ClaudeRankingGlassItem(
                     CategoryIconBadge(
                         iconName = item.mainCategory.iconName,
                         colorHex = item.mainCategory.colorHex,
-                        size = 34.dp,
-                        iconSize = 16.dp,
-                        cornerRadius = 8.dp
+                        size = 36.dp,
+                        iconSize = 18.dp,
+                        cornerRadius = 10.dp
                     )
                     Spacer(modifier = Modifier.width(10.dp))
                     Column {
@@ -391,14 +388,14 @@ private fun ClaudeRankingGlassItem(
                             text = item.mainCategory.name,
                             style = MaterialTheme.typography.bodyLarge,
                             fontWeight = FontWeight.SemiBold,
-                            color = ClaudeInk
+                            color = SumiInk
                         )
                         Text(
                             text = if (item.subCategoryBreakdowns.isNotEmpty())
                                 "含 ${item.subCategoryBreakdowns.size} 个细分子类"
                             else "${item.count} 笔明细",
                             style = MaterialTheme.typography.bodySmall,
-                            color = ClaudeTextSecondary
+                            color = SumiSecondary
                         )
                     }
                 }
@@ -408,7 +405,7 @@ private fun ClaudeRankingGlassItem(
                         text = "¥ " + String.format(Locale.US, "%.2f", item.totalAmount),
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.Bold,
-                        color = ClaudeInk
+                        color = SumiInk
                     )
                     Text(
                         text = String.format(Locale.US, "%.1f%%", item.percentage),
@@ -425,7 +422,7 @@ private fun ClaudeRankingGlassItem(
                     .fillMaxWidth()
                     .height(3.dp)
                     .clip(RoundedCornerShape(1.5.dp))
-                    .background(Color.White.copy(alpha = 0.5f))
+                    .background(WashiPaperSubtle)
             ) {
                 Box(
                     modifier = Modifier
@@ -443,13 +440,13 @@ private fun ClaudeRankingGlassItem(
  * 子分类明细下钻弹窗
  */
 @Composable
-private fun ClaudeCategoryDetailDialog(
+private fun WashiCategoryDetailDialog(
     aggregation: CategoryAggregation,
     onDismiss: () -> Unit
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        containerColor = Color.White.copy(alpha = 0.95f),
+        containerColor = Color.White,
         title = {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
@@ -468,12 +465,12 @@ private fun ClaudeCategoryDetailDialog(
                         text = "${aggregation.mainCategory.name} · 子类构成",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
-                        color = ClaudeInk
+                        color = SumiInk
                     )
                     Text(
                         text = "总计 ¥ " + String.format(Locale.US, "%.2f", aggregation.totalAmount),
                         style = MaterialTheme.typography.bodySmall,
-                        color = ClaudeTextSecondary
+                        color = SumiSecondary
                     )
                 }
             }
@@ -483,7 +480,7 @@ private fun ClaudeCategoryDetailDialog(
                 Text(
                     text = "该分类下暂无细分子类记录",
                     style = MaterialTheme.typography.bodyMedium,
-                    color = ClaudeTextSecondary
+                    color = SumiSecondary
                 )
             } else {
                 Column(
@@ -512,12 +509,12 @@ private fun ClaudeCategoryDetailDialog(
                                         text = subItem.category.name,
                                         style = MaterialTheme.typography.bodyMedium,
                                         fontWeight = FontWeight.Medium,
-                                        color = ClaudeInk
+                                        color = SumiInk
                                     )
                                     Text(
                                         text = "${subItem.count} 笔",
                                         style = MaterialTheme.typography.bodySmall,
-                                        color = ClaudeTextSecondary
+                                        color = SumiSecondary
                                     )
                                 }
                             }
@@ -527,7 +524,7 @@ private fun ClaudeCategoryDetailDialog(
                                     text = "¥ " + String.format(Locale.US, "%.2f", subItem.amount),
                                     style = MaterialTheme.typography.titleSmall,
                                     fontWeight = FontWeight.Bold,
-                                    color = ClaudeInk
+                                    color = SumiInk
                                 )
                                 Text(
                                     text = String.format(Locale.US, "占 %.1f%%", subItem.percentage),
@@ -542,7 +539,7 @@ private fun ClaudeCategoryDetailDialog(
         },
         confirmButton = {
             TextButton(onClick = onDismiss) {
-                Text(text = "关闭", fontWeight = FontWeight.Bold, color = ClaudeTerracotta)
+                Text(text = "关闭", fontWeight = FontWeight.Bold, color = MatchaPrimary)
             }
         }
     )

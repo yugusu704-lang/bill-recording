@@ -32,8 +32,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.localbill.recording.ui.theme.GlassCardBackground
-import com.localbill.recording.ui.theme.GlassCardBorder
+import com.localbill.recording.ui.theme.WashiBorder
 
 object CategoryIcons {
     val AVAILABLE_ICONS = listOf(
@@ -65,9 +64,9 @@ fun CategoryIconBadge(
     iconName: String,
     colorHex: Long,
     modifier: Modifier = Modifier,
-    size: Dp = 38.dp,
-    iconSize: Dp = 18.dp,
-    cornerRadius: Dp = 10.dp
+    size: Dp = 40.dp,
+    iconSize: Dp = 20.dp,
+    cornerRadius: Dp = 12.dp
 ) {
     val baseColor = Color(colorHex)
 
@@ -75,10 +74,10 @@ fun CategoryIconBadge(
         modifier = modifier
             .size(size)
             .clip(RoundedCornerShape(cornerRadius))
-            .background(Color.White.copy(alpha = 0.85f))
+            .background(baseColor.copy(alpha = 0.12f))
             .border(
-                width = 1.dp,
-                color = Color.White,
+                width = 0.8.dp,
+                color = baseColor.copy(alpha = 0.25f),
                 shape = RoundedCornerShape(cornerRadius)
             ),
         contentAlignment = Alignment.Center

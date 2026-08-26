@@ -40,20 +40,23 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.localbill.recording.data.model.TrendPoint
-import com.localbill.recording.ui.theme.ClaudeBorder
-import com.localbill.recording.ui.theme.ClaudeInk
-import com.localbill.recording.ui.theme.ClaudeTerracotta
-import com.localbill.recording.ui.theme.ClaudeTextSecondary
-import com.localbill.recording.ui.theme.ClaudeTextTertiary
-import com.localbill.recording.ui.theme.PrismWarmSpectralBrush
+import com.localbill.recording.ui.theme.MatchaPrimary
+import com.localbill.recording.ui.theme.SakuraAccent
+import com.localbill.recording.ui.theme.SumiInk
+import com.localbill.recording.ui.theme.SumiSecondary
+import com.localbill.recording.ui.theme.SumiTertiary
+import com.localbill.recording.ui.theme.WashiBorder
+import com.localbill.recording.ui.theme.WashiCardBg
+import com.localbill.recording.ui.theme.WashiPaperSubtle
+import com.localbill.recording.ui.theme.YamabukiGold
 import java.util.Locale
 
 @Composable
 fun BezierTrendChart(
     points: List<TrendPoint>,
     modifier: Modifier = Modifier,
-    lineColor: Color = ClaudeTerracotta,
-    gradientStartColor: Color = ClaudeTerracotta.copy(alpha = 0.15f),
+    lineColor: Color = MatchaPrimary,
+    gradientStartColor: Color = MatchaPrimary.copy(alpha = 0.18f),
     gradientEndColor: Color = Color.Transparent
 ) {
     if (points.isEmpty()) {
@@ -66,7 +69,7 @@ fun BezierTrendChart(
             Text(
                 text = "暂无消费走势数据",
                 style = MaterialTheme.typography.bodyMedium,
-                color = ClaudeTextSecondary
+                color = SumiSecondary
             )
         }
         return
@@ -90,34 +93,28 @@ fun BezierTrendChart(
         (points.maxOfOrNull { it.amount } ?: 1.0).coerceAtLeast(10.0)
     }
 
-    // 智能 X 轴关键里程碑抽样索引 (当数据点很多时，抽样显示 5 个代表性节点)
     val landmarkIndices = remember(points.size) {
         if (points.size <= 7) {
             points.indices.toList()
         } else {
             val last = points.size - 1
-            listOf(
-                0,
-                (last * 0.25f).toInt(),
-                (last * 0.50f).toInt(),
-                (last * 0.75f).toInt(),
-                last
-            ).distinct()
+            // 均匀抽取 3~4 个不拥挤的关键里程碑
+            val mid = (last / 2)
+            listOf(0, mid, last).distinct().sorted()
         }
     }
 
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(18.dp))
-            .background(Color.White.copy(alpha = 0.78f))
-            .border(1.2.dp, Color.White.copy(alpha = 0.92f), RoundedCornerShape(18.dp))
+            .clip(RoundedCornerShape(16.dp))
+            .background(WashiCardBg)
+            .border(0.8.dp, WashiBorder, RoundedCornerShape(16.dp))
             .padding(16.dp)
     ) {
         Column(modifier = Modifier.fillMaxWidth()) {
-            val currentPoint = points.getOrNull(safeSelectedIndex) ?: points.last()
-
-            // 顶部实时触控数据卡片
+            // 顶部交互提示
+            val selectedPoint = points[safeSelectedIndex]
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -125,198 +122,207 @@ fun BezierTrendChart(
             ) {
                 Column {
                     Text(
-                        text = "支出走势",
+                        text = "支出走势 (滑动查看)",
                         style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = ClaudeInk
+                        fontWeight = FontWeight.SemiBold,
+                        color = SumiInk
                     )
                     Text(
-                        text = "${currentPoint.label} ${if (currentPoint.subLabel.isNotEmpty()) "(${currentPoint.subLabel})" else ""}",
+                        text = "${selectedPoint.label} ${selectedPoint.subLabel}",
                         style = MaterialTheme.typography.bodySmall,
-                        color = ClaudeTextSecondary
+                        color = SumiSecondary
                     )
                 }
 
-                Box(
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(8.dp))
-                        .background(Color.White.copy(alpha = 0.85f))
-                        .border(1.dp, ClaudeBorder.copy(alpha = 0.6f), RoundedCornerShape(8.dp))
-                        .padding(horizontal = 10.dp, vertical = 4.dp)
-                ) {
+                Column(horizontalAlignment = Alignment.End) {
                     Text(
-                        text = "¥ " + String.format(Locale.US, "%.2f", currentPoint.amount),
-                        style = MaterialTheme.typography.titleSmall,
+                        text = "¥ " + String.format(Locale.US, "%.2f", selectedPoint.amount),
+                        style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold,
-                        color = ClaudeTerracotta
+                        color = if (selectedPoint.amount > 0) MatchaPrimary else SumiTertiary
                     )
+                    if (selectedPoint.isCurrent) {
+                        Text(
+                            text = "今日",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = SakuraAccent,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
                 }
             }
 
             Spacer(modifier = Modifier.height(14.dp))
 
-            // Canvas 曲线图 (支持点击与平滑跟手左右连续滑动 Touch Scrubbing)
+            // 画布主体
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(130.dp)
-            ) {
-                Canvas(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(130.dp)
-                        .pointerInput(points.size) {
-                            detectTapGestures { offset ->
-                                val spacing = size.width / (points.size - 1).coerceAtLeast(1)
-                                selectedIndex = (offset.x / spacing + 0.5f).toInt().coerceIn(0, points.size - 1)
+                    .pointerInput(points) {
+                        detectTapGestures { offset ->
+                            val n = points.size
+                            if (n <= 1) {
+                                selectedIndex = 0
+                            } else {
+                                val stepX = size.width / (n - 1).toFloat()
+                                val nearest = (offset.x / stepX).toInt().coerceIn(0, n - 1)
+                                selectedIndex = nearest
                             }
                         }
-                        .pointerInput(points.size) {
-                            detectDragGestures(
-                                onDragStart = { offset ->
-                                    val spacing = size.width / (points.size - 1).coerceAtLeast(1)
-                                    selectedIndex = (offset.x / spacing + 0.5f).toInt().coerceIn(0, points.size - 1)
-                                },
-                                onDrag = { change, _ ->
-                                    change.consume()
-                                    val spacing = size.width / (points.size - 1).coerceAtLeast(1)
-                                    selectedIndex = (change.position.x / spacing + 0.5f).toInt().coerceIn(0, points.size - 1)
-                                }
-                            )
+                    }
+                    .pointerInput(points) {
+                        detectDragGestures { change, _ ->
+                            change.consume()
+                            val n = points.size
+                            if (n <= 1) {
+                                selectedIndex = 0
+                            } else {
+                                val stepX = size.width / (n - 1).toFloat()
+                                val nearest = (change.position.x / stepX).toInt().coerceIn(0, n - 1)
+                                selectedIndex = nearest
+                            }
                         }
-                ) {
-                    val width = size.width
-                    val height = size.height
-                    val stepX = if (points.size > 1) width / (points.size - 1) else width
+                    }
+            ) {
+                Canvas(modifier = Modifier.matchParentSize()) {
+                    val w = size.width
+                    val h = size.height
+                    val n = points.size
+                    val topPadding = 16.dp.toPx()
+                    val bottomPadding = 8.dp.toPx()
+                    val usableHeight = h - topPadding - bottomPadding
 
-                    // 绘制水平辅助线
-                    val lineCount = 3
-                    for (i in 0..lineCount) {
-                        val y = height * (i.toFloat() / lineCount)
+                    // 绘制水平辅助虚线 (3条)
+                    for (i in 0..2) {
+                        val y = topPadding + usableHeight * (i / 2f)
                         drawLine(
-                            color = ClaudeBorder.copy(alpha = 0.4f),
+                            color = WashiBorder.copy(alpha = 0.6f),
                             start = Offset(0f, y),
-                            end = Offset(width, y),
-                            strokeWidth = 0.8f
+                            end = Offset(w, y),
+                            strokeWidth = 1.dp.toPx()
                         )
                     }
 
-                    val coordPoints = points.mapIndexed { index, item ->
+                    if (n == 1) {
+                        val centerOffset = Offset(w / 2f, h - bottomPadding - (points[0].amount / maxAmount).toFloat() * usableHeight * progress.value)
+                        drawCircle(
+                            color = lineColor,
+                            radius = 6.dp.toPx(),
+                            center = centerOffset
+                        )
+                        return@Canvas
+                    }
+
+                    val stepX = w / (n - 1).toFloat()
+                    val offsets = points.mapIndexed { index, point ->
                         val x = index * stepX
-                        val normalizedVal = (item.amount / maxAmount).coerceIn(0.0, 1.0).toFloat()
-                        val y = height - (normalizedVal * (height - 16.dp.toPx()) * progress.value) - 8.dp.toPx()
+                        val normalizedVal = (point.amount / maxAmount).toFloat().coerceIn(0f, 1f)
+                        val y = h - bottomPadding - (normalizedVal * usableHeight * progress.value)
                         Offset(x, y)
                     }
 
-                    if (coordPoints.isNotEmpty()) {
-                        val strokePath = Path()
-                        val fillPath = Path()
+                    // 构建贝塞尔平滑路径
+                    val strokePath = Path()
+                    val fillPath = Path()
 
-                        strokePath.moveTo(coordPoints.first().x, coordPoints.first().y)
-                        fillPath.moveTo(coordPoints.first().x, height)
-                        fillPath.lineTo(coordPoints.first().x, coordPoints.first().y)
+                    strokePath.moveTo(offsets[0].x, offsets[0].y)
+                    fillPath.moveTo(offsets[0].x, h)
+                    fillPath.lineTo(offsets[0].x, offsets[0].y)
 
-                        for (i in 0 until coordPoints.size - 1) {
-                            val p0 = coordPoints[i]
-                            val p1 = coordPoints[i + 1]
-                            val controlX1 = (p0.x + p1.x) / 2
-                            val controlY1 = p0.y
-                            val controlX2 = (p0.x + p1.x) / 2
-                            val controlY2 = p1.y
+                    for (i in 0 until offsets.size - 1) {
+                        val p0 = offsets[i]
+                        val p1 = offsets[i + 1]
+                        val controlPoint1 = Offset(p0.x + (p1.x - p0.x) / 2f, p0.y)
+                        val controlPoint2 = Offset(p0.x + (p1.x - p0.x) / 2f, p1.y)
 
-                            strokePath.cubicTo(controlX1, controlY1, controlX2, controlY2, p1.x, p1.y)
-                            fillPath.cubicTo(controlX1, controlY1, controlX2, controlY2, p1.x, p1.y)
-                        }
-
-                        fillPath.lineTo(coordPoints.last().x, height)
-                        fillPath.close()
-
-                        // 填充温润柔光渐变
-                        drawPath(
-                            path = fillPath,
-                            brush = Brush.verticalGradient(
-                                colors = listOf(
-                                    ClaudeTerracotta.copy(alpha = 0.16f),
-                                    Color.Transparent
-                                ),
-                                startY = 0f,
-                                endY = height
-                            )
+                        strokePath.cubicTo(
+                            controlPoint1.x, controlPoint1.y,
+                            controlPoint2.x, controlPoint2.y,
+                            p1.x, p1.y
                         )
-
-                        // 绘制陶土红折线
-                        drawPath(
-                            path = strokePath,
-                            brush = PrismWarmSpectralBrush,
-                            style = Stroke(
-                                width = 2.5.dp.toPx(),
-                                cap = StrokeCap.Round
-                            )
-                        )
-
-                        val selectedCoord = coordPoints.getOrNull(safeSelectedIndex) ?: coordPoints.last()
-
-                        // 垂直指示线
-                        drawLine(
-                            color = ClaudeBorder,
-                            start = Offset(selectedCoord.x, 0f),
-                            end = Offset(selectedCoord.x, height),
-                            strokeWidth = 1.dp.toPx()
-                        )
-
-                        // 外圈光晕
-                        drawCircle(
-                            color = ClaudeTerracotta.copy(alpha = 0.25f),
-                            radius = 8.dp.toPx(),
-                            center = selectedCoord
-                        )
-                        // 实心彩点
-                        drawCircle(
-                            color = ClaudeTerracotta,
-                            radius = 4.5.dp.toPx(),
-                            center = selectedCoord
-                        )
-                        // 中心白芯
-                        drawCircle(
-                            color = Color.White,
-                            radius = 2.dp.toPx(),
-                            center = selectedCoord
+                        fillPath.cubicTo(
+                            controlPoint1.x, controlPoint1.y,
+                            controlPoint2.x, controlPoint2.y,
+                            p1.x, p1.y
                         )
                     }
+
+                    fillPath.lineTo(offsets.last().x, h)
+                    fillPath.close()
+
+                    // 绘制渐变填充
+                    drawPath(
+                        path = fillPath,
+                        brush = Brush.verticalGradient(
+                            colors = listOf(gradientStartColor, gradientEndColor),
+                            startY = topPadding,
+                            endY = h
+                        )
+                    )
+
+                    // 绘制曲线
+                    drawPath(
+                        path = strokePath,
+                        color = lineColor,
+                        style = Stroke(
+                            width = 2.4.dp.toPx(),
+                            cap = StrokeCap.Round
+                        )
+                    )
+
+                    // 绘制选中点指示器
+                    val selOffset = offsets[safeSelectedIndex]
+                    // 垂直游标细线
+                    drawLine(
+                        color = SakuraAccent.copy(alpha = 0.5f),
+                        start = Offset(selOffset.x, topPadding),
+                        end = Offset(selOffset.x, h),
+                        strokeWidth = 1.2.dp.toPx()
+                    )
+
+                    // 焦点光晕与圆点
+                    drawCircle(
+                        color = SakuraAccent.copy(alpha = 0.2f),
+                        radius = 10.dp.toPx(),
+                        center = selOffset
+                    )
+                    drawCircle(
+                        color = Color.White,
+                        radius = 5.dp.toPx(),
+                        center = selOffset
+                    )
+                    drawCircle(
+                        color = SakuraAccent,
+                        radius = 3.5.dp.toPx(),
+                        center = selOffset
+                    )
                 }
             }
 
-            Spacer(modifier = Modifier.height(10.dp))
+            Spacer(modifier = Modifier.height(8.dp))
 
-            // 智能金融级 X 轴里程碑展示 (5 节点法，彻底消除月度 31 天挤压乱象)
+            // X 轴里程碑式文字标签 (两端对齐与居中平铺)
             Row(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 4.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                landmarkIndices.forEach { idx ->
-                    val pt = points[idx]
-                    val isNearSelected = (idx == safeSelectedIndex)
-                    val labelText = if (points.size > 7) {
-                        // 月度模式下提取简洁的 "1日", "8日", "15日", "22日", "31日"
-                        pt.label
-                    } else {
-                        pt.label
-                    }
+                if (points.isNotEmpty()) {
+                    landmarkIndices.forEach { idx ->
+                        val point = points[idx]
+                        val text = if (point.subLabel.isNotEmpty()) point.subLabel else point.label
+                        val isSelected = idx == safeSelectedIndex
 
-                    Text(
-                        text = labelText,
-                        style = MaterialTheme.typography.labelSmall.copy(
+                        Text(
+                            text = text,
                             fontSize = 11.sp,
-                            fontWeight = if (isNearSelected) FontWeight.Bold else FontWeight.Normal
-                        ),
-                        color = if (isNearSelected) ClaudeTerracotta else ClaudeTextTertiary,
-                        textAlign = when (idx) {
-                            0 -> TextAlign.Start
-                            points.size - 1 -> TextAlign.End
-                            else -> TextAlign.Center
-                        }
-                    )
+                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                            color = if (isSelected) MatchaPrimary else SumiTertiary
+                        )
+                    }
                 }
             }
         }

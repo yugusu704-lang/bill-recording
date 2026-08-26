@@ -4,57 +4,64 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 
 // ==========================================
-// CLAUDE WARM CREAM & TRANSLUCENT GLASS
+// 🌸 JAPANESE AIRY & WABI-SABI COLOR PALETTE
 // ==========================================
 
-// 1. Claude 经典温润象牙/米沙纸质背景
-val ClaudeWarmBg = Color(0xFFFBF9F5)          // 温暖奶油米白底色
-val ClaudeWarmBgSubtle = Color(0xFFF3EDE2)    // 暖沙色微底/微容器
-val ClaudeBorder = Color(0xFFE8E2D6)          // 暖调纸质细描边
-val ClaudeBorderLight = Color(0xFFF0EBE1)     // 极淡分界线
+// 1. 和纸宣白基底 (Washi Paper Backgrounds)
+val WashiPaperBg = Color(0xFFFAF8F5)          // 温润手工宣纸米白底色
+val WashiPaperSubtle = Color(0xFFF3EEE6)      // 柔和纸质浅灰/微容器色
+val WashiCardBg = Color(0xFFFFFFFF)           // 纯净和纸卡片纯白
+val WashiBorder = Color(0xFFE8E2D6)          // 纸质细线描边 (0.8dp 细腻透光)
+val WashiBorderSubtle = Color(0xFFF1ECE3)    // 极淡分界线
 
-// 2. 玻璃拟态 (Glassmorphism) 透明材质
-val GlassCardBackground = Color(0xCCFFFFFF)   // 80% 不透明度纯白毛玻璃
-val GlassCardBackgroundLight = Color(0x99FFFFFF) // 60% 不透明度轻薄毛玻璃
-val GlassCardBorder = Color(0xEEFFFFFF)       // 93% 高光玻璃边缘
-val GlassPillBackground = Color(0x80F3EDE2)   // 半透明微胶囊底色
+// 2. 和风自然与意境主色调 (Nature & Zen Aesthetics)
+val MatchaPrimary = Color(0xFF587A63)        // 若草抹茶绿 (主色：沉静、自然、克制)
+val MatchaLight = Color(0xFF7D9F88)          // 浅抹茶绿 (微高亮)
+val MatchaContainer = Color(0xFFEBF2EC)      // 抹茶淡色容器底色
 
-// 3. Claude 标志性陶土红与文字墨色
-val ClaudeTerracotta = Color(0xFFD96B43)      // Claude 标志性陶土红 (Terracotta)
-val ClaudePeach = Color(0xFFF2A97B)           // 柔和珊瑚蜜桃
-val ClaudeInk = Color(0xFF2C2B29)             // 温暖石墨黑墨水字
-val ClaudeTextSecondary = Color(0xFF73706A)   // 温暖中灰副标题
-val ClaudeTextTertiary = Color(0xFFA8A39A)    // 极淡注释灰
+val SakuraAccent = Color(0xFFD87D88)         // 樱落浅粉 (强调色：优雅、柔和、治愈)
+val SakuraSoft = Color(0xFFF7E6E9)           // 樱花柔粉微底色
 
-// 4. 棱镜与 Claude 暖光交融渐变 (Warm Prism Gradient)
-val PrismWarmSpectralBrush = Brush.linearGradient(
+val YamabukiGold = Color(0xFFD4973B)         // 山吹金 (点缀色：丰盈、温煦、阳光)
+val YamabukiLight = Color(0xFFFAF0DE)        // 山吹淡金容器
+
+// 3. 和风水墨墨色 (Sumi Calligraphy Inks)
+val SumiInk = Color(0xFF2A2E2B)              // 暖砚浓墨 (主标题、金额、高权重文字)
+val SumiSecondary = Color(0xFF6D736E)        // 淡墨中灰 (副标题、分类说明)
+val SumiTertiary = Color(0xFFA4AAA5)         // 极淡墨微灰 (时间戳、辅助注释、空态文字)
+
+// 4. 和风意境渐变 (Zen Atmosphere Gradients)
+val WashiZenGradient = Brush.verticalGradient(
     colors = listOf(
-        Color(0xFFD96B43), // 陶土红
-        Color(0xFFF59E0B), // 暖琥珀金
-        Color(0xFF2DD4BF), // 薄荷极光青
-        Color(0xFFA855F7), // 梦幻薰衣草紫
-        Color(0xFFF43F5E)  // 霓虹珊瑚粉
+        Color(0xFFFAF8F5),
+        Color(0xFFF4EFE7)
     )
 )
 
-val PrismSoftGlowBrush = Brush.linearGradient(
+val MatchaGradient = Brush.horizontalGradient(
     colors = listOf(
-        Color(0xFFF2A97B),
-        Color(0xFFC084FC),
-        Color(0xFF818CF8)
+        Color(0xFF587A63),
+        Color(0xFF6F947B)
     )
 )
 
-// 5. Claude 风格分类高级调色盘
-val ClaudeCategoryColors = listOf(
-    0xFFD96B43L, // 陶土红 (饮食/日常)
-    0xFF2563EBL, // 蔚蓝 (学习/科技)
-    0xFF059669L, // 翡翠绿 (自然/水果)
-    0xFF7C3AEDL, // 紫罗兰 (交通/出行)
-    0xFFE11D48L, // 浆果红 (服饰/美妆)
-    0xFFD97706L, // 暖琥珀 (日用/居家)
-    0xFF0891B2L, // 碧海青 (数码/娱乐)
-    0xFF4F46E5L, // 皇家蓝 (商务/财务)
-    0xFF57534EL, // 暖石灰 (其他/杂项)
-    0xFFDB2777L  // 樱花粉 (医疗/健康)
+val SakuraGlowGradient = Brush.linearGradient(
+    colors = listOf(
+        Color(0xFFF7E6E9),
+        Color(0xFFEBF2EC)
+    )
+)
+
+// 5. 和风分类雅致色系 (Japanese Aesthetic Category Palette)
+val JapaneseCategoryColors = listOf(
+    0xFF587A63L, // 若草 (餐饮/饮食)
+    0xFF5B8A99L, // 浅葱 (学习/科技/知识)
+    0xFF4A8576L, // 若竹 (健康/水果/自然)
+    0xFF7F7199L, // 桔梗 (交通/出行/远方)
+    0xFFD87D88L, // 樱花 (服饰/美容/生活)
+    0xFFD4973BL, // 山吹 (日用/居家/生活)
+    0xFFC25353L, // 茜红 (娱乐/数码/好物)
+    0xFF5C6F84L, // 蓝鼠 (商务/办公/账务)
+    0xFF996B54L, // 落叶 (其他/杂项)
+    0xFF8C7355L  // 柴染 (文具/手作)
 )

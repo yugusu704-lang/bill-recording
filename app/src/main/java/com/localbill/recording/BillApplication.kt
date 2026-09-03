@@ -20,10 +20,10 @@ class BillApplication : Application() {
     }
 
     val recordRepository by lazy {
-        RecordRepository(database.recordDao(), database.categoryDao())
+        RecordRepository(database.recordDao(), database.categoryDao(), this)
     }
 
     val backupRepository by lazy {
-        BackupRepository(database.categoryDao(), database.recordDao())
+        BackupRepository(database.categoryDao(), database.recordDao(), this)
     }
 }

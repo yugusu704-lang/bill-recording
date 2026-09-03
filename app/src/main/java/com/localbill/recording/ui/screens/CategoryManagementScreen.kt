@@ -1,4 +1,4 @@
-package com.localbill.recording.ui.screens
+﻿package com.localbill.recording.ui.screens
 
 import android.widget.Toast
 import androidx.compose.foundation.background
@@ -49,7 +49,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -58,16 +57,14 @@ import androidx.compose.ui.unit.sp
 import com.localbill.recording.data.entity.CategoryEntity
 import com.localbill.recording.ui.components.CategoryIconBadge
 import com.localbill.recording.ui.components.CategoryIcons
+import com.localbill.recording.ui.theme.DeepGreen
 import com.localbill.recording.ui.theme.JapaneseCategoryColors
-import com.localbill.recording.ui.theme.MatchaPrimary
-import com.localbill.recording.ui.theme.SakuraAccent
-import com.localbill.recording.ui.theme.SumiInk
-import com.localbill.recording.ui.theme.SumiSecondary
-import com.localbill.recording.ui.theme.SumiTertiary
-import com.localbill.recording.ui.theme.WashiBorder
-import com.localbill.recording.ui.theme.WashiCardBg
-import com.localbill.recording.ui.theme.WashiPaperBg
-import com.localbill.recording.ui.theme.WashiPaperSubtle
+import com.localbill.recording.ui.theme.TextDark
+import com.localbill.recording.ui.theme.TextSecondary
+import com.localbill.recording.ui.theme.TextTertiary
+import com.localbill.recording.ui.theme.WarmBorder
+import com.localbill.recording.ui.theme.WarmBone
+import com.localbill.recording.ui.theme.WarmSurface
 import com.localbill.recording.ui.viewmodel.CategoryEvent
 import com.localbill.recording.ui.viewmodel.CategoryNode
 import com.localbill.recording.ui.viewmodel.CategoryViewModel
@@ -102,7 +99,7 @@ fun CategoryManagementScreen(
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
-        containerColor = WashiPaperBg,
+        containerColor = WarmBone,
         floatingActionButton = {
             FloatingActionButton(
                 onClick = {
@@ -110,12 +107,10 @@ fun CategoryManagementScreen(
                     parentCategoryForNewSub = null
                     isEditDialogVisible = true
                 },
-                containerColor = MatchaPrimary,
+                containerColor = DeepGreen,
                 contentColor = Color.White,
-                shape = CircleShape,
-                modifier = Modifier
-                    .padding(bottom = 16.dp)
-                    .shadow(8.dp, CircleShape, spotColor = MatchaPrimary.copy(alpha = 0.35f))
+                shape = RoundedCornerShape(14.dp),
+                modifier = Modifier.padding(bottom = 16.dp)
             ) {
                 Row(
                     modifier = Modifier.padding(horizontal = 16.dp),
@@ -133,21 +128,21 @@ fun CategoryManagementScreen(
                 .fillMaxSize()
                 .padding(innerPadding),
             contentPadding = PaddingValues(horizontal = 18.dp, vertical = 14.dp),
-            verticalArrangement = Arrangement.spacedBy(14.dp)
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             item {
                 Column {
                     Text(
-                        text = "分类系统与层级",
-                        style = MaterialTheme.typography.titleLarge,
+                        text = "分类",
+                        style = MaterialTheme.typography.headlineMedium,
                         fontWeight = FontWeight.Bold,
-                        color = SumiInk
+                        color = TextDark
                     )
                     Spacer(modifier = Modifier.height(2.dp))
                     Text(
-                        text = "支持主分类与子分类自由拓展，自动汇总下辖流水",
+                        text = "管理主分类与子分类",
                         style = MaterialTheme.typography.bodySmall,
-                        color = SumiSecondary
+                        color = TextSecondary
                     )
                 }
             }
@@ -156,7 +151,7 @@ fun CategoryManagementScreen(
                 items = uiState.categoryNodes,
                 key = { it.mainCategory.id }
             ) { node ->
-                WashiCategoryCard(
+                CategoryCard(
                     node = node,
                     onAddSubCategory = {
                         parentCategoryForNewSub = node.mainCategory
@@ -181,7 +176,7 @@ fun CategoryManagementScreen(
     }
 
     if (isEditDialogVisible) {
-        WashiAddEditCategoryDialog(
+        AddEditCategoryDialog(
             category = editingCategory,
             parentCategory = parentCategoryForNewSub,
             onDismiss = {
@@ -205,7 +200,7 @@ fun CategoryManagementScreen(
 }
 
 @Composable
-private fun WashiCategoryCard(
+private fun CategoryCard(
     node: CategoryNode,
     onAddSubCategory: () -> Unit,
     onEditCategory: (CategoryEntity) -> Unit,
@@ -214,9 +209,9 @@ private fun WashiCategoryCard(
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(16.dp))
-            .background(WashiCardBg)
-            .border(0.8.dp, WashiBorder, RoundedCornerShape(16.dp))
+            .clip(RoundedCornerShape(14.dp))
+            .background(WarmSurface)
+            .border(1.dp, WarmBorder, RoundedCornerShape(14.dp))
             .padding(14.dp)
     ) {
         Column(modifier = Modifier.fillMaxWidth()) {
@@ -240,21 +235,21 @@ private fun WashiCategoryCard(
                                 text = node.mainCategory.name,
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold,
-                                color = SumiInk
+                                color = TextDark
                             )
                             if (node.mainCategory.isBuiltIn) {
                                 Spacer(modifier = Modifier.width(6.dp))
                                 Text(
                                     text = "内置",
                                     style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
-                                    color = SumiTertiary
+                                    color = TextTertiary
                                 )
                             }
                         }
                         Text(
                             text = "${node.subCategories.size} 个子分类",
                             style = MaterialTheme.typography.bodySmall,
-                            color = SumiSecondary
+                            color = TextSecondary
                         )
                     }
                 }
@@ -267,7 +262,7 @@ private fun WashiCategoryCard(
                         Icon(
                             imageVector = Icons.Default.Edit,
                             contentDescription = "编辑",
-                            tint = SumiSecondary,
+                            tint = TextSecondary,
                             modifier = Modifier.size(16.dp)
                         )
                     }
@@ -279,7 +274,7 @@ private fun WashiCategoryCard(
                             Icon(
                                 imageVector = Icons.Default.DeleteOutline,
                                 contentDescription = "删除",
-                                tint = SumiTertiary,
+                                tint = TextTertiary,
                                 modifier = Modifier.size(16.dp)
                             )
                         }
@@ -288,7 +283,7 @@ private fun WashiCategoryCard(
             }
 
             Spacer(modifier = Modifier.height(10.dp))
-            HorizontalDivider(color = WashiBorder.copy(alpha = 0.5f), thickness = 0.8.dp)
+            HorizontalDivider(color = WarmBorder, thickness = 1.dp)
             Spacer(modifier = Modifier.height(8.dp))
 
             Column(
@@ -315,7 +310,7 @@ private fun WashiCategoryCard(
                             Text(
                                 text = sub.name,
                                 style = MaterialTheme.typography.bodyMedium,
-                                color = SumiInk
+                                color = TextDark
                             )
                         }
 
@@ -327,7 +322,7 @@ private fun WashiCategoryCard(
                                 Icon(
                                     imageVector = Icons.Default.Edit,
                                     contentDescription = "编辑",
-                                    tint = SumiSecondary,
+                                    tint = TextSecondary,
                                     modifier = Modifier.size(14.dp)
                                 )
                             }
@@ -338,7 +333,7 @@ private fun WashiCategoryCard(
                                 Icon(
                                     imageVector = Icons.Default.DeleteOutline,
                                     contentDescription = "删除",
-                                    tint = SumiTertiary,
+                                    tint = TextTertiary,
                                     modifier = Modifier.size(14.dp)
                                 )
                             }
@@ -361,14 +356,14 @@ private fun WashiCategoryCard(
                         Icon(
                             imageVector = Icons.Default.Add,
                             contentDescription = null,
-                            tint = MatchaPrimary,
+                            tint = DeepGreen,
                             modifier = Modifier.size(14.dp)
                         )
                         Spacer(modifier = Modifier.width(4.dp))
                         Text(
                             text = "添加子分类...",
                             style = MaterialTheme.typography.bodySmall,
-                            color = MatchaPrimary,
+                            color = DeepGreen,
                             fontWeight = FontWeight.Medium
                         )
                     }
@@ -380,7 +375,7 @@ private fun WashiCategoryCard(
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun WashiAddEditCategoryDialog(
+private fun AddEditCategoryDialog(
     category: CategoryEntity?,
     parentCategory: CategoryEntity?,
     onDismiss: () -> Unit,
@@ -402,8 +397,8 @@ private fun WashiAddEditCategoryDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        containerColor = Color.White,
-        title = { Text(text = dialogTitle, fontWeight = FontWeight.Bold, color = SumiInk) },
+        containerColor = WarmSurface,
+        title = { Text(text = dialogTitle, fontWeight = FontWeight.Bold, color = TextDark) },
         text = {
             Column(
                 modifier = Modifier.fillMaxWidth(),
@@ -417,12 +412,11 @@ private fun WashiAddEditCategoryDialog(
                     modifier = Modifier.fillMaxWidth()
                 )
 
-                // 预览
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(text = "预览：", style = MaterialTheme.typography.bodySmall, color = SumiSecondary)
+                    Text(text = "预览：", style = MaterialTheme.typography.bodySmall, color = TextSecondary)
                     Spacer(modifier = Modifier.width(6.dp))
                     CategoryIconBadge(
                         iconName = selectedIconName,
@@ -439,8 +433,7 @@ private fun WashiAddEditCategoryDialog(
                     )
                 }
 
-                // 图标选择
-                Text(text = "选择图标", style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.SemiBold, color = SumiInk)
+                Text(text = "选择图标", style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.SemiBold, color = TextDark)
                 FlowRow(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -452,23 +445,22 @@ private fun WashiAddEditCategoryDialog(
                             modifier = Modifier
                                 .size(34.dp)
                                 .clip(RoundedCornerShape(8.dp))
-                                .background(if (isSelected) MatchaPrimary else WashiPaperSubtle)
-                                .border(0.8.dp, if (isSelected) MatchaPrimary else WashiBorder, RoundedCornerShape(8.dp))
-                            .clickable { selectedIconName = iconKey },
+                                .background(if (isSelected) DeepGreen else WarmBone)
+                                .border(0.8.dp, if (isSelected) DeepGreen else WarmBorder, RoundedCornerShape(8.dp))
+                                .clickable { selectedIconName = iconKey },
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(
                                 imageVector = vector,
                                 contentDescription = iconKey,
-                                tint = if (isSelected) Color.White else SumiInk,
+                                tint = if (isSelected) Color.White else TextDark,
                                 modifier = Modifier.size(16.dp)
                             )
                         }
                     }
                 }
 
-                // 色彩选择
-                Text(text = "选择和风色调", style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.SemiBold, color = SumiInk)
+                Text(text = "选择颜色", style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.SemiBold, color = TextDark)
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -484,7 +476,7 @@ private fun WashiAddEditCategoryDialog(
                                 .background(Color(colorVal))
                                 .border(
                                     width = if (isSelected) 2.5.dp else 0.dp,
-                                    color = if (isSelected) SumiInk else Color.Transparent,
+                                    color = if (isSelected) TextDark else Color.Transparent,
                                     shape = CircleShape
                                 )
                                 .clickable { selectedColorHex = colorVal }
@@ -497,13 +489,15 @@ private fun WashiAddEditCategoryDialog(
             TextButton(
                 onClick = { onSave(name, selectedIconName, selectedColorHex) }
             ) {
-                Text(text = "保存", fontWeight = FontWeight.Bold, color = MatchaPrimary)
+                Text(text = "保存", fontWeight = FontWeight.Bold, color = DeepGreen)
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text(text = "取消", color = SumiSecondary)
+                Text(text = "取消", color = TextSecondary)
             }
         }
     )
 }
+
+

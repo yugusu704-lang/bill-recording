@@ -60,6 +60,14 @@ android {
     testOptions {
         unitTests {
             isIncludeAndroidResources = true
+            all { test ->
+                val testTmpDirFile = project.layout.projectDirectory.dir(".build_tmp/unit-tests").asFile
+                testTmpDirFile.mkdirs()
+                val testTmpDir = testTmpDirFile.absolutePath
+                test.systemProperty("java.io.tmpdir", testTmpDir)
+                test.environment("TEMP", testTmpDir)
+                test.environment("TMP", testTmpDir)
+            }
         }
     }
 }

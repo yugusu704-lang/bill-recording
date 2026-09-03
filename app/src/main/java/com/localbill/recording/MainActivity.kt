@@ -14,6 +14,8 @@ import com.localbill.recording.ui.viewmodel.BackupViewModel
 import com.localbill.recording.ui.viewmodel.CategoryViewModel
 import com.localbill.recording.ui.viewmodel.HomeViewModel
 import com.localbill.recording.ui.viewmodel.StatisticsViewModel
+import com.localbill.recording.widget.BillWidgetProvider
+import com.localbill.recording.widget.BillWidgetRefreshReceiver
 
 class MainActivity : ComponentActivity() {
 
@@ -22,6 +24,8 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
 
         val app = application as BillApplication
+        BillWidgetRefreshReceiver.scheduleNextAlarm(this)
+        val initialAddRecord = intent?.getBooleanExtra(BillWidgetProvider.EXTRA_ADD_RECORD, false) ?: false
 
         val homeViewModel by viewModels<HomeViewModel> {
             HomeViewModel.Factory(app.recordRepository, app.categoryRepository)
@@ -46,7 +50,8 @@ class MainActivity : ComponentActivity() {
                         homeViewModel = homeViewModel,
                         statisticsViewModel = statisticsViewModel,
                         categoryViewModel = categoryViewModel,
-                        backupViewModel = backupViewModel
+                        backupViewModel = backupViewModel,
+                        initialAddRecord = initialAddRecord
                     )
                 }
             }

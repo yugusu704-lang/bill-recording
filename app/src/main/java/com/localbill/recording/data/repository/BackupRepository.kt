@@ -1,4 +1,4 @@
-package com.localbill.recording.data.repository
+﻿package com.localbill.recording.data.repository
 
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
@@ -10,17 +10,18 @@ import com.localbill.recording.data.model.BackupPayload
 import com.localbill.recording.data.model.CategoryBackupDto
 import com.localbill.recording.data.model.RecordBackupDto
 import com.localbill.recording.util.CsvExporter
+import com.localbill.recording.widget.BillWidgetProvider
 import java.io.File
 
 class BackupRepository(
     private val categoryDao: CategoryDao,
-    private val recordDao: RecordDao
+    private val recordDao: RecordDao,
+    private val context: android.content.Context? = null
 ) {
     private val gson: Gson = GsonBuilder().setPrettyPrinting().create()
 
     /**
-     * 生成全量 JSON 备份数据字符串
-     */
+     * 鐢熸垚鍏ㄩ噺 JSON 澶囦唤鏁版嵁瀛楃涓?     */
     suspend fun createBackupJson(): String {
         val categories = categoryDao.getAllCategories().map {
             CategoryBackupDto(
@@ -55,22 +56,22 @@ class BackupRepository(
     }
 
     /**
-     * 从 JSON 字符串恢复数据库
+     * 浠?JSON 瀛楃涓叉仮澶嶆暟鎹簱
      */
     suspend fun restoreFromJson(jsonString: String): Result<Int> {
         return try {
             val payload = gson.fromJson(jsonString, BackupPayload::class.java)
-                ?: return Result.failure(IllegalArgumentException("备份文件内容无效"))
+                ?: return Result.failure(IllegalArgumentException("澶囦唤鏂囦欢鍐呭鏃犳晥"))
 
             if (payload.categories.isEmpty()) {
-                return Result.failure(IllegalArgumentException("备份数据中无有效分类信息"))
+                return Result.failure(IllegalArgumentException("澶囦唤鏁版嵁涓棤鏈夋晥鍒嗙被淇℃伅"))
             }
 
-            // 清空现有数据
+            // 娓呯┖鐜版湁鏁版嵁
             recordDao.clearAll()
             categoryDao.clearAll()
 
-            // 恢复分类（先恢复主分类，再恢复子分类以满足外键依赖）
+            // 鎭㈠鍒嗙被锛堝厛鎭㈠涓诲垎绫伙紝鍐嶆仮澶嶅瓙鍒嗙被浠ユ弧瓒冲閿緷璧栵級
             val categoryEntities = payload.categories.map {
                 CategoryEntity(
                     id = it.id,
@@ -84,7 +85,7 @@ class BackupRepository(
             }
             categoryDao.insertCategories(categoryEntities)
 
-            // 恢复记账记录
+            // 鎭㈠璁拌处璁板綍
             val recordEntities = payload.records.map {
                 RecordEntity(
                     id = it.id,
@@ -98,6 +99,7 @@ class BackupRepository(
                 )
             }
             recordDao.insertRecords(recordEntities)
+            context?.let { BillWidgetProvider.refreshAllWidgets(it) }
 
             Result.success(recordEntities.size)
         } catch (e: Exception) {
@@ -107,10 +109,11 @@ class BackupRepository(
     }
 
     /**
-     * 导出为 CSV 文件
+     * 瀵煎嚭涓?CSV 鏂囦欢
      */
     suspend fun exportCsv(targetFile: File): Boolean {
         val records = recordDao.getAllRecordsWithCategory()
         return CsvExporter.exportRecordsToCsv(records, targetFile)
     }
 }
+

@@ -53,6 +53,10 @@ interface RecordDao {
     @Query("SELECT * FROM records WHERE id = :id LIMIT 1")
     suspend fun getRecordWithCategoryById(id: Long): RecordWithCategory?
 
+    @Transaction
+    @Query("SELECT * FROM records ORDER BY timestamp DESC, id DESC LIMIT :limit")
+    suspend fun getRecentRecordsWithCategory(limit: Int): List<RecordWithCategory>
+
     @Query("SELECT * FROM records WHERE id = :id LIMIT 1")
     suspend fun getRecordById(id: Long): RecordEntity?
 

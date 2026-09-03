@@ -1,4 +1,4 @@
-package com.localbill.recording.ui.components
+﻿package com.localbill.recording.ui.components
 
 import android.app.DatePickerDialog
 import android.widget.Toast
@@ -59,19 +59,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.localbill.recording.data.entity.CategoryEntity
 import com.localbill.recording.data.entity.RecordWithCategory
-import com.localbill.recording.data.model.KakeiboPillar
-import com.localbill.recording.ui.theme.HankoRed
-import com.localbill.recording.ui.theme.PillarCulture
-import com.localbill.recording.ui.theme.PillarNeeds
-import com.localbill.recording.ui.theme.PillarWants
-import com.localbill.recording.ui.theme.SumiDark
-import com.localbill.recording.ui.theme.SumiLight
-import com.localbill.recording.ui.theme.SumiMedium
-import com.localbill.recording.ui.theme.TomoeBorder
-import com.localbill.recording.ui.theme.TomoePaperBg
-import com.localbill.recording.ui.theme.TomoePaperPage
+import com.localbill.recording.ui.theme.DeepGreen
+import com.localbill.recording.ui.theme.TextDark
+import com.localbill.recording.ui.theme.TextSecondary
+import com.localbill.recording.ui.theme.TextTertiary
+import com.localbill.recording.ui.theme.WarmBorder
+import com.localbill.recording.ui.theme.WarmBone
+import com.localbill.recording.ui.theme.WarmSurface
 import com.localbill.recording.util.DateTimeUtils
-import kotlinx.coroutines.delay
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.Locale
@@ -82,6 +77,7 @@ fun CalculatorBottomSheet(
     allMainCategories: List<CategoryEntity>,
     subCategoriesMap: Map<Long, List<CategoryEntity>>,
     editingRecord: RecordWithCategory? = null,
+    defaultTimestamp: Long = System.currentTimeMillis(),
     onDismiss: () -> Unit,
     onSaveRecord: (amount: Double, categoryId: Long, subCategoryId: Long?, note: String, timestamp: Long, imagePath: String?) -> Unit
 ) {
@@ -103,38 +99,17 @@ fun CalculatorBottomSheet(
         mutableStateOf(editingRecord?.subCategory)
     }
 
-    var selectedPillar by remember {
-        mutableStateOf(
-            if (editingRecord != null) {
-                if (editingRecord.record.note.contains("[WANTS]")) KakeiboPillar.WANTS
-                else if (editingRecord.record.note.contains("[CULTURE]")) KakeiboPillar.CULTURE
-                else if (editingRecord.record.note.contains("[UNEXPECTED]")) KakeiboPillar.UNEXPECTED
-                else KakeiboPillar.NEEDS
-            } else KakeiboPillar.NEEDS
-        )
-    }
-
     var note by remember {
-        mutableStateOf(
-            editingRecord?.record?.note
-                ?.replace("[NEEDS]", "")
-                ?.replace("[WANTS]", "")
-                ?.replace("[CULTURE]", "")
-                ?.replace("[UNEXPECTED]", "")
-                ?.trim() ?: ""
-        )
+        mutableStateOf(editingRecord?.record?.note?.trim() ?: "")
     }
 
     var selectedTimestamp by remember {
-        mutableLongStateOf(editingRecord?.record?.timestamp ?: System.currentTimeMillis())
+        mutableLongStateOf(editingRecord?.record?.timestamp ?: defaultTimestamp)
     }
 
     var isNoteInputVisible by remember {
         mutableStateOf(note.isNotEmpty())
     }
-
-    // 朱红落印盖章动画状态
-    var isStamping by remember { mutableStateOf(false) }
 
     LaunchedEffect(selectedMainCategory) {
         val currentSub = selectedSubCategory
@@ -146,202 +121,170 @@ fun CalculatorBottomSheet(
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = sheetState,
-        containerColor = TomoePaperBg,
+        containerColor = WarmSurface,
         dragHandle = null,
         shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
     ) {
-        Box(modifier = Modifier.fillMaxWidth()) {
-            Column(
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .navigationBarsPadding()
+                .padding(horizontal = 18.dp, vertical = 14.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = if (editingRecord == null) "记一笔" else "编辑账单",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = TextDark
+                )
+                IconButton(onClick = onDismiss, modifier = Modifier.size(32.dp)) {
+                    Icon(
+                        imageVector = Icons.Default.Close,
+                        contentDescription = "关闭",
+                        tint = TextSecondary
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .navigationBarsPadding()
-                    .padding(horizontal = 18.dp, vertical = 14.dp)
+                    .clip(RoundedCornerShape(14.dp))
+                    .background(WarmBone)
+                    .border(1.dp, WarmBorder, RoundedCornerShape(14.dp))
+                    .padding(horizontal = 16.dp, vertical = 12.dp)
             ) {
-                // 顶部手账小札标题
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        WashiTapeTab(
-                            title = "ほぼ日家計簿",
-                            tapeColor = PillarCulture.copy(alpha = 0.15f),
-                            textColor = PillarCulture
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
                         Text(
-                            text = if (editingRecord == null) "支出手账记事" else "修改记账小札",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = SumiDark,
-                            fontFamily = FontFamily.Serif
+                            text = if (isExpression(expression)) "算式实时计算" else "记账金额",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = TextSecondary
                         )
-                    }
-                    IconButton(onClick = onDismiss, modifier = Modifier.size(32.dp)) {
-                        Icon(
-                            imageVector = Icons.Default.Close,
-                            contentDescription = "关闭",
-                            tint = SumiMedium
-                        )
-                    }
-                }
 
-                Spacer(modifier = Modifier.height(10.dp))
-
-                // 1. 金额便签大卡片 (巴川纸纯白便签)
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(14.dp))
-                        .background(TomoePaperPage)
-                        .border(0.8.dp, TomoeBorder, RoundedCornerShape(14.dp))
-                        .padding(horizontal = 16.dp, vertical = 12.dp)
-                ) {
-                    Column(modifier = Modifier.fillMaxWidth()) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                text = if (isExpression(expression)) "算式实时计算" else "记账金额",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = SumiMedium
-                            )
-
-                            // 当前主/子分类小指示
-                            selectedMainCategory?.let { main ->
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Box(
-                                        modifier = Modifier
-                                            .size(6.dp)
-                                            .clip(RoundedCornerShape(3.dp))
-                                            .background(Color(main.colorHex))
-                                    )
-                                    Spacer(modifier = Modifier.width(4.dp))
-                                    Text(
-                                        text = if (selectedSubCategory != null) "${main.name} · ${selectedSubCategory?.name}" else main.name,
-                                        style = MaterialTheme.typography.labelSmall,
-                                        fontWeight = FontWeight.Bold,
-                                        color = Color(main.colorHex)
-                                    )
-                                }
-                            }
-                        }
-
-                        Spacer(modifier = Modifier.height(4.dp))
-
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.Bottom
-                        ) {
-                            Text(
-                                text = "¥",
-                                style = MaterialTheme.typography.headlineMedium,
-                                fontWeight = FontWeight.Bold,
-                                color = selectedPillar.color
-                            )
-                            Text(
-                                text = expression,
-                                style = MaterialTheme.typography.displayMedium.copy(fontSize = 34.sp),
-                                fontWeight = FontWeight.Bold,
-                                color = SumiDark,
-                                fontFamily = FontFamily.Monospace
-                            )
-                        }
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(10.dp))
-
-                // 2. Kakeibo 日本家计簿四大支柱和纸选择条
-                Text(
-                    text = "消費性質 (Kakeibo 四支柱)",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = SumiMedium,
-                    modifier = Modifier.padding(bottom = 4.dp, start = 2.dp)
-                )
-                KakeiboPillarBar(
-                    selectedPillar = selectedPillar,
-                    onSelectPillar = {
-                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                        selectedPillar = it
-                    }
-                )
-
-                Spacer(modifier = Modifier.height(10.dp))
-
-                // 3. 主分类与子分类横滑和纸胶囊
-                val mainScrollState = rememberScrollState()
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .horizontalScroll(mainScrollState),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    allMainCategories.forEach { mainCat ->
-                        val isSelected = selectedMainCategory?.id == mainCat.id
-                        val catColor = Color(mainCat.colorHex)
-
-                        Box(
-                            modifier = Modifier
-                                .clip(RoundedCornerShape(10.dp))
-                                .background(if (isSelected) catColor.copy(alpha = 0.15f) else TomoePaperPage)
-                                .border(
-                                    width = if (isSelected) 1.2.dp else 0.8.dp,
-                                    color = if (isSelected) catColor else TomoeBorder,
-                                    shape = RoundedCornerShape(10.dp)
-                                )
-                                .clickable {
-                                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                                    selectedMainCategory = mainCat
-                                }
-                                .padding(horizontal = 12.dp, vertical = 7.dp)
-                        ) {
+                        selectedMainCategory?.let { main ->
                             Row(verticalAlignment = Alignment.CenterVertically) {
-                                Icon(
-                                    imageVector = CategoryIcons.getIcon(mainCat.iconName),
-                                    contentDescription = null,
-                                    tint = if (isSelected) catColor else SumiMedium,
-                                    modifier = Modifier.size(16.dp)
-                                )
-                                Spacer(modifier = Modifier.width(6.dp))
-                                Text(
-                                    text = mainCat.name,
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                                    color = if (isSelected) catColor else SumiDark
-                                )
-                            }
-                        }
-                    }
-                }
-
-                // 子分类横滑
-                val currentSubList = selectedMainCategory?.let { subCategoriesMap[it.id] } ?: emptyList()
-                AnimatedVisibility(
-                    visible = currentSubList.isNotEmpty(),
-                    enter = expandVertically() + fadeIn(),
-                    exit = shrinkVertically() + fadeOut()
-                ) {
-                    Column(modifier = Modifier.padding(top = 8.dp)) {
-                        val subScrollState = rememberScrollState()
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .horizontalScroll(subScrollState),
-                            horizontalArrangement = Arrangement.spacedBy(6.dp)
-                        ) {
-                            currentSubList.forEach { subCat ->
-                                val isSubSelected = selectedSubCategory?.id == subCat.id
-                                val subColor = Color(subCat.colorHex)
-
                                 Box(
                                     modifier = Modifier
-                                        .clip(RoundedCornerShape(8.dp))
-                                        .background(if (isSubSelected) subColor.copy(alpha = 0.15f) else TomoePaperBg)
+                                        .size(6.dp)
+                                        .clip(RoundedCornerShape(3.dp))
+                                        .background(Color(main.colorHex))
+                                )
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text(
+                                    text = if (selectedSubCategory != null) "${main.name} · ${selectedSubCategory?.name}" else main.name,
+                                    style = MaterialTheme.typography.labelSmall,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color(main.colorHex)
+                                )
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(4.dp))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.Bottom
+                    ) {
+                        Text(
+                            text = "¥",
+                            style = MaterialTheme.typography.headlineMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = DeepGreen
+                        )
+                        Text(
+                            text = expression,
+                            style = MaterialTheme.typography.displayMedium.copy(fontSize = 34.sp),
+                            fontWeight = FontWeight.Bold,
+                            color = TextDark,
+                            fontFamily = FontFamily.Monospace
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            val mainScrollState = rememberScrollState()
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .horizontalScroll(mainScrollState),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                allMainCategories.forEach { mainCat ->
+                    val isSelected = selectedMainCategory?.id == mainCat.id
+                    val catColor = Color(mainCat.colorHex)
+
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(10.dp))
+                            .background(if (isSelected) catColor.copy(alpha = 0.12f) else WarmSurface)
+                            .border(
+                                width = if (isSelected) 1.2.dp else 1.dp,
+                                color = if (isSelected) catColor else WarmBorder,
+                                shape = RoundedCornerShape(10.dp)
+                            )
+                            .clickable {
+                                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                selectedMainCategory = mainCat
+                            }
+                            .padding(horizontal = 12.dp, vertical = 7.dp)
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = CategoryIcons.getIcon(mainCat.iconName),
+                                contentDescription = null,
+                                tint = if (isSelected) catColor else TextSecondary,
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(
+                                text = mainCat.name,
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                                color = if (isSelected) catColor else TextDark
+                            )
+                        }
+                    }
+                }
+            }
+
+            val currentSubList = selectedMainCategory?.let { subCategoriesMap[it.id] } ?: emptyList()
+            AnimatedVisibility(
+                visible = currentSubList.isNotEmpty(),
+                enter = expandVertically() + fadeIn(),
+                exit = shrinkVertically() + fadeOut()
+            ) {
+                Column(modifier = Modifier.padding(top = 8.dp)) {
+                    val subScrollState = rememberScrollState()
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .horizontalScroll(subScrollState),
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        currentSubList.forEach { subCat ->
+                            val isSubSelected = selectedSubCategory?.id == subCat.id
+                            val subColor = Color(subCat.colorHex)
+
+                            Box(
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .background(if (isSubSelected) subColor.copy(alpha = 0.12f) else WarmBone)
                                     .border(
                                         width = if (isSubSelected) 1.dp else 0.dp,
                                         color = if (isSubSelected) subColor else Color.Transparent,
@@ -352,187 +295,162 @@ fun CalculatorBottomSheet(
                                         selectedSubCategory = if (isSubSelected) null else subCat
                                     }
                                     .padding(horizontal = 10.dp, vertical = 5.dp)
-                                ) {
-                                    Text(
-                                        text = subCat.name,
-                                        style = MaterialTheme.typography.bodySmall,
-                                        fontWeight = if (isSubSelected) FontWeight.Bold else FontWeight.Normal,
-                                        color = if (isSubSelected) subColor else SumiMedium
-                                    )
-                                }
+                            ) {
+                                Text(
+                                    text = subCat.name,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    fontWeight = if (isSubSelected) FontWeight.Bold else FontWeight.Normal,
+                                    color = if (isSubSelected) subColor else TextSecondary
+                                )
                             }
                         }
                     }
                 }
-
-                Spacer(modifier = Modifier.height(10.dp))
-
-                // 4. 日期选择与备注便条
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    val dateStr = DateTimeUtils.formatFriendlyDate(selectedTimestamp)
-                    Box(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(8.dp))
-                            .background(TomoePaperPage)
-                            .border(0.8.dp, TomoeBorder, RoundedCornerShape(8.dp))
-                            .clickable {
-                                val curDate = DateTimeUtils.toLocalDate(selectedTimestamp)
-                                DatePickerDialog(
-                                    context,
-                                    { _, year, month, dayOfMonth ->
-                                        val newDate = LocalDate.of(year, month + 1, dayOfMonth)
-                                        val nowTime = LocalDateTime.now().toLocalTime()
-                                        val newLdt = newDate.atTime(nowTime)
-                                        selectedTimestamp = DateTimeUtils.toMillis(newLdt)
-                                    },
-                                    curDate.year,
-                                    curDate.monthValue - 1,
-                                    curDate.dayOfMonth
-                                ).show()
-                            }
-                            .padding(horizontal = 10.dp, vertical = 6.dp)
-                    ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(
-                                imageVector = Icons.Default.CalendarToday,
-                                contentDescription = "日期",
-                                tint = PillarCulture,
-                                modifier = Modifier.size(14.dp)
-                            )
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Text(
-                                text = dateStr,
-                                style = MaterialTheme.typography.bodySmall,
-                                fontWeight = FontWeight.Medium,
-                                color = SumiDark
-                            )
-                        }
-                    }
-
-                    Box(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(8.dp))
-                            .background(if (isNoteInputVisible || note.isNotEmpty()) PillarWants.copy(alpha = 0.12f) else TomoePaperPage)
-                            .border(0.8.dp, if (isNoteInputVisible || note.isNotEmpty()) PillarWants else TomoeBorder, RoundedCornerShape(8.dp))
-                            .clickable {
-                                isNoteInputVisible = !isNoteInputVisible
-                            }
-                            .padding(horizontal = 10.dp, vertical = 6.dp)
-                    ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(
-                                imageVector = Icons.Default.EditNote,
-                                contentDescription = "备注",
-                                tint = if (isNoteInputVisible || note.isNotEmpty()) PillarWants else SumiMedium,
-                                modifier = Modifier.size(16.dp)
-                            )
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text(
-                                text = if (note.isNotEmpty()) note else "手账备注",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = if (isNoteInputVisible || note.isNotEmpty()) PillarWants else SumiMedium
-                            )
-                        }
-                    }
-                }
-
-                AnimatedVisibility(
-                    visible = isNoteInputVisible,
-                    enter = expandVertically() + fadeIn(),
-                    exit = shrinkVertically() + fadeOut()
-                ) {
-                    Column(modifier = Modifier.padding(top = 8.dp)) {
-                        BasicTextField(
-                            value = note,
-                            onValueChange = { note = it },
-                            textStyle = MaterialTheme.typography.bodyMedium.copy(color = SumiDark),
-                            cursorBrush = SolidColor(PillarCulture),
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clip(RoundedCornerShape(10.dp))
-                                .background(TomoePaperPage)
-                                .border(0.8.dp, TomoeBorder, RoundedCornerShape(10.dp))
-                                .padding(12.dp),
-                            decorationBox = { innerTextField ->
-                                if (note.isEmpty()) {
-                                    Text(
-                                        text = "写下消费心境与备注（如：心动的古着、食堂午餐）",
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        color = SumiLight
-                                    )
-                                }
-                                innerTextField()
-                            }
-                        )
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(12.dp))
-
-                // 5. ほぼ日手帳 算盘手感键盘
-                HobonichiKeypad(
-                    expression = expression,
-                    onExpressionChange = { expression = it },
-                    onSave = {
-                        val mainCat = selectedMainCategory
-                        if (mainCat == null) {
-                            Toast.makeText(context, "请先选择消费分类", Toast.LENGTH_SHORT).show()
-                            return@HobonichiKeypad
-                        }
-
-                        val finalAmount = evaluateExpression(expression)
-                        if (finalAmount == null || finalAmount <= 0.0) {
-                            Toast.makeText(context, "请输入有效的记账金额", Toast.LENGTH_SHORT).show()
-                            return@HobonichiKeypad
-                        }
-
-                        // 将 Kakeibo 四支柱编码写入备注前缀（平滑保留历史兼容）
-                        val finalNote = "[${selectedPillar.code}] $note".trim()
-
-                        // 触发盖印动画与触觉反馈
-                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                        isStamping = true
-
-                        onSaveRecord(
-                            finalAmount,
-                            mainCat.id,
-                            selectedSubCategory?.id,
-                            finalNote,
-                            selectedTimestamp,
-                            null
-                        )
-                        onDismiss()
-                    },
-                    haptic = haptic
-                )
             }
 
-            // 盖印浮层动效
-            if (isStamping) {
+            Spacer(modifier = Modifier.height(10.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                val dateStr = DateTimeUtils.formatFriendlyDate(selectedTimestamp)
                 Box(
                     modifier = Modifier
-                        .matchParentSize()
-                        .background(Color.Black.copy(alpha = 0.1f)),
-                    contentAlignment = Alignment.Center
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(WarmSurface)
+                        .border(1.dp, WarmBorder, RoundedCornerShape(8.dp))
+                        .clickable {
+                            val curDate = DateTimeUtils.toLocalDate(selectedTimestamp)
+                            DatePickerDialog(
+                                context,
+                                { _, year, month, dayOfMonth ->
+                                    val newDate = LocalDate.of(year, month + 1, dayOfMonth)
+                                    val nowTime = LocalDateTime.now().toLocalTime()
+                                    val newLdt = newDate.atTime(nowTime)
+                                    selectedTimestamp = DateTimeUtils.toMillis(newLdt)
+                                },
+                                curDate.year,
+                                curDate.monthValue - 1,
+                                curDate.dayOfMonth
+                            ).show()
+                        }
+                        .padding(horizontal = 10.dp, vertical = 6.dp)
                 ) {
-                    HankoStampBadge(
-                        text = "済",
-                        size = 80.dp,
-                        angle = -12f,
-                        animateOnEntry = true
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Default.CalendarToday,
+                            contentDescription = "日期",
+                            tint = DeepGreen,
+                            modifier = Modifier.size(14.dp)
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = dateStr,
+                            style = MaterialTheme.typography.bodySmall,
+                            fontWeight = FontWeight.Medium,
+                            color = TextDark
+                        )
+                    }
+                }
+
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(if (isNoteInputVisible || note.isNotEmpty()) DeepGreen.copy(alpha = 0.08f) else WarmSurface)
+                        .border(1.dp, if (isNoteInputVisible || note.isNotEmpty()) DeepGreen.copy(alpha = 0.4f) else WarmBorder, RoundedCornerShape(8.dp))
+                        .clickable {
+                            isNoteInputVisible = !isNoteInputVisible
+                        }
+                        .padding(horizontal = 10.dp, vertical = 6.dp)
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Default.EditNote,
+                            contentDescription = "备注",
+                            tint = if (isNoteInputVisible || note.isNotEmpty()) DeepGreen else TextSecondary,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = if (note.isNotEmpty()) note else "添加备注",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = if (isNoteInputVisible || note.isNotEmpty()) DeepGreen else TextSecondary
+                        )
+                    }
+                }
+            }
+
+            AnimatedVisibility(
+                visible = isNoteInputVisible,
+                enter = expandVertically() + fadeIn(),
+                exit = shrinkVertically() + fadeOut()
+            ) {
+                Column(modifier = Modifier.padding(top = 8.dp)) {
+                    BasicTextField(
+                        value = note,
+                        onValueChange = { note = it },
+                        textStyle = MaterialTheme.typography.bodyMedium.copy(color = TextDark),
+                        cursorBrush = SolidColor(DeepGreen),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(10.dp))
+                            .background(WarmSurface)
+                            .border(1.dp, WarmBorder, RoundedCornerShape(10.dp))
+                            .padding(12.dp),
+                        decorationBox = { innerTextField ->
+                            if (note.isEmpty()) {
+                                Text(
+                                    text = "写下备注（可选）",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = TextTertiary
+                                )
+                            }
+                            innerTextField()
+                        }
                     )
                 }
             }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            ModernKeypad(
+                expression = expression,
+                onExpressionChange = { expression = it },
+                onSave = {
+                    val mainCat = selectedMainCategory
+                    if (mainCat == null) {
+                        Toast.makeText(context, "请先选择消费分类", Toast.LENGTH_SHORT).show()
+                        return@ModernKeypad
+                    }
+
+                    val finalAmount = evaluateExpression(expression)
+                    if (finalAmount == null || finalAmount <= 0.0) {
+                        Toast.makeText(context, "请输入有效的记账金额", Toast.LENGTH_SHORT).show()
+                        return@ModernKeypad
+                    }
+
+                    haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+
+                    onSaveRecord(
+                        finalAmount,
+                        mainCat.id,
+                        selectedSubCategory?.id,
+                        note.trim(),
+                        selectedTimestamp,
+                        null
+                    )
+                    onDismiss()
+                },
+                haptic = haptic
+            )
         }
     }
 }
 
 @Composable
-private fun HobonichiKeypad(
+private fun ModernKeypad(
     expression: String,
     onExpressionChange: (String) -> Unit,
     onSave: () -> Unit,
@@ -562,18 +480,18 @@ private fun HobonichiKeypad(
                             .clip(RoundedCornerShape(12.dp))
                             .background(
                                 when (key) {
-                                    "ok" -> PillarCulture
-                                    "+", "-" -> PillarWants.copy(alpha = 0.12f)
-                                    "del", "C" -> TomoePaperBg
-                                    else -> TomoePaperPage
+                                    "ok" -> DeepGreen
+                                    "+", "-" -> DeepGreen.copy(alpha = 0.08f)
+                                    "del", "C" -> WarmBone
+                                    else -> WarmSurface
                                 }
                             )
                             .border(
-                                width = 0.8.dp,
+                                width = 1.dp,
                                 color = when (key) {
-                                    "ok" -> PillarCulture
-                                    "+", "-" -> PillarWants.copy(alpha = 0.4f)
-                                    else -> TomoeBorder
+                                    "ok" -> DeepGreen
+                                    "+", "-" -> DeepGreen.copy(alpha = 0.25f)
+                                    else -> WarmBorder
                                 },
                                 shape = RoundedCornerShape(12.dp)
                             )
@@ -587,12 +505,12 @@ private fun HobonichiKeypad(
                             "del" -> Icon(
                                 imageVector = Icons.AutoMirrored.Filled.Backspace,
                                 contentDescription = "退格",
-                                tint = SumiMedium,
+                                tint = TextSecondary,
                                 modifier = Modifier.size(20.dp)
                             )
                             "ok" -> Row(verticalAlignment = Alignment.CenterVertically) {
                                 Text(
-                                    text = "落印·完成",
+                                    text = "保存",
                                     style = MaterialTheme.typography.titleSmall,
                                     fontWeight = FontWeight.Bold,
                                     color = Color.White
@@ -602,19 +520,19 @@ private fun HobonichiKeypad(
                                 text = key,
                                 style = MaterialTheme.typography.titleLarge,
                                 fontWeight = FontWeight.Bold,
-                                color = PillarWants
+                                color = DeepGreen
                             )
                             "C" -> Text(
                                 text = "清空",
                                 style = MaterialTheme.typography.bodyMedium,
                                 fontWeight = FontWeight.SemiBold,
-                                color = SumiMedium
+                                color = TextSecondary
                             )
                             else -> Text(
                                 text = key,
                                 style = MaterialTheme.typography.titleLarge,
                                 fontWeight = FontWeight.SemiBold,
-                                color = SumiDark,
+                                color = TextDark,
                                 fontFamily = FontFamily.Monospace
                             )
                         }

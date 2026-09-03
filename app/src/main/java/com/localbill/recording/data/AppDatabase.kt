@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.localbill.recording.data.dao.CategoryDao
 import com.localbill.recording.data.dao.RecordDao
@@ -15,7 +16,7 @@ import kotlinx.coroutines.launch
 
 @Database(
     entities = [CategoryEntity::class, RecordEntity::class],
-    version = 1,
+    version = 2,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -27,6 +28,29 @@ abstract class AppDatabase : RoomDatabase() {
         @Volatile
         private var INSTANCE: AppDatabase? = null
 
+        private val MIGRATION_1_2 = object : Migration(1, 2) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                // 表结构未变化，仅保留所有旧数据并清洗旧版 Kakeibo 备注标记
+                db.execSQL(
+                    """
+                    UPDATE records
+                    SET note = TRIM(
+                        REPLACE(
+                            REPLACE(
+                                REPLACE(
+                                    REPLACE(TRIM(note), '[NEEDS]', ''),
+                                    '[WANTS]', ''
+                                ),
+                                '[CULTURE]', ''
+                            ),
+                            '[UNEXPECTED]', ''
+                        )
+                    )
+                    """.trimIndent()
+                )
+            }
+        }
+
         fun getDatabase(context: Context, scope: CoroutineScope = CoroutineScope(Dispatchers.IO)): AppDatabase {
             return INSTANCE ?: synchronized(this) {
                 val instance = Room.databaseBuilder(
@@ -34,6 +58,7 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "bill_recording.db"
                 )
+                    .addMigrations(MIGRATION_1_2)
                     .addCallback(DatabaseCallback(scope))
                     .build()
                 INSTANCE = instance

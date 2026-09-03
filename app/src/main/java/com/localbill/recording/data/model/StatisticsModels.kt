@@ -1,4 +1,4 @@
-package com.localbill.recording.data.model
+﻿package com.localbill.recording.data.model
 
 import com.localbill.recording.data.entity.CategoryEntity
 
@@ -31,11 +31,12 @@ data class TrendPoint(
     val isCurrent: Boolean = false
 )
 
-data class KakeiboPillarStat(
-    val pillar: KakeiboPillar,
-    val amount: Double,
-    val count: Int,
-    val percentage: Float
+data class EngelCoefficient(
+    val foodAmount: Double = 0.0,
+    val totalAmount: Double = 0.0,
+    val percentage: Float = 0f, // 0.0f - 100.0f
+    val levelLabel: String = "暂无数据",
+    val description: String = ""
 )
 
 data class PeriodSummary(
@@ -45,6 +46,5 @@ data class PeriodSummary(
     val topCategoryName: String? = null,
     val topCategoryAmount: Double = 0.0,
     val highestSingleExpense: Double = 0.0,
-    val kakeiboPillars: List<KakeiboPillarStat> = emptyList(),
-    val reflectionQuote: String = "花钱如泼水，省钱如针挑。理智审视每一笔心动支出。"
+    val engelCoefficient: EngelCoefficient = EngelCoefficient()
 )

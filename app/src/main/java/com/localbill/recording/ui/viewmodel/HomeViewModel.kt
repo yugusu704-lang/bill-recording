@@ -1,4 +1,4 @@
-package com.localbill.recording.ui.viewmodel
+﻿package com.localbill.recording.ui.viewmodel
 
 import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
@@ -32,6 +32,10 @@ data class HomeUiState(
     val todayExpense: Double = 0.0,
     val weekExpense: Double = 0.0,
     val monthExpense: Double = 0.0,
+    val selectedDate: LocalDate? = null,
+    val selectedDateExpense: Double = 0.0,
+    val selectedDateCount: Int = 0,
+    val datesWithRecords: Set<LocalDate> = emptySet(),
     val groupedDays: List<DayGroupItem> = emptyList(),
     val totalRecordCount: Int = 0,
     val mainCategories: List<CategoryEntity> = emptyList(),
@@ -44,11 +48,14 @@ class HomeViewModel(
     private val categoryRepository: CategoryRepository
 ) : ViewModel() {
 
+    private val _selectedDate = MutableStateFlow<LocalDate?>(null)
+
     val uiState: StateFlow<HomeUiState> = combine(
         recordRepository.allRecordsFlow,
         categoryRepository.mainCategoriesFlow,
-        categoryRepository.allCategoriesFlow
-    ) { records, mainCategories, allCategories ->
+        categoryRepository.allCategoriesFlow,
+        _selectedDate
+    ) { records, mainCategories, allCategories, selectedDate ->
         val today = LocalDate.now()
         val (todayStart, todayEnd) = DateTimeUtils.getDayRange(today)
         val (weekStart, weekEnd) = DateTimeUtils.getWeekRange(today)
@@ -71,12 +78,20 @@ class HomeViewModel(
             subMap[mainCat.id] = allCategories.filter { it.parentId == mainCat.id }
         }
 
-        // 后台高性能预先分组
+        val visibleRecords = if (selectedDate != null) {
+            val (dayStart, dayEnd) = DateTimeUtils.getDayRange(selectedDate)
+            records.filter { it.record.timestamp in dayStart..dayEnd }
+        } else {
+            records.filter { it.record.timestamp in monthStart..monthEnd }
+        }
+
         val groupedMap = LinkedHashMap<LocalDate, MutableList<RecordWithCategory>>()
-        for (r in records) {
+        for (r in visibleRecords) {
             val date = DateTimeUtils.toLocalDate(r.record.timestamp)
             groupedMap.getOrPut(date) { mutableListOf() }.add(r)
         }
+
+        val datesWithRecords = records.map { DateTimeUtils.toLocalDate(it.record.timestamp) }.toSet()
 
         val groupedDays = groupedMap.map { (date, recs) ->
             DayGroupItem(
@@ -86,12 +101,26 @@ class HomeViewModel(
             )
         }
 
+        val selectedDateExpense = selectedDate?.let { date ->
+            val (start, end) = DateTimeUtils.getDayRange(date)
+            records.filter { it.record.timestamp in start..end }.sumOf { it.record.amount }
+        } ?: 0.0
+
+        val selectedDateCount = selectedDate?.let { date ->
+            val (start, end) = DateTimeUtils.getDayRange(date)
+            records.count { it.record.timestamp in start..end }
+        } ?: 0
+
         HomeUiState(
             todayExpense = todayTotal,
             weekExpense = weekTotal,
             monthExpense = monthTotal,
+            selectedDate = selectedDate,
+            selectedDateExpense = selectedDateExpense,
+            selectedDateCount = selectedDateCount,
+            datesWithRecords = datesWithRecords,
             groupedDays = groupedDays,
-            totalRecordCount = records.size,
+            totalRecordCount = visibleRecords.size,
             mainCategories = mainCategories,
             subCategoriesMap = subMap,
             isLoading = false
@@ -101,6 +130,14 @@ class HomeViewModel(
         started = SharingStarted.Eagerly,
         initialValue = HomeUiState()
     )
+
+    fun selectDate(date: LocalDate) {
+        _selectedDate.value = date
+    }
+
+    fun clearSelectedDate() {
+        _selectedDate.value = null
+    }
 
     fun saveRecord(
         amount: Double,
@@ -138,3 +175,7 @@ class HomeViewModel(
         }
     }
 }
+
+
+
+

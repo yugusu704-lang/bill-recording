@@ -1,4 +1,4 @@
-package com.localbill.recording.ui.navigation
+﻿package com.localbill.recording.ui.navigation
 
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -20,6 +20,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -33,19 +34,20 @@ import com.localbill.recording.ui.screens.BackupScreen
 import com.localbill.recording.ui.screens.CategoryManagementScreen
 import com.localbill.recording.ui.screens.HomeScreen
 import com.localbill.recording.ui.screens.StatisticsScreen
-import com.localbill.recording.ui.theme.PillarCulture
-import com.localbill.recording.ui.theme.SumiMedium
-import com.localbill.recording.ui.theme.TomoePaperBg
+import com.localbill.recording.ui.theme.DeepGreen
+import com.localbill.recording.ui.theme.TextSecondary
+import com.localbill.recording.ui.theme.WarmBorder
+import com.localbill.recording.ui.theme.WarmBone
 import com.localbill.recording.ui.viewmodel.BackupViewModel
 import com.localbill.recording.ui.viewmodel.CategoryViewModel
 import com.localbill.recording.ui.viewmodel.HomeViewModel
 import com.localbill.recording.ui.viewmodel.StatisticsViewModel
 
 sealed class Screen(val route: String, val title: String, val icon: ImageVector) {
-    object Home : Screen("home", "流水", Icons.AutoMirrored.Filled.MenuBook)
+    object Home : Screen("home", "账单", Icons.AutoMirrored.Filled.MenuBook)
     object Statistics : Screen("statistics", "统计", Icons.Default.AutoGraph)
     object Categories : Screen("categories", "分类", Icons.Default.CollectionsBookmark)
-    object Backup : Screen("backup", "管理", Icons.Default.Settings)
+    object Backup : Screen("backup", "设置", Icons.Default.Settings)
 }
 
 val bottomNavScreens = listOf(
@@ -61,6 +63,7 @@ fun MainAppNavigation(
     statisticsViewModel: StatisticsViewModel,
     categoryViewModel: CategoryViewModel,
     backupViewModel: BackupViewModel,
+    initialAddRecord: Boolean = false,
     navController: NavHostController = rememberNavController()
 ) {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
@@ -69,8 +72,9 @@ fun MainAppNavigation(
     Scaffold(
         bottomBar = {
             NavigationBar(
-                containerColor = TomoePaperBg,
-                tonalElevation = 0.dp
+                containerColor = WarmBone,
+                tonalElevation = 0.dp,
+                modifier = Modifier
             ) {
                 bottomNavScreens.forEach { screen ->
                     val isSelected = currentRoute == screen.route
@@ -101,11 +105,13 @@ fun MainAppNavigation(
                             }
                         },
                         colors = NavigationBarItemDefaults.colors(
-                            selectedIconColor = PillarCulture,
-                            selectedTextColor = PillarCulture,
-                            indicatorColor = PillarCulture.copy(alpha = 0.16f),
-                            unselectedIconColor = SumiMedium,
-                            unselectedTextColor = SumiMedium
+                            selectedIconColor = DeepGreen,
+                            selectedTextColor = DeepGreen,
+                            indicatorColor = DeepGreen.copy(alpha = 0.12f),
+                            unselectedIconColor = TextSecondary,
+                            unselectedTextColor = TextSecondary,
+                            disabledIconColor = Color.Transparent,
+                            disabledTextColor = Color.Transparent
                         )
                     )
                 }
@@ -118,11 +124,11 @@ fun MainAppNavigation(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding),
-            enterTransition = { fadeIn(animationSpec = tween(200)) },
-            exitTransition = { fadeOut(animationSpec = tween(200)) }
+            enterTransition = { fadeIn(animationSpec = tween(220)) },
+            exitTransition = { fadeOut(animationSpec = tween(160)) }
         ) {
             composable(Screen.Home.route) {
-                HomeScreen(viewModel = homeViewModel)
+                HomeScreen(viewModel = homeViewModel, initialAddRecord = initialAddRecord)
             }
             composable(Screen.Statistics.route) {
                 StatisticsScreen(viewModel = statisticsViewModel)
@@ -136,3 +142,4 @@ fun MainAppNavigation(
         }
     }
 }
+

@@ -10,3 +10,12 @@
 local.properties
 app/build/
 *.hprof
+
+# Local dev/temp artifacts
+/.build_tmp/
+/.gradle_home/
+/.userhome/
+/recovered_db/
+/jbr-link/
+/app/.build_tmp/
+*.log

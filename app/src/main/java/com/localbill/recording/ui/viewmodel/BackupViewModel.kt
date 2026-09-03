@@ -1,6 +1,7 @@
 package com.localbill.recording.ui.viewmodel
 
 import android.content.Context
+import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
@@ -62,6 +63,45 @@ class BackupViewModel(
                 _eventFlow.emit(BackupEvent.ShowToast("恢复成功！共导入 ${count} 条流水账单"))
             } else {
                 _eventFlow.emit(BackupEvent.ShowToast("恢复失败: ${result.exceptionOrNull()?.message}"))
+            }
+        }
+    }
+
+    fun exportBackupToFile(context: Context, uri: Uri) {
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isExporting = true)
+            try {
+                val json = backupRepository.createBackupJson()
+                context.contentResolver.openOutputStream(uri)?.use { output ->
+                    output.write(json.toByteArray(Charsets.UTF_8))
+                } ?: throw IllegalStateException("无法写入所选文件")
+                _uiState.value = _uiState.value.copy(isExporting = false)
+                _eventFlow.emit(BackupEvent.ShowToast("备份文件已保存"))
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(isExporting = false)
+                _eventFlow.emit(BackupEvent.ShowToast("导出备份文件失败: ${e.message}"))
+            }
+        }
+    }
+
+    fun restoreBackupFile(context: Context, uri: Uri) {
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isRestoring = true)
+            try {
+                val json = context.contentResolver.openInputStream(uri)?.bufferedReader(Charsets.UTF_8)?.use { it.readText() }
+                    ?: throw IllegalStateException("无法读取所选备份文件")
+                val result = backupRepository.restoreFromJson(json)
+                _uiState.value = _uiState.value.copy(isRestoring = false)
+
+                if (result.isSuccess) {
+                    val count = result.getOrDefault(0)
+                    _eventFlow.emit(BackupEvent.ShowToast("恢复成功！共导入 ${count} 条流水账单"))
+                } else {
+                    _eventFlow.emit(BackupEvent.ShowToast("恢复失败: ${result.exceptionOrNull()?.message}"))
+                }
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(isRestoring = false)
+                _eventFlow.emit(BackupEvent.ShowToast("恢复失败: ${e.message}"))
             }
         }
     }

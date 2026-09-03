@@ -1,3 +1,4 @@
-<resources>
+﻿<resources>
     <string name="app_name">本地记账</string>
+    <string name="widget_bill_description">本地记账桌面小部件</string>
 </resources>

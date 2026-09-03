@@ -1,4 +1,4 @@
-package com.localbill.recording.ui.theme
+﻿package com.localbill.recording.ui.theme
 
 import android.app.Activity
 import androidx.compose.material3.MaterialTheme
@@ -9,22 +9,26 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 
-private val HobonichiTechoColorScheme = lightColorScheme(
-    primary = PillarCulture,          // 抹茶绿
-    onPrimary = TomoePaperBg,
-    primaryContainer = PillarCultureLight,
-    onPrimaryContainer = PillarCulture,
-    secondary = HankoRed,             // 朱红印章
-    onSecondary = TomoePaperBg,
-    secondaryContainer = HankoSealBg,
-    onSecondaryContainer = HankoRed,
-    background = TomoePaperBg,
-    onBackground = SumiDark,
-    surface = TomoePaperPage,
-    onSurface = SumiDark,
-    surfaceVariant = TomoePaperBg,
-    onSurfaceVariant = SumiMedium,
-    outline = TomoeBorder
+private val MinimalBillColorScheme = lightColorScheme(
+    primary = DeepGreen,
+    onPrimary = WarmSurface,
+    primaryContainer = DeepGreenLight,
+    onPrimaryContainer = DeepGreen,
+    secondary = TextDark,
+    onSecondary = WarmSurface,
+    secondaryContainer = DeepGreenSoft,
+    onSecondaryContainer = TextDark,
+    background = WarmBone,
+    onBackground = TextDark,
+    surface = WarmSurface,
+    onSurface = TextDark,
+    surfaceVariant = WarmBone,
+    onSurfaceVariant = TextSecondary,
+    outline = WarmBorder,
+    error = DangerRed,
+    onError = WarmSurface,
+    errorContainer = DangerRedLight,
+    onErrorContainer = DangerRed
 )
 
 @Composable
@@ -32,14 +36,14 @@ fun BillRecordingTheme(
     darkTheme: Boolean = false,
     content: @Composable () -> Unit
 ) {
-    val colorScheme = HobonichiTechoColorScheme
+    val colorScheme = MinimalBillColorScheme
     val view = LocalView.current
 
     if (!view.isInEditMode) {
         SideEffect {
             val window = (view.context as Activity).window
-            window.statusBarColor = TomoePaperBg.toArgb()
-            window.navigationBarColor = TomoePaperBg.toArgb()
+            window.statusBarColor = WarmBone.toArgb()
+            window.navigationBarColor = WarmBone.toArgb()
             WindowCompat.getInsetsController(window, view).apply {
                 isAppearanceLightStatusBars = true
                 isAppearanceLightNavigationBars = true

@@ -1,9 +1,12 @@
-package com.localbill.recording.ui.screens
+﻿package com.localbill.recording.ui.screens
 
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
+import android.net.Uri
 import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -51,14 +54,12 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.localbill.recording.ui.theme.MatchaPrimary
-import com.localbill.recording.ui.theme.SakuraAccent
-import com.localbill.recording.ui.theme.SumiInk
-import com.localbill.recording.ui.theme.SumiSecondary
-import com.localbill.recording.ui.theme.WashiBorder
-import com.localbill.recording.ui.theme.WashiCardBg
-import com.localbill.recording.ui.theme.WashiPaperBg
-import com.localbill.recording.ui.theme.WashiPaperSubtle
+import com.localbill.recording.ui.theme.DeepGreen
+import com.localbill.recording.ui.theme.TextDark
+import com.localbill.recording.ui.theme.TextSecondary
+import com.localbill.recording.ui.theme.WarmBorder
+import com.localbill.recording.ui.theme.WarmBone
+import com.localbill.recording.ui.theme.WarmSurface
 import com.localbill.recording.ui.viewmodel.BackupEvent
 import com.localbill.recording.ui.viewmodel.BackupViewModel
 import kotlinx.coroutines.flow.collectLatest
@@ -75,6 +76,18 @@ fun BackupScreen(
     var restoreJsonInput by remember { mutableStateOf("") }
     var isJsonResultDialogVisible by remember { mutableStateOf(false) }
     var currentExportedJson by remember { mutableStateOf("") }
+
+    val exportFileLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.CreateDocument("application/json")
+    ) { uri: Uri? ->
+        uri?.let { viewModel.exportBackupToFile(context, it) }
+    }
+
+    val restoreFileLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenDocument()
+    ) { uri: Uri? ->
+        uri?.let { viewModel.restoreBackupFile(context, it) }
+    }
 
     LaunchedEffect(viewModel.eventFlow) {
         viewModel.eventFlow.collectLatest { event ->
@@ -93,175 +106,66 @@ fun BackupScreen(
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
-        containerColor = WashiPaperBg
+        containerColor = WarmBone
     ) { innerPadding ->
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding),
             contentPadding = PaddingValues(horizontal = 18.dp, vertical = 14.dp),
-            verticalArrangement = Arrangement.spacedBy(14.dp)
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             item {
                 Column {
                     Text(
-                        text = "数据管理与备份",
-                        style = MaterialTheme.typography.titleLarge,
+                        text = "设置",
+                        style = MaterialTheme.typography.headlineMedium,
                         fontWeight = FontWeight.Bold,
-                        color = SumiInk
+                        color = TextDark
                     )
                     Spacer(modifier = Modifier.height(2.dp))
                     Text(
-                        text = "100% 纯本地离线隐私安全，支持 JSON 全量备份与 Excel/CSV 报表导出",
+                        text = "数据安全、备份与导出都在这里",
                         style = MaterialTheme.typography.bodySmall,
-                        color = SumiSecondary
+                        color = TextSecondary
                     )
                 }
             }
 
-            // 隐私宣言和纸卡片
             item {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(16.dp))
-                        .background(WashiCardBg)
-                        .border(0.8.dp, WashiBorder, RoundedCornerShape(16.dp))
-                        .padding(14.dp)
-                ) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .size(38.dp)
-                                .clip(RoundedCornerShape(10.dp))
-                                .background(MatchaPrimary.copy(alpha = 0.12f))
-                                .border(0.8.dp, MatchaPrimary.copy(alpha = 0.3f), RoundedCornerShape(10.dp)),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Security,
-                                contentDescription = null,
-                                tint = MatchaPrimary,
-                                modifier = Modifier.size(18.dp)
-                            )
-                        }
-                        Spacer(modifier = Modifier.width(12.dp))
-                        Column {
-                            Text(
-                                text = "🌸 纯本地离线安全保障",
-                                style = MaterialTheme.typography.titleSmall,
-                                fontWeight = FontWeight.Bold,
-                                color = SumiInk
-                            )
-                            Text(
-                                text = "所有账单与分类仅保存在当前设备本地 SQLite 数据库，无任何远程上传。",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = SumiSecondary
-                            )
-                        }
-                    }
-                }
+                SettingsSectionTitle(text = "数据安全")
             }
 
-            // JSON 备份与恢复和纸卡片
             item {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(16.dp))
-                        .background(WashiCardBg)
-                        .border(0.8.dp, WashiBorder, RoundedCornerShape(16.dp))
-                        .padding(16.dp)
-                ) {
-                    Column(modifier = Modifier.fillMaxWidth()) {
-                        Text(
-                            text = "全量数据备份 (JSON)",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = SumiInk
-                        )
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(
-                            text = "包含全部主分类、子分类以及所有历史流水账单，适用于换机迁移与归档。",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = SumiSecondary
-                        )
-
-                        Spacer(modifier = Modifier.height(14.dp))
-
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(10.dp)
-                        ) {
-                            Button(
-                                onClick = { viewModel.exportBackupJson() },
-                                modifier = Modifier.weight(1f),
-                                colors = ButtonDefaults.buttonColors(containerColor = MatchaPrimary),
-                                shape = RoundedCornerShape(10.dp)
-                            ) {
-                                Icon(imageVector = Icons.Default.CloudUpload, contentDescription = null, modifier = Modifier.size(16.dp))
-                                Spacer(modifier = Modifier.width(6.dp))
-                                Text(text = "导出备份", fontWeight = FontWeight.Bold)
-                            }
-
-                            OutlinedButton(
-                                onClick = {
-                                    restoreJsonInput = ""
-                                    isRestoreDialogVisible = true
-                                },
-                                modifier = Modifier.weight(1f),
-                                shape = RoundedCornerShape(10.dp)
-                            ) {
-                                Icon(imageVector = Icons.Default.CloudDownload, contentDescription = null, tint = SumiInk, modifier = Modifier.size(16.dp))
-                                Spacer(modifier = Modifier.width(6.dp))
-                                Text(text = "导入恢复", fontWeight = FontWeight.Bold, color = SumiInk)
-                            }
-                        }
-                    }
-                }
+                SettingsPrivacyCard()
             }
 
-            // CSV 导出和纸卡片
             item {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(16.dp))
-                        .background(WashiCardBg)
-                        .border(0.8.dp, WashiBorder, RoundedCornerShape(16.dp))
-                        .padding(16.dp)
-                ) {
-                    Column(modifier = Modifier.fillMaxWidth()) {
-                        Text(
-                            text = "导出为 Excel 表格 (CSV)",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = SumiInk
-                        )
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(
-                            text = "生成带 UTF-8 BOM 的标准 CSV 表格文件，可直接用 Excel 或 WPS 开启多维分析。",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = SumiSecondary
-                        )
+                SettingsSectionTitle(text = "备份与恢复")
+            }
 
-                        Spacer(modifier = Modifier.height(14.dp))
+            item {
+                SettingsJsonCard(
+                    onExport = { viewModel.exportBackupJson() },
+                    onRestore = {
+                        restoreJsonInput = ""
+                        isRestoreDialogVisible = true
+                    },
+                    onExportFile = { exportFileLauncher.launch("bill_backup_${System.currentTimeMillis()}.json") },
+                    onRestoreFile = { restoreFileLauncher.launch(arrayOf("application/json", "text/plain")) }
+                )
+            }
 
-                        Button(
-                            onClick = { viewModel.exportToCsv(context) },
-                            modifier = Modifier.fillMaxWidth(),
-                            colors = ButtonDefaults.buttonColors(containerColor = WashiPaperSubtle),
-                            shape = RoundedCornerShape(10.dp)
-                        ) {
-                            Icon(imageVector = Icons.Default.FileDownload, contentDescription = null, tint = SumiInk, modifier = Modifier.size(16.dp))
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Text(text = "导出 CSV 表格文件", fontWeight = FontWeight.Bold, color = SumiInk)
-                        }
-                    }
-                }
+            item {
+                SettingsSectionTitle(text = "数据导出")
+            }
+
+            item {
+                SettingsCsvCard(onExport = { viewModel.exportToCsv(context) })
+            }
+
+            item {
+                Spacer(modifier = Modifier.height(24.dp))
             }
         }
     }
@@ -269,14 +173,14 @@ fun BackupScreen(
     if (isJsonResultDialogVisible) {
         AlertDialog(
             onDismissRequest = { isJsonResultDialogVisible = false },
-            containerColor = Color.White,
-            title = { Text(text = "备份已生成", fontWeight = FontWeight.Bold, color = SumiInk) },
+            containerColor = WarmSurface,
+            title = { Text(text = "备份已生成", fontWeight = FontWeight.Bold, color = TextDark) },
             text = {
                 Column {
                     Text(
                         text = "以下为导出的 JSON 备份数据：",
                         style = MaterialTheme.typography.bodySmall,
-                        color = SumiSecondary
+                        color = TextSecondary
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     OutlinedTextField(
@@ -299,7 +203,7 @@ fun BackupScreen(
                         Toast.makeText(context, "备份内容已复制到剪贴板", Toast.LENGTH_SHORT).show()
                         isJsonResultDialogVisible = false
                     },
-                    colors = ButtonDefaults.buttonColors(containerColor = MatchaPrimary)
+                    colors = ButtonDefaults.buttonColors(containerColor = DeepGreen)
                 ) {
                     Icon(imageVector = Icons.Default.ContentCopy, contentDescription = null, modifier = Modifier.size(16.dp))
                     Spacer(modifier = Modifier.width(4.dp))
@@ -308,7 +212,7 @@ fun BackupScreen(
             },
             dismissButton = {
                 TextButton(onClick = { isJsonResultDialogVisible = false }) {
-                    Text("关闭", color = SumiSecondary)
+                    Text("关闭", color = TextSecondary)
                 }
             }
         )
@@ -317,14 +221,14 @@ fun BackupScreen(
     if (isRestoreDialogVisible) {
         AlertDialog(
             onDismissRequest = { isRestoreDialogVisible = false },
-            containerColor = Color.White,
-            title = { Text(text = "从 JSON 恢复备份", fontWeight = FontWeight.Bold, color = SumiInk) },
+            containerColor = WarmSurface,
+            title = { Text(text = "从 JSON 恢复备份", fontWeight = FontWeight.Bold, color = TextDark) },
             text = {
                 Column {
                     Text(
                         text = "请粘贴之前导出的 JSON 备份文本（注意：导入将覆盖当前所有数据）：",
                         style = MaterialTheme.typography.bodySmall,
-                        color = SakuraAccent
+                        color = DeepGreen
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     OutlinedTextField(
@@ -348,16 +252,200 @@ fun BackupScreen(
                         viewModel.restoreFromJson(restoreJsonInput.trim())
                         isRestoreDialogVisible = false
                     },
-                    colors = ButtonDefaults.buttonColors(containerColor = SakuraAccent)
+                    colors = ButtonDefaults.buttonColors(containerColor = DeepGreen)
                 ) {
                     Text("确认覆盖恢复", fontWeight = FontWeight.Bold)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { isRestoreDialogVisible = false }) {
-                    Text("取消", color = SumiSecondary)
+                    Text("取消", color = TextSecondary)
                 }
             }
         )
     }
 }
+
+@Composable
+private fun SettingsSectionTitle(text: String) {
+    Text(
+        text = text,
+        style = MaterialTheme.typography.labelMedium,
+        fontWeight = FontWeight.Bold,
+        color = TextSecondary,
+        modifier = Modifier.padding(start = 4.dp, top = 4.dp)
+    )
+}
+
+@Composable
+private fun SettingsPrivacyCard() {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(14.dp))
+            .background(WarmSurface)
+            .border(1.dp, WarmBorder, RoundedCornerShape(14.dp))
+            .padding(14.dp)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(38.dp)
+                    .clip(RoundedCornerShape(10.dp))
+                    .background(DeepGreen.copy(alpha = 0.1f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Security,
+                    contentDescription = null,
+                    tint = DeepGreen,
+                    modifier = Modifier.size(18.dp)
+                )
+            }
+            Spacer(modifier = Modifier.width(12.dp))
+            Column {
+                Text(
+                    text = "纯本地离线安全保障",
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = TextDark
+                )
+                Text(
+                    text = "所有账单与分类仅保存在当前设备本地 SQLite 数据库，无任何远程上传。",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = TextSecondary
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun SettingsJsonCard(
+    onExport: () -> Unit,
+    onRestore: () -> Unit,
+    onExportFile: () -> Unit,
+    onRestoreFile: () -> Unit
+) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(14.dp))
+            .background(WarmSurface)
+            .border(1.dp, WarmBorder, RoundedCornerShape(14.dp))
+            .padding(16.dp)
+    ) {
+        Column(modifier = Modifier.fillMaxWidth()) {
+            Text(
+                text = "JSON 全量备份",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color = TextDark
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = "包含全部主分类、子分类以及所有历史流水账单，适用于换机迁移与归档。",
+                style = MaterialTheme.typography.bodySmall,
+                color = TextSecondary
+            )
+
+            Spacer(modifier = Modifier.height(14.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                Button(
+                    onClick = onExport,
+                    modifier = Modifier.weight(1f),
+                    colors = ButtonDefaults.buttonColors(containerColor = DeepGreen),
+                    shape = RoundedCornerShape(10.dp)
+                ) {
+                    Icon(imageVector = Icons.Default.CloudUpload, contentDescription = null, modifier = Modifier.size(16.dp))
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(text = "导出备份", fontWeight = FontWeight.Bold)
+                }
+
+                OutlinedButton(
+                    onClick = onRestore,
+                    modifier = Modifier.weight(1f),
+                    shape = RoundedCornerShape(10.dp)
+                ) {
+                    Icon(imageVector = Icons.Default.CloudDownload, contentDescription = null, tint = TextDark, modifier = Modifier.size(16.dp))
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(text = "导入恢复", fontWeight = FontWeight.Bold, color = TextDark)
+                }
+            }
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                OutlinedButton(
+                    onClick = onExportFile,
+                    modifier = Modifier.weight(1f),
+                    shape = RoundedCornerShape(10.dp)
+                ) {
+                    Text(text = "导出到文件", fontWeight = FontWeight.Bold, color = TextDark)
+                }
+
+                OutlinedButton(
+                    onClick = onRestoreFile,
+                    modifier = Modifier.weight(1f),
+                    shape = RoundedCornerShape(10.dp)
+                ) {
+                    Text(text = "从文件恢复", fontWeight = FontWeight.Bold, color = DeepGreen)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun SettingsCsvCard(onExport: () -> Unit) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(14.dp))
+            .background(WarmSurface)
+            .border(1.dp, WarmBorder, RoundedCornerShape(14.dp))
+            .padding(16.dp)
+    ) {
+        Column(modifier = Modifier.fillMaxWidth()) {
+            Text(
+                text = "导出 Excel 表格 (CSV)",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color = TextDark
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = "生成带 UTF-8 BOM 的标准 CSV 表格文件，可直接用 Excel 或 WPS 开启多维分析。",
+                style = MaterialTheme.typography.bodySmall,
+                color = TextSecondary
+            )
+
+            Spacer(modifier = Modifier.height(14.dp))
+
+            Button(
+                onClick = onExport,
+                modifier = Modifier.fillMaxWidth(),
+                colors = ButtonDefaults.buttonColors(containerColor = WarmBone),
+                shape = RoundedCornerShape(10.dp)
+            ) {
+                Icon(imageVector = Icons.Default.FileDownload, contentDescription = null, tint = TextDark, modifier = Modifier.size(16.dp))
+                Spacer(modifier = Modifier.width(6.dp))
+                Text(text = "导出 CSV 表格文件", fontWeight = FontWeight.Bold, color = TextDark)
+            }
+        }
+    }
+}
+
+
+
+

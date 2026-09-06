@@ -1,4 +1,4 @@
-﻿package com.localbill.recording.ui.components
+package com.localbill.recording.ui.components
 
 import android.app.DatePickerDialog
 import android.widget.Toast
@@ -7,10 +7,20 @@ import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -43,14 +53,18 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.hapticfeedback.HapticFeedback
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontFamily
@@ -111,10 +125,18 @@ fun CalculatorBottomSheet(
         mutableStateOf(note.isNotEmpty())
     }
 
+    val coroutineScope = rememberCoroutineScope()
+    val mainScrollState = rememberScrollState()
+
     LaunchedEffect(selectedMainCategory) {
         val currentSub = selectedSubCategory
         if (currentSub != null && currentSub.parentId != selectedMainCategory?.id) {
             selectedSubCategory = null
+        }
+        val idx = allMainCategories.indexOfFirst { it.id == selectedMainCategory?.id }
+        if (idx >= 0) {
+            val targetOffset = (idx * 200 - 180).coerceAtLeast(0)
+            mainScrollState.animateScrollTo(targetOffset)
         }
     }
 
@@ -138,7 +160,7 @@ fun CalculatorBottomSheet(
             ) {
                 Text(
                     text = if (editingRecord == null) "记一笔" else "编辑账单",
-                    style = MaterialTheme.typography.titleLarge,
+                    style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     color = TextDark
                 )
@@ -146,7 +168,8 @@ fun CalculatorBottomSheet(
                     Icon(
                         imageVector = Icons.Default.Close,
                         contentDescription = "关闭",
-                        tint = TextSecondary
+                        tint = TextSecondary,
+                        modifier = Modifier.size(18.dp)
                     )
                 }
             }
@@ -218,49 +241,69 @@ fun CalculatorBottomSheet(
 
             Spacer(modifier = Modifier.height(10.dp))
 
-            val mainScrollState = rememberScrollState()
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .horizontalScroll(mainScrollState),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                allMainCategories.forEach { mainCat ->
-                    val isSelected = selectedMainCategory?.id == mainCat.id
-                    val catColor = Color(mainCat.colorHex)
+            Box(modifier = Modifier.fillMaxWidth()) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .horizontalScroll(mainScrollState),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    allMainCategories.forEachIndexed { idx, mainCat ->
+                        val isSelected = selectedMainCategory?.id == mainCat.id
+                        val catColor = Color(mainCat.colorHex)
 
-                    Box(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(10.dp))
-                            .background(if (isSelected) catColor.copy(alpha = 0.12f) else WarmSurface)
-                            .border(
-                                width = if (isSelected) 1.2.dp else 1.dp,
-                                color = if (isSelected) catColor else WarmBorder,
-                                shape = RoundedCornerShape(10.dp)
-                            )
-                            .clickable {
-                                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                                selectedMainCategory = mainCat
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(10.dp))
+                                .background(if (isSelected) catColor.copy(alpha = 0.12f) else WarmSurface)
+                                .border(
+                                    width = if (isSelected) 1.2.dp else 1.dp,
+                                    color = if (isSelected) catColor else WarmBorder,
+                                    shape = RoundedCornerShape(10.dp)
+                                )
+                                .clickable {
+                                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                    selectedMainCategory = mainCat
+                                    coroutineScope.launch {
+                                        val targetOffset = (idx * 200 - 180).coerceAtLeast(0)
+                                        mainScrollState.animateScrollTo(targetOffset)
+                                    }
+                                }
+                                .padding(horizontal = 12.dp, vertical = 7.dp)
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(
+                                    imageVector = CategoryIcons.getIcon(mainCat.iconName),
+                                    contentDescription = null,
+                                    tint = if (isSelected) catColor else TextSecondary,
+                                    modifier = Modifier.size(16.dp)
+                                )
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text(
+                                    text = mainCat.name,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                                    color = if (isSelected) catColor else TextDark
+                                )
                             }
-                            .padding(horizontal = 12.dp, vertical = 7.dp)
-                    ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(
-                                imageVector = CategoryIcons.getIcon(mainCat.iconName),
-                                contentDescription = null,
-                                tint = if (isSelected) catColor else TextSecondary,
-                                modifier = Modifier.size(16.dp)
-                            )
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Text(
-                                text = mainCat.name,
-                                style = MaterialTheme.typography.bodyMedium,
-                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                                color = if (isSelected) catColor else TextDark
-                            )
                         }
                     }
                 }
+
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.CenterStart)
+                        .width(14.dp)
+                        .height(36.dp)
+                        .background(Brush.horizontalGradient(listOf(WarmSurface, Color.Transparent)))
+                )
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.CenterEnd)
+                        .width(14.dp)
+                        .height(36.dp)
+                        .background(Brush.horizontalGradient(listOf(Color.Transparent, WarmSurface)))
+                )
             }
 
             val currentSubList = selectedMainCategory?.let { subCategoriesMap[it.id] } ?: emptyList()
@@ -271,39 +314,56 @@ fun CalculatorBottomSheet(
             ) {
                 Column(modifier = Modifier.padding(top = 8.dp)) {
                     val subScrollState = rememberScrollState()
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .horizontalScroll(subScrollState),
-                        horizontalArrangement = Arrangement.spacedBy(6.dp)
-                    ) {
-                        currentSubList.forEach { subCat ->
-                            val isSubSelected = selectedSubCategory?.id == subCat.id
-                            val subColor = Color(subCat.colorHex)
+                    Box(modifier = Modifier.fillMaxWidth()) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .horizontalScroll(subScrollState),
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            currentSubList.forEach { subCat ->
+                                val isSubSelected = selectedSubCategory?.id == subCat.id
+                                val subColor = Color(subCat.colorHex)
 
-                            Box(
-                                modifier = Modifier
-                                    .clip(RoundedCornerShape(8.dp))
-                                    .background(if (isSubSelected) subColor.copy(alpha = 0.12f) else WarmBone)
-                                    .border(
-                                        width = if (isSubSelected) 1.dp else 0.dp,
-                                        color = if (isSubSelected) subColor else Color.Transparent,
-                                        shape = RoundedCornerShape(8.dp)
+                                Box(
+                                    modifier = Modifier
+                                        .clip(RoundedCornerShape(8.dp))
+                                        .background(if (isSubSelected) subColor.copy(alpha = 0.12f) else WarmBone)
+                                        .border(
+                                            width = if (isSubSelected) 1.dp else 0.dp,
+                                            color = if (isSubSelected) subColor else Color.Transparent,
+                                            shape = RoundedCornerShape(8.dp)
+                                        )
+                                        .clickable {
+                                            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                            selectedSubCategory = if (isSubSelected) null else subCat
+                                        }
+                                        .padding(horizontal = 10.dp, vertical = 5.dp)
+                                ) {
+                                    Text(
+                                        text = subCat.name,
+                                        style = MaterialTheme.typography.bodySmall,
+                                        fontWeight = if (isSubSelected) FontWeight.Bold else FontWeight.Normal,
+                                        color = if (isSubSelected) subColor else TextSecondary
                                     )
-                                    .clickable {
-                                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                                        selectedSubCategory = if (isSubSelected) null else subCat
-                                    }
-                                    .padding(horizontal = 10.dp, vertical = 5.dp)
-                            ) {
-                                Text(
-                                    text = subCat.name,
-                                    style = MaterialTheme.typography.bodySmall,
-                                    fontWeight = if (isSubSelected) FontWeight.Bold else FontWeight.Normal,
-                                    color = if (isSubSelected) subColor else TextSecondary
-                                )
+                                }
                             }
                         }
+
+                        Box(
+                            modifier = Modifier
+                                .align(Alignment.CenterStart)
+                                .width(12.dp)
+                                .height(30.dp)
+                                .background(Brush.horizontalGradient(listOf(WarmSurface, Color.Transparent)))
+                        )
+                        Box(
+                            modifier = Modifier
+                                .align(Alignment.CenterEnd)
+                                .width(12.dp)
+                                .height(30.dp)
+                                .background(Brush.horizontalGradient(listOf(Color.Transparent, WarmSurface)))
+                        )
                     }
                 }
             }
@@ -450,6 +510,122 @@ fun CalculatorBottomSheet(
 }
 
 @Composable
+private fun TactileKeyButton(
+    modifier: Modifier = Modifier,
+    key: String,
+    haptic: HapticFeedback,
+    onClick: () -> Unit,
+    onDeleteOnce: (() -> Unit)? = null
+) {
+    val coroutineScope = rememberCoroutineScope()
+    val isDel = key == "del"
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+
+    val scale by animateFloatAsState(
+        targetValue = if (isPressed) 0.93f else 1f,
+        animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessHigh),
+        label = "KeySpringScale"
+    )
+
+    val gestureModifier = if (isDel && onDeleteOnce != null) {
+        Modifier.pointerInput(Unit) {
+            detectTapGestures(
+                onPress = {
+                    haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                    onDeleteOnce()
+                    val continuousJob = coroutineScope.launch {
+                        delay(400)
+                        var tick = 0
+                        while (isActive) {
+                            onDeleteOnce()
+                            tick++
+                            if (tick % 3 == 0) {
+                                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                            }
+                            delay(60)
+                        }
+                    }
+                    tryAwaitRelease()
+                    continuousJob.cancel()
+                }
+            )
+        }
+    } else {
+        Modifier.clickable(
+            interactionSource = interactionSource,
+            indication = null,
+            onClick = {
+                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                onClick()
+            }
+        )
+    }
+
+    Box(
+        modifier = modifier
+            .graphicsLayer {
+                scaleX = scale
+                scaleY = scale
+            }
+            .clip(RoundedCornerShape(12.dp))
+            .background(
+                when (key) {
+                    "ok" -> DeepGreen
+                    "+", "-" -> DeepGreen.copy(alpha = 0.08f)
+                    "del", "C" -> WarmBone
+                    else -> WarmSurface
+                }
+            )
+            .border(
+                width = 1.dp,
+                color = when (key) {
+                    "ok" -> DeepGreen
+                    "+", "-" -> DeepGreen.copy(alpha = 0.25f)
+                    else -> WarmBorder
+                },
+                shape = RoundedCornerShape(12.dp)
+            )
+            .then(gestureModifier),
+        contentAlignment = Alignment.Center
+    ) {
+        when (key) {
+            "del" -> Icon(
+                imageVector = Icons.AutoMirrored.Filled.Backspace,
+                contentDescription = "退格",
+                tint = TextSecondary,
+                modifier = Modifier.size(20.dp)
+            )
+            "ok" -> Text(
+                text = "保存",
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.Bold,
+                color = Color.White
+            )
+            "+", "-" -> Text(
+                text = key,
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+                color = DeepGreen
+            )
+            "C" -> Text(
+                text = "清空",
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.SemiBold,
+                color = TextSecondary
+            )
+            else -> Text(
+                text = key,
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.SemiBold,
+                color = TextDark,
+                fontFamily = FontFamily.Monospace
+            )
+        }
+    }
+}
+
+@Composable
 private fun ModernKeypad(
     expression: String,
     onExpressionChange: (String) -> Unit,
@@ -473,70 +649,21 @@ private fun ModernKeypad(
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 rowKeys.forEach { key ->
-                    Box(
+                    TactileKeyButton(
                         modifier = Modifier
                             .weight(1f)
-                            .height(52.dp)
-                            .clip(RoundedCornerShape(12.dp))
-                            .background(
-                                when (key) {
-                                    "ok" -> DeepGreen
-                                    "+", "-" -> DeepGreen.copy(alpha = 0.08f)
-                                    "del", "C" -> WarmBone
-                                    else -> WarmSurface
-                                }
-                            )
-                            .border(
-                                width = 1.dp,
-                                color = when (key) {
-                                    "ok" -> DeepGreen
-                                    "+", "-" -> DeepGreen.copy(alpha = 0.25f)
-                                    else -> WarmBorder
-                                },
-                                shape = RoundedCornerShape(12.dp)
-                            )
-                            .clickable {
-                                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                                handleKeyClick(key, expression, onExpressionChange, onSave)
-                            },
-                        contentAlignment = Alignment.Center
-                    ) {
-                        when (key) {
-                            "del" -> Icon(
-                                imageVector = Icons.AutoMirrored.Filled.Backspace,
-                                contentDescription = "退格",
-                                tint = TextSecondary,
-                                modifier = Modifier.size(20.dp)
-                            )
-                            "ok" -> Row(verticalAlignment = Alignment.CenterVertically) {
-                                Text(
-                                    text = "保存",
-                                    style = MaterialTheme.typography.titleSmall,
-                                    fontWeight = FontWeight.Bold,
-                                    color = Color.White
-                                )
+                            .height(52.dp),
+                        key = key,
+                        haptic = haptic,
+                        onClick = {
+                            handleKeyClick(key, expression, onExpressionChange, onSave)
+                        },
+                        onDeleteOnce = if (key == "del") {
+                            {
+                                handleKeyClick("del", expression, onExpressionChange, onSave)
                             }
-                            "+", "-" -> Text(
-                                text = key,
-                                style = MaterialTheme.typography.titleLarge,
-                                fontWeight = FontWeight.Bold,
-                                color = DeepGreen
-                            )
-                            "C" -> Text(
-                                text = "清空",
-                                style = MaterialTheme.typography.bodyMedium,
-                                fontWeight = FontWeight.SemiBold,
-                                color = TextSecondary
-                            )
-                            else -> Text(
-                                text = key,
-                                style = MaterialTheme.typography.titleLarge,
-                                fontWeight = FontWeight.SemiBold,
-                                color = TextDark,
-                                fontFamily = FontFamily.Monospace
-                            )
-                        }
-                    }
+                        } else null
+                    )
                 }
             }
         }

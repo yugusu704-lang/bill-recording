@@ -1,4 +1,4 @@
-﻿package com.localbill.recording.ui.viewmodel
+package com.localbill.recording.ui.viewmodel
 
 import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
@@ -159,9 +159,34 @@ class HomeViewModel(
         }
     }
 
+    private var lastDeletedRecord: RecordWithCategory? = null
+
     fun deleteRecord(recordId: Long) {
         viewModelScope.launch(Dispatchers.IO) {
             recordRepository.deleteRecordById(recordId)
+        }
+    }
+
+    fun deleteRecordWithUndo(item: RecordWithCategory) {
+        lastDeletedRecord = item
+        viewModelScope.launch(Dispatchers.IO) {
+            recordRepository.deleteRecordById(item.record.id)
+        }
+    }
+
+    fun undoDelete() {
+        val recordToRestore = lastDeletedRecord ?: return
+        lastDeletedRecord = null
+        viewModelScope.launch(Dispatchers.IO) {
+            recordRepository.saveRecord(
+                id = recordToRestore.record.id,
+                amount = recordToRestore.record.amount,
+                categoryId = recordToRestore.record.categoryId,
+                subCategoryId = recordToRestore.record.subCategoryId,
+                note = recordToRestore.record.note,
+                timestamp = recordToRestore.record.timestamp,
+                imagePath = recordToRestore.record.imagePath
+            )
         }
     }
 

@@ -19,3 +19,4 @@ app/build/
 /jbr-link/
 /app/.build_tmp/
 *.log
+*.apk

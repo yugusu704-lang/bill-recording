@@ -1,5 +1,6 @@
-﻿package com.localbill.recording.ui.screens
+package com.localbill.recording.ui.screens
 
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -24,26 +25,39 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.DeleteOutline
 import androidx.compose.material.icons.filled.Info
-import androidx.compose.material3.AlertDialog
+import androidx.compose.material.icons.filled.Undo
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
+import androidx.compose.material3.SwipeToDismissBox
+import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
+import kotlinx.coroutines.launch
+import com.localbill.recording.ui.components.AnimatedAmountText
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.localbill.recording.data.entity.RecordWithCategory
@@ -64,6 +78,7 @@ import com.localbill.recording.util.formatAmount
 import java.time.LocalDate
 import java.time.LocalTime
 
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun HomeScreen(
     viewModel: HomeViewModel,
@@ -72,15 +87,18 @@ fun HomeScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val selectedDate = uiState.selectedDate
+    val coroutineScope = rememberCoroutineScope()
+    val snackbarHostState = remember { SnackbarHostState() }
+    val haptic = LocalHapticFeedback.current
 
     var isCalendarOpen by remember { mutableStateOf(false) }
     var isBottomSheetOpen by remember { mutableStateOf(initialAddRecord) }
     var editingRecord by remember { mutableStateOf<RecordWithCategory?>(null) }
-    var recordToDelete by remember { mutableStateOf<RecordWithCategory?>(null) }
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
         containerColor = WarmBone,
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         floatingActionButton = {
             FloatingActionButton(
                 onClick = {
@@ -176,11 +194,18 @@ fun HomeScreen(
                 }
             } else {
                 uiState.groupedDays.forEach { dayGroup ->
-                    item(key = "header_${dayGroup.date}", contentType = "date_header") {
-                        DateBanner(
-                            date = dayGroup.date,
-                            dayTotal = dayGroup.totalAmount
-                        )
+                    stickyHeader(key = "header_${dayGroup.date}", contentType = "date_header") {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .background(WarmBone)
+                                .padding(vertical = 4.dp)
+                        ) {
+                            DateBanner(
+                                date = dayGroup.date,
+                                dayTotal = dayGroup.totalAmount
+                            )
+                        }
                     }
 
                     items(
@@ -188,14 +213,25 @@ fun HomeScreen(
                         key = { it.record.id },
                         contentType = { "record_item" }
                     ) { recordItem ->
-                        RecordCard(
-                            item = recordItem,
+                        SwipeToDismissRecordItem(
+                            recordItem = recordItem,
                             onClick = {
                                 editingRecord = recordItem
                                 isBottomSheetOpen = true
                             },
-                            onDelete = {
-                                recordToDelete = recordItem
+                            onDeleteWithUndo = {
+                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                viewModel.deleteRecordWithUndo(recordItem)
+                                coroutineScope.launch {
+                                    val result = snackbarHostState.showSnackbar(
+                                        message = "已删除「${recordItem.displayCategoryName}」¥ ${formatAmount(recordItem.record.amount)}",
+                                        actionLabel = "撤销",
+                                        duration = SnackbarDuration.Short
+                                    )
+                                    if (result == SnackbarResult.ActionPerformed) {
+                                        viewModel.undoDelete()
+                                    }
+                                }
                             }
                         )
                     }
@@ -240,35 +276,6 @@ fun HomeScreen(
                     timestamp = timestamp,
                     imagePath = imagePath
                 )
-            }
-        )
-    }
-
-    recordToDelete?.let { recordItem ->
-        AlertDialog(
-            onDismissRequest = { recordToDelete = null },
-            containerColor = WarmSurface,
-            title = { Text(text = "删除这笔账单？", fontWeight = FontWeight.Bold, color = TextDark) },
-            text = {
-                Text(
-                    text = "即将删除「${recordItem.displayCategoryName}」支出 ¥ ${formatAmount(recordItem.record.amount)}，此账单将从本地清除。",
-                    color = TextSecondary
-                )
-            },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        viewModel.deleteRecord(recordItem.record.id)
-                        recordToDelete = null
-                    }
-                ) {
-                    Text(text = "删除", color = Color(0xFF9F2F2D), fontWeight = FontWeight.Bold)
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { recordToDelete = null }) {
-                    Text(text = "保留", color = TextSecondary)
-                }
             }
         )
     }
@@ -368,13 +375,14 @@ private fun MonthSummaryCard(
                     color = DeepGreen,
                     modifier = Modifier.padding(end = 4.dp, bottom = 3.dp)
                 )
-                Text(
-                    text = formatAmount(monthAmount),
+                AnimatedAmountText(
+                    amount = monthAmount,
                     style = MaterialTheme.typography.displayLarge.copy(
                         fontSize = 34.sp,
                         fontWeight = FontWeight.Bold
                     ),
-                    color = TextDark
+                    color = TextDark,
+                    showPrefix = false
                 )
             }
 
@@ -421,13 +429,14 @@ private fun DaySummaryCard(
                     color = DeepGreen,
                     modifier = Modifier.padding(end = 4.dp, bottom = 3.dp)
                 )
-                Text(
-                    text = formatAmount(dayAmount),
+                AnimatedAmountText(
+                    amount = dayAmount,
                     style = MaterialTheme.typography.displayLarge.copy(
                         fontSize = 34.sp,
                         fontWeight = FontWeight.Bold
                     ),
-                    color = TextDark
+                    color = TextDark,
+                    showPrefix = false
                 )
             }
 
@@ -454,11 +463,12 @@ private fun SummaryMiniItem(
             color = TextSecondary
         )
         Spacer(modifier = Modifier.height(2.dp))
-        Text(
-            text = "¥ " + formatAmount(amount),
-            style = MaterialTheme.typography.titleSmall,
-            fontWeight = FontWeight.Bold,
-            color = TextDark
+        AnimatedAmountText(
+            amount = amount,
+            style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
+            color = TextDark,
+            showPrefix = true,
+            prefix = "¥"
         )
     }
 }
@@ -503,6 +513,61 @@ private fun DateBanner(
             style = MaterialTheme.typography.bodySmall,
             fontWeight = FontWeight.Bold,
             color = TextSecondary
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun SwipeToDismissRecordItem(
+    recordItem: RecordWithCategory,
+    onClick: () -> Unit,
+    onDeleteWithUndo: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val dismissState = rememberSwipeToDismissBoxState(
+        confirmValueChange = { dismissValue ->
+            if (dismissValue == SwipeToDismissBoxValue.EndToStart) {
+                onDeleteWithUndo()
+                true
+            } else {
+                false
+            }
+        },
+        positionalThreshold = { totalDistance -> totalDistance * 0.38f }
+    )
+
+    SwipeToDismissBox(
+        state = dismissState,
+        modifier = modifier.clip(RoundedCornerShape(12.dp)),
+        enableDismissFromStartToEnd = false,
+        enableDismissFromEndToStart = true,
+        backgroundContent = {
+            val color = if (dismissState.targetValue == SwipeToDismissBoxValue.EndToStart) {
+                Color(0xFFEF4444)
+            } else {
+                Color(0xFFFCA5A5)
+            }
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(color, RoundedCornerShape(12.dp))
+                    .padding(end = 20.dp),
+                contentAlignment = Alignment.CenterEnd
+            ) {
+                Icon(
+                    imageVector = Icons.Default.DeleteOutline,
+                    contentDescription = "删除",
+                    tint = Color.White,
+                    modifier = Modifier.size(22.dp)
+                )
+            }
+        }
+    ) {
+        RecordCard(
+            item = recordItem,
+            onClick = onClick,
+            onDelete = onDeleteWithUndo
         )
     }
 }

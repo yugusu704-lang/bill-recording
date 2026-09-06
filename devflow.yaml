@@ -1,0 +1,26 @@
+# DevFlow Project Configuration
+project_name: "bill-recording"
+engine_path: "C:\Users\long\.gemini\antigravity\scratch\rigorous-dev-workflow"
+
+subagents:
+  enabled: true
+  config_file: ".agents/subagents/subagents.json"
+  rooms:
+    - name: "think_tank_room"
+      role: "Think Tank Reasoning & Adversary"
+    - name: "dumb_tank_room"
+      role: "Dumb Tank Control (No Files)"
+    - name: "committee_room"
+      role: "Committee Voting & Evidence"
+
+ocs:
+  identity: "DevFlow Engineer for bill-recording"
+  hard_char_limit: 24400
+  rules:
+    - "Evidence over opinions (exact file and line references required)."
+    - "Three-room dual-blind arbitration for critical architectural changes."
+    - "Prose Effect must be checked to prevent framing bias."
+    - "Verify findability before writing ADRs/memories."
+
+workflows:
+  default: "C:\Users\long\.gemini\antigravity\scratch\rigorous-dev-workflow\workflows\feature_dev.yaml"

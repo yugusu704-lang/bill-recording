@@ -1,8 +1,15 @@
-﻿package com.localbill.recording.ui.screens
+package com.localbill.recording.ui.screens
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -21,23 +28,26 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ChevronLeft
 import androidx.compose.material.icons.filled.ChevronRight
-import androidx.compose.material3.AlertDialog
+import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
+import com.localbill.recording.ui.components.AnimatedAmountText
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -64,7 +74,7 @@ fun StatisticsScreen(
     modifier: Modifier = Modifier
 ) {
     val uiState by viewModel.uiState.collectAsState()
-    var selectedCategoryForDetail by remember { mutableStateOf<CategoryAggregation?>(null) }
+    var expandedCategoryId by remember { mutableStateOf<Long?>(null) }
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
@@ -122,7 +132,7 @@ fun StatisticsScreen(
                     aggregations = uiState.categoryAggregations,
                     totalAmount = uiState.summary.totalAmount,
                     onCategoryClick = { cat ->
-                        selectedCategoryForDetail = cat
+                        expandedCategoryId = if (expandedCategoryId == cat.mainCategory.id) null else cat.mainCategory.id
                     }
                 )
             }
@@ -151,7 +161,10 @@ fun StatisticsScreen(
                 ) { aggregation ->
                     RankingItem(
                         item = aggregation,
-                        onClick = { selectedCategoryForDetail = aggregation }
+                        isExpanded = expandedCategoryId == aggregation.mainCategory.id,
+                        onToggle = {
+                            expandedCategoryId = if (expandedCategoryId == aggregation.mainCategory.id) null else aggregation.mainCategory.id
+                        }
                     )
                 }
             }
@@ -160,13 +173,6 @@ fun StatisticsScreen(
                 Spacer(modifier = Modifier.height(24.dp))
             }
         }
-    }
-
-    selectedCategoryForDetail?.let { detail ->
-        CategoryDetailDialog(
-            aggregation = detail,
-            onDismiss = { selectedCategoryForDetail = null }
-        )
     }
 }
 
@@ -230,9 +236,29 @@ private fun StatisticsDateNavigator(
     onPrev: () -> Unit,
     onNext: () -> Unit
 ) {
+    var totalDrag by remember { mutableFloatStateOf(0f) }
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            .pointerInput(Unit) {
+                detectHorizontalDragGestures(
+                    onDragStart = { totalDrag = 0f },
+                    onDragEnd = {
+                        if (totalDrag < -40f) {
+                            onNext()
+                        } else if (totalDrag > 40f) {
+                            onPrev()
+                        }
+                        totalDrag = 0f
+                    },
+                    onDragCancel = { totalDrag = 0f },
+                    onHorizontalDrag = { change, dragAmount ->
+                        change.consume()
+                        totalDrag += dragAmount
+                    }
+                )
+            }
             .padding(vertical = 2.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
@@ -312,13 +338,14 @@ private fun MetricsCard(
                     color = DeepGreen,
                     modifier = Modifier.padding(end = 4.dp, bottom = 3.dp)
                 )
-                Text(
-                    text = formatAmount(totalAmount),
+                AnimatedAmountText(
+                    amount = totalAmount,
                     style = MaterialTheme.typography.displayLarge.copy(
                         fontSize = 32.sp,
                         fontWeight = FontWeight.Bold
                     ),
-                    color = TextDark
+                    color = TextDark,
+                    showPrefix = false
                 )
             }
 
@@ -469,15 +496,21 @@ private fun EngelMiniStat(
 @Composable
 private fun RankingItem(
     item: CategoryAggregation,
-    onClick: () -> Unit
+    isExpanded: Boolean,
+    onToggle: () -> Unit
 ) {
+    val arrowRotation by animateFloatAsState(
+        targetValue = if (isExpanded) 180f else 0f,
+        label = "RankingAccordionArrow"
+    )
+
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(12.dp))
             .background(WarmSurface)
             .border(1.dp, WarmBorder, RoundedCornerShape(12.dp))
-            .clickable(onClick = onClick)
+            .clickable(onClick = onToggle)
             .padding(12.dp)
     ) {
         Column(modifier = Modifier.fillMaxWidth()) {
@@ -486,7 +519,10 @@ private fun RankingItem(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.weight(1f, fill = false)
+                ) {
                     CategoryIconBadge(
                         iconName = item.mainCategory.iconName,
                         colorHex = item.mainCategory.colorHex,
@@ -512,18 +548,29 @@ private fun RankingItem(
                     }
                 }
 
-                Column(horizontalAlignment = Alignment.End) {
-                    Text(
-                        text = "¥ " + formatAmount(item.totalAmount),
-                        style = MaterialTheme.typography.titleSmall,
-                        fontWeight = FontWeight.Bold,
-                        color = TextDark
-                    )
-                    Text(
-                        text = formatPercent(item.percentage),
-                        style = MaterialTheme.typography.bodySmall,
-                        fontWeight = FontWeight.Bold,
-                        color = Color(item.mainCategory.colorHex)
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Column(horizontalAlignment = Alignment.End) {
+                        Text(
+                            text = "¥ " + formatAmount(item.totalAmount),
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = TextDark
+                        )
+                        Text(
+                            text = formatPercent(item.percentage),
+                            style = MaterialTheme.typography.bodySmall,
+                            fontWeight = FontWeight.Bold,
+                            color = Color(item.mainCategory.colorHex)
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Icon(
+                        imageVector = Icons.Default.KeyboardArrowDown,
+                        contentDescription = if (isExpanded) "折叠" else "展开",
+                        tint = TextTertiary,
+                        modifier = Modifier
+                            .size(18.dp)
+                            .rotate(arrowRotation)
                     )
                 }
             }
@@ -544,88 +591,78 @@ private fun RankingItem(
                         .background(Color(item.mainCategory.colorHex))
                 )
             }
-        }
-    }
-}
 
-@Composable
-private fun CategoryDetailDialog(
-    aggregation: CategoryAggregation,
-    onDismiss: () -> Unit
-) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        containerColor = WarmSurface,
-        title = {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.fillMaxWidth()
+            AnimatedVisibility(
+                visible = isExpanded,
+                enter = expandVertically() + fadeIn(),
+                exit = shrinkVertically() + fadeOut()
             ) {
-                CategoryIconBadge(
-                    iconName = aggregation.mainCategory.iconName,
-                    colorHex = aggregation.mainCategory.colorHex,
-                    size = 32.dp,
-                    iconSize = 16.dp,
-                    cornerRadius = 8.dp
-                )
-                Spacer(modifier = Modifier.width(10.dp))
-                Column {
-                    Text(
-                        text = "${aggregation.mainCategory.name} · 子类构成",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = TextDark
-                    )
-                    Text(
-                        text = "总计 ¥ " + formatAmount(aggregation.totalAmount),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = TextSecondary
-                    )
-                }
-            }
-        },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                if (aggregation.subCategoryBreakdowns.isEmpty()) {
-                    Text(
-                        text = "该分类没有细分子类数据。",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = TextSecondary
-                    )
-                } else {
-                    aggregation.subCategoryBreakdowns.forEach { sub ->
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                text = sub.category.name,
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = TextDark
-                            )
-                            Column(horizontalAlignment = Alignment.End) {
-                                Text(
-                                    text = "¥ " + formatAmount(sub.amount),
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    fontWeight = FontWeight.Bold,
-                                    color = TextDark
-                                )
-                                Text(
-                                    text = formatPercent(sub.percentage),
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = TextSecondary
-                                )
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 10.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    HorizontalDivider(color = WarmBorder.copy(alpha = 0.5f), thickness = 0.5.dp)
+
+                    if (item.subCategoryBreakdowns.isEmpty()) {
+                        Text(
+                            text = "无更细子类 (全部为 ${item.mainCategory.name})",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = TextTertiary,
+                            modifier = Modifier.padding(vertical = 4.dp)
+                        )
+                    } else {
+                        item.subCategoryBreakdowns.forEach { sub ->
+                            Column(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalArrangement = Arrangement.spacedBy(3.dp)
+                            ) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(
+                                        text = sub.category.name,
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = TextSecondary
+                                    )
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Text(
+                                            text = "¥ " + formatAmount(sub.amount),
+                                            style = MaterialTheme.typography.bodySmall,
+                                            fontWeight = FontWeight.Bold,
+                                            color = TextDark
+                                        )
+                                        Spacer(modifier = Modifier.width(6.dp))
+                                        Text(
+                                            text = formatPercent(sub.percentage),
+                                            style = MaterialTheme.typography.labelSmall,
+                                            color = TextTertiary
+                                        )
+                                    }
+                                }
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(2.dp)
+                                        .clip(RoundedCornerShape(1.dp))
+                                        .background(WarmBorder.copy(alpha = 0.5f))
+                                ) {
+                                    Box(
+                                        modifier = Modifier
+                                            .fillMaxWidth(fraction = (sub.percentage / 100f).coerceIn(0f, 1f))
+                                            .height(2.dp)
+                                            .clip(RoundedCornerShape(1.dp))
+                                            .background(Color(item.mainCategory.colorHex).copy(alpha = 0.75f))
+                                    )
+                                }
                             }
                         }
                     }
                 }
             }
-        },
-        confirmButton = {
-            TextButton(onClick = onDismiss) {
-                Text(text = "知道了", color = DeepGreen, fontWeight = FontWeight.Bold)
-            }
         }
-    )
+    }
 }

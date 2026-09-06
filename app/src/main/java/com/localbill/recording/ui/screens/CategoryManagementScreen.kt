@@ -1,4 +1,4 @@
-﻿package com.localbill.recording.ui.screens
+package com.localbill.recording.ui.screens
 
 import android.widget.Toast
 import androidx.compose.foundation.background
@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -100,6 +101,7 @@ fun CategoryManagementScreen(
     Scaffold(
         modifier = modifier.fillMaxSize(),
         containerColor = WarmBone,
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
         floatingActionButton = {
             FloatingActionButton(
                 onClick = {
@@ -110,7 +112,7 @@ fun CategoryManagementScreen(
                 containerColor = DeepGreen,
                 contentColor = Color.White,
                 shape = RoundedCornerShape(14.dp),
-                modifier = Modifier.padding(bottom = 16.dp)
+                modifier = Modifier.padding(bottom = 8.dp)
             ) {
                 Row(
                     modifier = Modifier.padding(horizontal = 16.dp),
@@ -170,7 +172,7 @@ fun CategoryManagementScreen(
             }
 
             item {
-                Spacer(modifier = Modifier.height(72.dp))
+                Spacer(modifier = Modifier.height(96.dp))
             }
         }
     }
